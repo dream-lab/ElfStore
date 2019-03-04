@@ -1,1 +1,1 @@
-# elfstore
+# ElfStore: Edge-local federated Store
