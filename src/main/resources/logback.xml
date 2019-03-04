@@ -1,0 +1,35 @@
+<configuration>
+
+	<!-- <property name="LOG_FILE" value="edgeFS" />
+	<property name="LOG_DIR" value="/edgefs/logs" /> -->
+	<property scope="context" name="LOG_DIR" value="${log.dir}"></property>
+	<property scope="context" name="LOG_FILE" value="${log.file}"></property>
+	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+		<file>${LOG_DIR}/${LOG_FILE}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+		<!-- daily rollover -->
+        <fileNamePattern>${LOG_DIR}/%d{dd-MM-yyyy}/${LOG_FILE}.gz</fileNamePattern>
+        <maxFileSize>10MB</maxFileSize>
+        <totalSizeCap>1GB</totalSizeCap>
+        <!-- 7 days worth of data -->
+        <maxHistory>7</maxHistory>
+    </rollingPolicy>
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="com.dreamlab.edgefs" level="INFO">
+		<appender-ref ref="FILE" />
+	</logger>
+
+	<root level="info">
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>
