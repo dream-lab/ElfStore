@@ -92,6 +92,13 @@ struct ReadReplica {
 	3: optional Metadata metadata;
 }
 
+struct WriteResponse {
+	1: required byte status;
+	//in case write to edge is successful, we will be sending
+	//back to client the reliability of the edge, value between 1 to 100
+	2: optional byte reliability;
+}
+
 
 service EdgeService {
 
@@ -108,7 +115,9 @@ service EdgeService {
 
    i32 add(1:i32 num1, 2:i32 num2),
 
-   byte write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
+   //byte write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
+   
+   WriteResponse write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
 
    ReadReplica read(1:string mbId, 2:byte fetchMetadata),
 

@@ -14,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dreamlab.edgefs.edge.model.Edge;
+import com.dreamlab.edgefs.misc.Constants;
 import com.dreamlab.edgefs.thrift.EdgeService;
 import com.dreamlab.edgefs.thrift.Metadata;
 import com.dreamlab.edgefs.thrift.ReadReplica;
+import com.dreamlab.edgefs.thrift.WriteResponse;
 
 public class EdgeServiceHandler implements EdgeService.Iface {
 
@@ -30,8 +32,10 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 	}
 
 	@Override
-	public byte write(String mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
-		byte response = 0;
+//	public byte write(String mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
+	public WriteResponse write(String mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
+		WriteResponse wrResponse = new WriteResponse();
+		wrResponse.setStatus(Constants.FAILURE);
 		if (mbId != null && mbMetadata != null && mbData != null) {
 			try {
 				LOGGER.info(
@@ -56,13 +60,14 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 				LOGGER.info(
 						"MicrobatchId : " + mbMetadata.getMbId() + ", write, endTime=" + System.currentTimeMillis());
 
-				response = 1;
+				wrResponse.setStatus(Constants.SUCCESS);
+				wrResponse.setReliability(edge.getReliability());
 			} catch (IOException e) {
 				LOGGER.error("Error while writing the microbatch " + e);
 				e.printStackTrace();
 			}
 		}
-		return response;
+		return wrResponse;
 	}
 
 	@Override

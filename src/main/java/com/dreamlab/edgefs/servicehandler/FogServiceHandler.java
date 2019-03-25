@@ -63,6 +63,7 @@ import com.dreamlab.edgefs.thrift.TwoPhasePreCommitRequest;
 import com.dreamlab.edgefs.thrift.TwoPhasePreCommitResponse;
 import com.dreamlab.edgefs.thrift.WritableFogData;
 import com.dreamlab.edgefs.thrift.WritePreference;
+import com.dreamlab.edgefs.thrift.WriteResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -1363,12 +1364,15 @@ public class FogServiceHandler implements FogService.Iface {
 
 
 	@Override
-	public byte write(Metadata mbMetadata, ByteBuffer data, WritePreference preference) throws TException {
+//	public byte write(Metadata mbMetadata, ByteBuffer data, WritePreference preference) throws TException {
+	public WriteResponse write(Metadata mbMetadata, ByteBuffer data, WritePreference preference) throws TException {
 		// select a local edge based on the preference given
 		// become a client with that edge server and send the write request
 		// if successful, the persist the metadata and update the various maps
 		// and return true else return false
 		
+		WriteResponse wrResponse = new WriteResponse();
+		wrResponse.setStatus(Constants.FAILURE);
 		//it may happen that multiple copies of the same microbatch 
 		//will be written to the edges within a single Fog, so we need
 		//to make sure that we should not pick the same edge again
@@ -1378,12 +1382,12 @@ public class FogServiceHandler implements FogService.Iface {
 		EdgeInfo localEdge = identifyLocalReplica(data.capacity(), preference, duplicateHolderEdgeId);
 		if(localEdge == null) {
 			LOGGER.info("No suitable edge present");
-			return Constants.FAILURE;
+			return wrResponse;
 		}
 		//the microbatchId is contained within the metadata so check for safety
 		if(mbMetadata == null) {
 			LOGGER.error("No metadata supplied while writing");
-			return Constants.FAILURE;
+			return wrResponse;
 		}
 		TTransport transport = new TFramedTransport(new TSocket(localEdge.getNodeIp(), localEdge.getPort()));
 		try {
@@ -1392,24 +1396,27 @@ public class FogServiceHandler implements FogService.Iface {
 			transport.close();
 			LOGGER.error("Unable to contact edge device : " + localEdge);
 			e.printStackTrace();
-			return Constants.FAILURE;
+			return wrResponse;
 		}
 		
 		TProtocol protocol = new TBinaryProtocol(transport);
 		EdgeService.Client edgeClient = new EdgeService.Client(protocol);
 		try {
-			byte result = edgeClient.write(mbMetadata.getMbId(), mbMetadata, data);
+			wrResponse = edgeClient.write(mbMetadata.getMbId(), mbMetadata, data);
 		} catch (TException e) {
 			LOGGER.info("Error while writing microbatch to edge : " + localEdge);
 			e.printStackTrace();
-			return Constants.FAILURE;
+			return wrResponse;
 		} finally {
 			transport.close();
 		}
 		updateMicrobatchLocalInfo(mbMetadata, localEdge);
 		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", write, endTime=" +
 				System.currentTimeMillis());
-		return Constants.SUCCESS;
+		//make sure that edge reliability is set correctly when the various edges
+		//are started as we are returning the WriteResponse returned directly 
+		//from the Edge
+		return wrResponse;
 	}
 	
 	private void updateMicrobatchLocalInfo(Metadata mbMetadata, EdgeInfo edgeInfo) {

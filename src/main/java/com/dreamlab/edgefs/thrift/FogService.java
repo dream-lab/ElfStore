@@ -56,7 +56,7 @@ public class FogService {
 
     public java.util.List<WritableFogData> getWriteLocations(byte dataLength, Metadata metadata, java.util.List<java.lang.Short> blackListedFogs, boolean isEdge) throws org.apache.thrift.TException;
 
-    public byte write(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference) throws org.apache.thrift.TException;
+    public WriteResponse write(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference) throws org.apache.thrift.TException;
 
     public java.util.List<NodeInfoData> writeNext(java.lang.String sessionId, Metadata mbData, byte dataLength) throws org.apache.thrift.TException;
 
@@ -118,7 +118,7 @@ public class FogService {
 
     public void getWriteLocations(byte dataLength, Metadata metadata, java.util.List<java.lang.Short> blackListedFogs, boolean isEdge, org.apache.thrift.async.AsyncMethodCallback<java.util.List<WritableFogData>> resultHandler) throws org.apache.thrift.TException;
 
-    public void write(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference, org.apache.thrift.async.AsyncMethodCallback<java.lang.Byte> resultHandler) throws org.apache.thrift.TException;
+    public void write(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference, org.apache.thrift.async.AsyncMethodCallback<WriteResponse> resultHandler) throws org.apache.thrift.TException;
 
     public void writeNext(java.lang.String sessionId, Metadata mbData, byte dataLength, org.apache.thrift.async.AsyncMethodCallback<java.util.List<NodeInfoData>> resultHandler) throws org.apache.thrift.TException;
 
@@ -641,7 +641,7 @@ public class FogService {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getWriteLocations failed: unknown result");
     }
 
-    public byte write(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference) throws org.apache.thrift.TException
+    public WriteResponse write(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference) throws org.apache.thrift.TException
     {
       send_write(mbMetadata, data, preference);
       return recv_write();
@@ -656,7 +656,7 @@ public class FogService {
       sendBase("write", args);
     }
 
-    public byte recv_write() throws org.apache.thrift.TException
+    public WriteResponse recv_write() throws org.apache.thrift.TException
     {
       write_result result = new write_result();
       receiveBase(result, "write");
@@ -1554,18 +1554,18 @@ public class FogService {
       }
     }
 
-    public void write(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference, org.apache.thrift.async.AsyncMethodCallback<java.lang.Byte> resultHandler) throws org.apache.thrift.TException {
+    public void write(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference, org.apache.thrift.async.AsyncMethodCallback<WriteResponse> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       write_call method_call = new write_call(mbMetadata, data, preference, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class write_call extends org.apache.thrift.async.TAsyncMethodCall<java.lang.Byte> {
+    public static class write_call extends org.apache.thrift.async.TAsyncMethodCall<WriteResponse> {
       private Metadata mbMetadata;
       private java.nio.ByteBuffer data;
       private WritePreference preference;
-      public write_call(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference, org.apache.thrift.async.AsyncMethodCallback<java.lang.Byte> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public write_call(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference, org.apache.thrift.async.AsyncMethodCallback<WriteResponse> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.mbMetadata = mbMetadata;
         this.data = data;
@@ -1582,7 +1582,7 @@ public class FogService {
         prot.writeMessageEnd();
       }
 
-      public java.lang.Byte getResult() throws org.apache.thrift.TException {
+      public WriteResponse getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new java.lang.IllegalStateException("Method call not finished!");
         }
@@ -2434,7 +2434,6 @@ public class FogService {
       public write_result getResult(I iface, write_args args) throws org.apache.thrift.TException {
         write_result result = new write_result();
         result.success = iface.write(args.mbMetadata, args.data, args.preference);
-        result.setSuccessIsSet(true);
         return result;
       }
     }
@@ -3928,7 +3927,7 @@ public class FogService {
       }
     }
 
-    public static class write<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, write_args, java.lang.Byte> {
+    public static class write<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, write_args, WriteResponse> {
       public write() {
         super("write");
       }
@@ -3937,13 +3936,12 @@ public class FogService {
         return new write_args();
       }
 
-      public org.apache.thrift.async.AsyncMethodCallback<java.lang.Byte> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
+      public org.apache.thrift.async.AsyncMethodCallback<WriteResponse> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
-        return new org.apache.thrift.async.AsyncMethodCallback<java.lang.Byte>() { 
-          public void onComplete(java.lang.Byte o) {
+        return new org.apache.thrift.async.AsyncMethodCallback<WriteResponse>() { 
+          public void onComplete(WriteResponse o) {
             write_result result = new write_result();
             result.success = o;
-            result.setSuccessIsSet(true);
             try {
               fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
             } catch (org.apache.thrift.transport.TTransportException e) {
@@ -3985,7 +3983,7 @@ public class FogService {
         return false;
       }
 
-      public void start(I iface, write_args args, org.apache.thrift.async.AsyncMethodCallback<java.lang.Byte> resultHandler) throws org.apache.thrift.TException {
+      public void start(I iface, write_args args, org.apache.thrift.async.AsyncMethodCallback<WriteResponse> resultHandler) throws org.apache.thrift.TException {
         iface.write(args.mbMetadata, args.data, args.preference,resultHandler);
       }
     }
@@ -21057,12 +21055,12 @@ public class FogService {
   public static class write_result implements org.apache.thrift.TBase<write_result, write_result._Fields>, java.io.Serializable, Cloneable, Comparable<write_result>   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("write_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.BYTE, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new write_resultStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new write_resultTupleSchemeFactory();
 
-    public byte success; // required
+    public WriteResponse success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -21123,13 +21121,11 @@ public class FogService {
     }
 
     // isset id assignments
-    private static final int __SUCCESS_ISSET_ID = 0;
-    private byte __isset_bitfield = 0;
     public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BYTE)));
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, WriteResponse.class)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(write_result.class, metaDataMap);
     }
@@ -21138,19 +21134,19 @@ public class FogService {
     }
 
     public write_result(
-      byte success)
+      WriteResponse success)
     {
       this();
       this.success = success;
-      setSuccessIsSet(true);
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
     public write_result(write_result other) {
-      __isset_bitfield = other.__isset_bitfield;
-      this.success = other.success;
+      if (other.isSetSuccess()) {
+        this.success = new WriteResponse(other.success);
+      }
     }
 
     public write_result deepCopy() {
@@ -21159,31 +21155,31 @@ public class FogService {
 
     @Override
     public void clear() {
-      setSuccessIsSet(false);
-      this.success = 0;
+      this.success = null;
     }
 
-    public byte getSuccess() {
+    public WriteResponse getSuccess() {
       return this.success;
     }
 
-    public write_result setSuccess(byte success) {
+    public write_result setSuccess(WriteResponse success) {
       this.success = success;
-      setSuccessIsSet(true);
       return this;
     }
 
     public void unsetSuccess() {
-      __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __SUCCESS_ISSET_ID);
+      this.success = null;
     }
 
     /** Returns true if field success is set (has been assigned a value) and false otherwise */
     public boolean isSetSuccess() {
-      return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __SUCCESS_ISSET_ID);
+      return this.success != null;
     }
 
     public void setSuccessIsSet(boolean value) {
-      __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __SUCCESS_ISSET_ID, value);
+      if (!value) {
+        this.success = null;
+      }
     }
 
     public void setFieldValue(_Fields field, java.lang.Object value) {
@@ -21192,7 +21188,7 @@ public class FogService {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((java.lang.Byte)value);
+          setSuccess((WriteResponse)value);
         }
         break;
 
@@ -21236,12 +21232,12 @@ public class FogService {
       if (this == that)
         return true;
 
-      boolean this_present_success = true;
-      boolean that_present_success = true;
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
       if (this_present_success || that_present_success) {
         if (!(this_present_success && that_present_success))
           return false;
-        if (this.success != that.success)
+        if (!this.success.equals(that.success))
           return false;
       }
 
@@ -21252,7 +21248,9 @@ public class FogService {
     public int hashCode() {
       int hashCode = 1;
 
-      hashCode = hashCode * 8191 + (int) (success);
+      hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
+      if (isSetSuccess())
+        hashCode = hashCode * 8191 + success.hashCode();
 
       return hashCode;
     }
@@ -21296,7 +21294,11 @@ public class FogService {
       boolean first = true;
 
       sb.append("success:");
-      sb.append(this.success);
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
       first = false;
       sb.append(")");
       return sb.toString();
@@ -21305,6 +21307,9 @@ public class FogService {
     public void validate() throws org.apache.thrift.TException {
       // check for required fields
       // check for sub-struct validity
+      if (success != null) {
+        success.validate();
+      }
     }
 
     private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
@@ -21317,8 +21322,6 @@ public class FogService {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
       try {
-        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
-        __isset_bitfield = 0;
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
         throw new java.io.IOException(te);
@@ -21344,8 +21347,9 @@ public class FogService {
           }
           switch (schemeField.id) {
             case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.BYTE) {
-                struct.success = iprot.readByte();
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new WriteResponse();
+                struct.success.read(iprot);
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -21366,9 +21370,9 @@ public class FogService {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.isSetSuccess()) {
+        if (struct.success != null) {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-          oprot.writeByte(struct.success);
+          struct.success.write(oprot);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -21394,7 +21398,7 @@ public class FogService {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          oprot.writeByte(struct.success);
+          struct.success.write(oprot);
         }
       }
 
@@ -21403,7 +21407,8 @@ public class FogService {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.success = iprot.readByte();
+          struct.success = new WriteResponse();
+          struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }
       }

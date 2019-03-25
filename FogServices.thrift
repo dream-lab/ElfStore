@@ -215,6 +215,13 @@ struct QueryReplica {
 	1: required map<string, list<NodeInfoData>> matchingNodes;
 }
 
+struct WriteResponse {
+	1: required byte status;
+	//in case write to edge is successful, we will be sending
+	//back to client the reliability of the edge, value between 1 to 100
+	2: optional byte reliability;
+}
+
 // the interfaces belonging to Fog Interface
 service FogService {
 
@@ -281,11 +288,8 @@ service FogService {
 	list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 
 											3: list<i16> blackListedFogs, 4:bool isEdge);
 	
-	
-	//once the above write call return the prospective fog devices, client
-	//should send the actual metadata and data for the microbatch 
-	//the insertMetadata may not be needed any more
-	byte write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
+	//byte write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
+	WriteResponse write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
 
 	// does a test and set tupe of thing, returns the same set of locations as done previously
 	list<NodeInfoData> writeNext(1: string sessionId, 2: Metadata mbData, 3: byte dataLength);
@@ -297,14 +301,6 @@ service FogService {
 	//will store the metadata as well, edgeInfo will set only the edgeID
 	
 	byte insertMetadata(1: Metadata mbMetadata, 2: EdgeInfoData edgeInfoData);
-
-	// Read a specific microbatch
-	//ReadResponse read(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
-	//ReadResponse read(1: string microbatchId, 2:bool checkLocal, 3:bool checkNeighbors, 4:bool checkBuddies,
-	 //5:EdgeInfoData selfInfo, 6:bool fetchMetadata);
-
-	// Find a microbatch based on query, this is a metadata based search for micro batch
-	//FindResponse findUsingMetadata(1: string metadataKey, 2:string metadataValue, 3:bool checkNeighbors, 4:bool checkBuddies);
 
 	// Find the next micro bactch satisfying the query
 	binary findNext(1: string microbatchId);
