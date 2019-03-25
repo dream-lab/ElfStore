@@ -120,6 +120,9 @@ service EdgeService {
    WriteResponse write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
 
    ReadReplica read(1:string mbId, 2:byte fetchMetadata),
+   
+   //this only returns the metadata
+   ReadReplica getMetadata(1:string mbId),
 
    /**
     * This method has a oneway modifier. That means the client only makes

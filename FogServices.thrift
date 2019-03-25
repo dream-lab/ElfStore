@@ -95,26 +95,6 @@ struct MessagePayload {
 	
 }
 
-//struct BuddyPayload {
-//	1:required i16 nodeId;
-//	2:optional string ip;
-//	3:optional i32 port;
-//	4:optional i16 poolId;
-//	5: optional double reliability;
-//	6:optional binary bloomFilterUpdates;
-//	7:optional list<binary> stats;
-//}
-
-//struct NeighborPayload {
-//	1:required i16 nodeId;
-//	2:optional string ip;
-//	3:optional i32 port;
-//	4:optional i16 poolId;
-//	5: optional double reliability;
-//	6:optional binary bloomFilterUpdates;
-//	7:optional binary stats;
-//}
-
 struct BuddyPayload {
 	1:required binary payload;
 }
@@ -311,4 +291,7 @@ service FogService {
 	ReadReplica read(1: string microbatchId, 2:bool fetchMetadata);
 
 	QueryReplica findUsingQuery(1: string metadataKey, 2:string metadataValue, 3:bool checkNeighbors, 4:bool checkBuddies);
+	
+	//only returning metadata in this operation
+	ReadReplica getMeta(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
 }

@@ -1030,8 +1030,7 @@ public class FogServiceHandler implements FogService.Iface {
 		data.setStatus(Constants.SUCCESS);
 		return data;
 	}
-
-
+	
 	private List<FindReplica> getFromNeighbors(String searchKey, String searchValue, EdgeInfoData selfInfo) {
 		List<FindReplica> replicas = new ArrayList<>();
 		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
@@ -1101,6 +1100,138 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 		return replicas;
 	}
+	
+	@Override
+	public ReadReplica getMeta(String microbatchId, boolean checkNeighbors, boolean checkBuddies) throws TException {
+		LOGGER.info("MicrobatchId : " + microbatchId + ", getMeta, startTime=" +
+				System.currentTimeMillis());
+		ReadReplica replica = new ReadReplica();
+		replica.setStatus(Constants.FAILURE);
+		if (fog.getMbIDLocationMap().containsKey(microbatchId)) {
+			Short edgeId = fog.getMbIDLocationMap().get(microbatchId);
+			if (edgeId != null && fog.getLocalEdgesMap().containsKey(edgeId)
+					&& fog.getLocalEdgesMap().get(edgeId).getStatus().equals("A")) {
+				boolean noError = true;
+				EdgeInfo edgeInfo = fog.getLocalEdgesMap().get(edgeId);
+				TTransport transport = new TFramedTransport(new TSocket(edgeInfo.getNodeIp(),
+						edgeInfo.getPort()));
+				try {
+					transport.open();
+				} catch (TTransportException e) {
+					transport.close();
+					LOGGER.info("Unable to contact edge device : " + edgeInfo);
+					e.printStackTrace();
+					noError = false;
+				}
+				
+				if (noError) {
+					TProtocol protocol = new TBinaryProtocol(transport);
+					EdgeService.Client edgeClient = new EdgeService.Client(protocol);
+					try {
+						replica = edgeClient.getMetadata(microbatchId);
+					} catch (TException e) {
+						LOGGER.info("Error while fetching metadata of microbatch {} from edge : {} ",
+								microbatchId, edgeInfo);
+						e.printStackTrace();
+						noError = false;
+					} finally {
+						transport.close();
+					}
+				}
+				if (noError) {
+					LOGGER.info("MicrobatchId : " + microbatchId + ", getMeta, endTime=" +
+							System.currentTimeMillis());
+					return replica;
+				}
+			}
+		}
+		
+		if(checkNeighbors) {
+			replica = getMetadataFromNeighbors(Constants.MICROBATCH_METADATA_ID, microbatchId);
+			if(replica.getStatus() == Constants.SUCCESS) {
+				LOGGER.info("MicrobatchId : " + microbatchId + ", getMeta, endTime=" +
+						System.currentTimeMillis());
+				return replica;
+			}
+		}
+		
+		if(checkBuddies) {
+			replica = getMetadataFromBuddies(Constants.MICROBATCH_METADATA_ID, microbatchId);
+		}
+		
+		LOGGER.info("MicrobatchId : " + microbatchId + ", getMeta, endTime=" +
+				System.currentTimeMillis());
+		return replica;
+	}
+	
+	private ReadReplica getMetadataFromNeighbors(String searchKey, String searchValue) {
+		ReadReplica replica = new ReadReplica();
+		replica.setStatus(Constants.FAILURE);
+		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
+		for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
+			FogExchangeInfo nInfo = entry.getValue();
+			if (nInfo != null) {
+				byte[] bloomFilter = nInfo.getBloomFilterUpdates();
+				if (BloomFilter.search(searchKey, searchValue, bloomFilter)) {
+					// match with BloomFilter, now contact the node to see if data present or not
+					NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
+					replica = fetchMetadataFromOtherFog(neighbor.getNode().getNodeIP(), 
+							neighbor.getNode().getPort(), searchValue, false, false);
+					if(replica.getStatus() == Constants.SUCCESS)
+						return replica;
+				}
+			}
+		}
+		return replica;
+	}
+
+	private ReadReplica getMetadataFromBuddies(String searchKey, String searchValue) {
+		ReadReplica replica = new ReadReplica();
+		replica.setStatus(Constants.FAILURE);
+		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
+		for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
+			FogExchangeInfo buddyInfo = entry.getValue();
+			if (buddyInfo != null) {
+				byte[] consolidateBFilter = buddyInfo.getBloomFilterUpdates();
+				if (BloomFilter.search(searchKey, searchValue, consolidateBFilter)) {
+					// match with BloomFilter, now contact the node to see if data present or not
+					FogInfo buddy = fog.getBuddyMap().get(entry.getKey());
+					replica = fetchMetadataFromOtherFog(buddy.getNodeIP(), buddy.getPort(), 
+							searchValue, true, false);
+					if(replica.getStatus() == Constants.SUCCESS)
+						return replica;
+				}
+			}
+		}
+		return replica;
+	}
+	
+	private ReadReplica fetchMetadataFromOtherFog(String ip, int port, String searchValue, 
+			boolean checkNeighbors, boolean checkBuddies) {
+		ReadReplica replica = new ReadReplica();
+		replica.setStatus(Constants.FAILURE);
+		TTransport transport = new TFramedTransport(new TSocket(ip, port));
+		try {
+			transport.open();
+		} catch (TTransportException e) {
+			transport.close();
+			LOGGER.error("Error while fetching metadata information from other fog");
+			e.printStackTrace();
+			return replica;
+		}
+		TProtocol protocol = new TBinaryProtocol(transport);
+		FogService.Client fogClient = new FogService.Client(protocol);
+		try {
+			replica = fogClient.getMeta(searchValue, checkNeighbors, checkBuddies); 
+		} catch (TException e) {
+			LOGGER.error("Error in finding replicas from neighbor " + ip);
+			e.printStackTrace();
+		} finally {
+			transport.close();
+		}
+		return replica;
+	}
+
 	
 	@Override
 	public QueryReplica findUsingQuery(String metadataKey, String metadataValue, boolean checkNeighbors,
@@ -1756,5 +1887,5 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 
 	}
-	
+
 }
