@@ -276,8 +276,11 @@ service FogService {
 	StreamMetadata getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
 	
 	//Returns a list of Fog Locations
+	//list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 
+	//										3: list<i16> blackListedFogs, 4:EdgeInfoData selfInfo);
 	list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 
-											3: list<i16> blackListedFogs, 4:EdgeInfoData selfInfo);
+											3: list<i16> blackListedFogs, 4:bool isEdge);
+	
 	
 	//once the above write call return the prospective fog devices, client
 	//should send the actual metadata and data for the microbatch 

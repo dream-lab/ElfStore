@@ -103,7 +103,8 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 			long datalength = read.getData().length;
 			//identifyreplicas take MB size of datalength
 			datalength = datalength/(1024 * 1024);
-			newReplicas = handler.identifyReplicas(datalength, null, (double) (edgeReliability * 1.0) / 100, 1, 2);
+//			newReplicas = handler.identifyReplicas(datalength, null, (double) (edgeReliability * 1.0) / 100, 1, 2);
+			newReplicas = handler.identifyReplicas(datalength, true, (double) (edgeReliability * 1.0) / 100, 1, 2);
 		}
 		if (read != null && read.getStatus() == Constants.SUCCESS) {
 			LOGGER.info("Found new replicas for writing");

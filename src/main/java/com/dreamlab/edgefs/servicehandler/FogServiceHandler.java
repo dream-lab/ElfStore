@@ -533,7 +533,8 @@ public class FogServiceHandler implements FogService.Iface {
 	 * It is called from {@link #getWriteLocations} wherein we receive the encoded
 	 * value of storage space as a byte and send to this method the datalength in MB
 	 */
-	public List<WritableFogData> identifyReplicas(long dataLength, EdgeInfoData edge,double expectedReliability,int minReplica,int maxReplica) {
+//	public List<WritableFogData> identifyReplicas(long dataLength, EdgeInfoData edge,double expectedReliability,int minReplica,int maxReplica) {
+	public List<WritableFogData> identifyReplicas(long dataLength, boolean isEdge,double expectedReliability,int minReplica,int maxReplica) {
 		
 		LOGGER.info("the data length requested is "+dataLength);
 
@@ -547,7 +548,8 @@ public class FogServiceHandler implements FogService.Iface {
 
 		String pref = "HHL";
 		double reliability = 0.0;
-		if (edge != null && fog.getLocalEdgesMap().containsKey(edge.getNodeId())) {
+		
+		/*if (edge != null && fog.getLocalEdgesMap().containsKey(edge.getNodeId())) {
 			Short edgeId = edge.getNodeId();
 			LOGGER.info("The storage for this " + fog.getLocalEdgesMap().get(edgeId).getStats().getStorage());
 
@@ -579,76 +581,27 @@ public class FogServiceHandler implements FogService.Iface {
 				}
 
 			}
-			
-//			else {
-//				LOGGER.info("Local fog allocation");
-//				Map<StorageReliability, List<Short>> storageRElToEdge = fog.getLocalEdgeMapping();
-//				/** choose from HH **/
-//				if (storageRElToEdge.get(StorageReliability.HH).size() > 0) {
-//
-//					int index = storageRElToEdge.get(StorageReliability.HH).size();
-//					Short randomEdge = storageRElToEdge.get(StorageReliability.HH).get(new Random().nextInt(index));
-//					EdgeInfo edgeChosen = fog.getLocalEdgesMap().get(randomEdge);
-//
-//					NodeInfoData myNode = new NodeInfoData(edgeChosen.getNodeId(), edgeChosen.getNodeIp(),
-//							edgeChosen.getPort());
-//
-//					replicaAlloc.setReliability((double) edgeChosen.getStats().getReliability() / 100.0);
-//					LOGGER.info("The reliability is set to " + replicaAlloc.getReliability());
-//					replicasToWrite.add(myNode);
-//					reliability = replicaAlloc.getReliability();
-//					pref = "HHL";
-//
-//				} else if (storageRElToEdge.get(StorageReliability.HL).size() > 0) {
-//					int index = storageRElToEdge.get(StorageReliability.HL).size();
-//					Short randomEdge = storageRElToEdge.get(StorageReliability.HL).get(new Random().nextInt(index));
-//					EdgeInfo edgeChosen = fog.getLocalEdgesMap().get(randomEdge);
-//
-//					NodeInfoData myNode = new NodeInfoData(edgeChosen.getNodeId(), edgeChosen.getNodeIp(),
-//							edgeChosen.getPort());
-//
-//					replicaAlloc.setReliability((double) edgeChosen.getStats().getReliability() / 100.0);
-//					LOGGER.info("The reliability is set to " + replicaAlloc.getReliability());
-//					replicasToWrite.add(myNode);
-//					reliability = replicaAlloc.getReliability();
-//					pref = "HLH";
-//
-//				} else if (storageRElToEdge.get(StorageReliability.LH).size() > 0) {
-//					int index = storageRElToEdge.get(StorageReliability.LH).size();
-//					Short randomEdge = storageRElToEdge.get(StorageReliability.LH).get(new Random().nextInt(index));
-//					EdgeInfo edgeChosen = fog.getLocalEdgesMap().get(randomEdge);
-//
-//					NodeInfoData myNode = new NodeInfoData(edgeChosen.getNodeId(), edgeChosen.getNodeIp(),
-//							edgeChosen.getPort());
-//
-//					replicaAlloc.setReliability((double) edgeChosen.getStats().getReliability() / 100.0);
-//					LOGGER.info("The reliability is set to " + replicaAlloc.getReliability());
-//					replicasToWrite.add(myNode);
-//					reliability = replicaAlloc.getReliability();
-//					pref = "LHL";
-//
-//				} else if (storageRElToEdge.get(StorageReliability.LL).size() > 0) {
-//					int index = storageRElToEdge.get(StorageReliability.LL).size();
-//					Short randomEdge = storageRElToEdge.get(StorageReliability.LL).get(new Random().nextInt(index));
-//					EdgeInfo edgeChosen = fog.getLocalEdgesMap().get(randomEdge);
-//
-//					NodeInfoData myNode = new NodeInfoData(edgeChosen.getNodeId(), edgeChosen.getNodeIp(),
-//							edgeChosen.getPort());
-//
-//					replicaAlloc.setReliability((double) edgeChosen.getStats().getReliability() / 100.0);
-//					LOGGER.info("The reliability is set to " + replicaAlloc.getReliability());
-//					replicasToWrite.add(myNode);
-//					reliability = replicaAlloc.getReliability();
-//					pref = "LLH";
-//
-//				}
-//
-//				/** Not answering the query **/
-//
-//			}
-			
 		}
-
+*/
+		
+		//the logic to pick local replica is changed to this piece only
+		FogStats selfStats = FogStats.createInstance(fog.getCoarseGrainedStats().getInfo());
+		// lets try to pick a higher reliability edge first
+		EdgeInfo chosenEdge = getHighReliabilityEdge(selfStats, dataLength * 1024 * 1024, null);
+		if (chosenEdge == null) {
+			chosenEdge = getLowReliabilityEdge(selfStats, dataLength * 1024 * 1024, null);
+		}
+		if (chosenEdge == null) {
+			LOGGER.info("Unable to pick A local edge");
+		} else {
+			NodeInfoData edgeData = new NodeInfoData(chosenEdge.getNodeId(), chosenEdge.getNodeIp(),
+					chosenEdge.getPort());
+			replicaAlloc.setReliability((double) chosenEdge.getStats().getReliability() / 100.0);
+			LOGGER.info("The reliability is set to " + replicaAlloc.getReliability());
+			reliability = replicaAlloc.getReliability();
+			replicasToWrite.add(edgeData);
+		}
+		
 		/**
 		 * Get all the stream related metadata such as reliability , replica count and
 		 * so on, which was set during registration
@@ -1279,8 +1232,10 @@ public class FogServiceHandler implements FogService.Iface {
 	 * some Fog with the id of that Fog so that it is not returned again
 	 */
 	@Override
+	/*public List<WritableFogData> getWriteLocations(byte dataLength, Metadata metadata,
+			List<Short> blackListedFogs, EdgeInfoData clientEdgeInfo) throws TException {*/
 	public List<WritableFogData> getWriteLocations(byte dataLength, Metadata metadata,
-			List<Short> blackListedFogs, EdgeInfoData clientEdgeInfo) throws TException {
+			List<Short> blackListedFogs, boolean isEdge) throws TException {
 		// WritableFogData contains the information of node to contact, the type of the
 		// edge
 		// device such as HHL,HLH, etc(WritePreference), the reliability of the node
@@ -1311,7 +1266,8 @@ public class FogServiceHandler implements FogService.Iface {
 		double expectedReliability = strMetadata.getReliability();
 		LOGGER.info("MicrobatchId : " + metadata.getMbId() + ", identifyReplicas, startTime=" +
 				System.currentTimeMillis());
-		List<WritableFogData> fogLocations = identifyReplicas(decodedLength, clientEdgeInfo,expectedReliability, strMetadata.getMinReplica(), strMetadata.getMaxReplica());
+//		List<WritableFogData> fogLocations = identifyReplicas(decodedLength, clientEdgeInfo,expectedReliability, strMetadata.getMinReplica(), strMetadata.getMaxReplica());
+		List<WritableFogData> fogLocations = identifyReplicas(decodedLength, isEdge,expectedReliability, strMetadata.getMinReplica(), strMetadata.getMaxReplica());
 		LOGGER.info("MicrobatchId : " + metadata.getMbId() + ", identifyReplicas, endTime=" +
 				System.currentTimeMillis());
 		
