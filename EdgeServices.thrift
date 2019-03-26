@@ -67,8 +67,9 @@ struct Metadata {
 	1: required string mbId,
 	2: required string streamId,
 	3: required i64 timestamp, //This is actually a metadata
+	4: optional string checksum,
 	//this is similar to key value pairs as received for the stream
-	4: optional string properties;
+	5: optional string properties,
 }
 
 struct EdgeInfoData {

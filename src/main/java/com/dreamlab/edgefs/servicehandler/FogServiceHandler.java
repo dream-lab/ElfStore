@@ -2,6 +2,8 @@ package com.dreamlab.edgefs.servicehandler;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -1341,6 +1343,8 @@ public class FogServiceHandler implements FogService.Iface {
 	 * Update the arguments required with additional edgeId and call the method
 	 * updateMicrobatchLocalInfo to update metadata
 	 * updateMicrobatchLocalInfo(Metadata mbMetadata, EdgeInfo edgeInfo)
+	 * TODO:: This is invoked by the Edge client in case of a local write, this 
+	 * client should calculate the MD5 checksum and pass that checksum in the metadata 
 	 */
 	@Override
 	public byte insertMetadata(Metadata mbMetadata, EdgeInfoData edgeInfoData) throws TException {
@@ -1351,7 +1355,12 @@ public class FogServiceHandler implements FogService.Iface {
 		
 		LOGGER.info(" updated here by Sheshadri ");
 		/**This is the method which the client should call if it writes to the edge by itself **/
-		updateMicrobatchLocalInfo(mbMetadata,edgeInfo);
+		//we don't have the data in this call, so the client should send
+		//the MD5 checksum as part of the Metadata itself
+		if(!mbMetadata.isSetChecksum()) {
+			//throw error or do something to make the client know of the error
+		}
+		updateMicrobatchLocalInfo(mbMetadata, null, edgeInfo);
 		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", insertMetadata, endTime=" +
 				System.currentTimeMillis());
 		return Constants.SUCCESS;
@@ -1541,7 +1550,7 @@ public class FogServiceHandler implements FogService.Iface {
 		} finally {
 			transport.close();
 		}
-		updateMicrobatchLocalInfo(mbMetadata, localEdge);
+		updateMicrobatchLocalInfo(mbMetadata, data, localEdge);
 		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", write, endTime=" +
 				System.currentTimeMillis());
 		//make sure that edge reliability is set correctly when the various edges
@@ -1550,7 +1559,7 @@ public class FogServiceHandler implements FogService.Iface {
 		return wrResponse;
 	}
 	
-	private void updateMicrobatchLocalInfo(Metadata mbMetadata, EdgeInfo edgeInfo) {
+	private void updateMicrobatchLocalInfo(Metadata mbMetadata, ByteBuffer data, EdgeInfo edgeInfo) {
 		//microbatch to edgeId mapping
 		fog.getMbIDLocationMap().put(mbMetadata.getMbId(), edgeInfo.getNodeId());
 		
@@ -1576,11 +1585,49 @@ public class FogServiceHandler implements FogService.Iface {
 		//update the bloomfilter
 		updatePersonalBloomFilter(mbMetadata);
 		
+		//add the MD5 checksum for the block of data as well
+		//Note:: This call can come from the write() or insertMetadata()
+		//The case of write is fine as it has the data from which the checksum can
+		//be computed however insertMetadata() doesn't have the data as it comes
+		//from a local edge and makes a separate metadata call. This edge client
+		//should compute the MD5 checksum on its own and send it as a field in the
+		//Metadata object passed
+		if(data != null) {
+			computeMD5Checksum(data, mbMetadata);
+		}
+		
+		//put the Metadata object into the map, this is a new addition
+		fog.getBlockMetadata().put(mbMetadata.getMbId(), mbMetadata);
+		
 		//update which stream the microbatch belongs to
 		fog.getMicroBatchToStream().put(mbMetadata.getMbId(), mbMetadata.getStreamId());
 		
 		fog.setMostRecentSelfBFUpdate(System.currentTimeMillis());
 		fog.setMostRecentNeighborBFUpdate(System.currentTimeMillis());
+	}
+
+	private void computeMD5Checksum(ByteBuffer data, Metadata mbMetadata) {
+		try {
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			byte[] arr = data.array();
+			for (int i = 0; i < arr.length; i += 1024) {
+				if (arr.length - i <= 1023) {
+					md.update(arr, i, arr.length - i);
+				} else {
+					md.update(arr, i, 1024);
+				}
+			}
+			StringBuilder checkSum = new StringBuilder();
+			for (byte b : md.digest()) {
+				checkSum.append(String.format("%02x", b));
+			}
+			mbMetadata.setChecksum(checkSum.toString());
+			LOGGER.info("The MD5 checksum for the block {} is : {}", mbMetadata.getMbId(), 
+					mbMetadata.getChecksum());
+		} catch (NoSuchAlgorithmException e) {
+			LOGGER.error("The algorithm for messagedigest is not present");
+			e.printStackTrace();
+		}
 	}
 
 	//personal bloomfilter is sent to subscribers and also in consolidated
@@ -1887,5 +1934,5 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 
 	}
-
+	
 }
