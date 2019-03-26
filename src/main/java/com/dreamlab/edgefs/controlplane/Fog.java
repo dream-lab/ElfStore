@@ -266,6 +266,8 @@ public class Fog {
 	
 	private Map<String, String> microBatchToStream = new ConcurrentHashMap<>();
 	
+	private Map<String, Metadata> blockMetadata = new ConcurrentHashMap<>();
+	
 	
 	/****************************************************************************/
 	
@@ -629,6 +631,14 @@ public class Fog {
 
 	public void setMetaToMBIdListMap(Map<String, List<String>> metaToMBIdListMap) {
 		this.metaToMBIdListMap = metaToMBIdListMap;
+	}
+
+	public Map<String, Metadata> getBlockMetadata() {
+		return blockMetadata;
+	}
+
+	public void setBlockMetadata(Map<String, Metadata> blockMetadata) {
+		this.blockMetadata = blockMetadata;
 	}
 
 	public Lock getEdgeLock() {

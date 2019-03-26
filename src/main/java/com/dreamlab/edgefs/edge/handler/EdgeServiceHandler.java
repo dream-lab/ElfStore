@@ -2,6 +2,7 @@ package com.dreamlab.edgefs.edge.handler;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -14,9 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dreamlab.edgefs.edge.model.Edge;
+import com.dreamlab.edgefs.misc.Constants;
 import com.dreamlab.edgefs.thrift.EdgeService;
 import com.dreamlab.edgefs.thrift.Metadata;
 import com.dreamlab.edgefs.thrift.ReadReplica;
+import com.dreamlab.edgefs.thrift.WriteResponse;
 
 public class EdgeServiceHandler implements EdgeService.Iface {
 
@@ -30,8 +33,10 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 	}
 
 	@Override
-	public byte write(String mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
-		byte response = 0;
+//	public byte write(String mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
+	public WriteResponse write(String mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
+		WriteResponse wrResponse = new WriteResponse();
+		wrResponse.setStatus(Constants.FAILURE);
 		if (mbId != null && mbMetadata != null && mbData != null) {
 			try {
 				LOGGER.info(
@@ -56,19 +61,20 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 				LOGGER.info(
 						"MicrobatchId : " + mbMetadata.getMbId() + ", write, endTime=" + System.currentTimeMillis());
 
-				response = 1;
+				wrResponse.setStatus(Constants.SUCCESS);
+				wrResponse.setReliability(edge.getReliability());
 			} catch (IOException e) {
 				LOGGER.error("Error while writing the microbatch " + e);
 				e.printStackTrace();
 			}
 		}
-		return response;
+		return wrResponse;
 	}
 
 	@Override
 	public ReadReplica read(String mbId, byte fetchMetadata) throws TException {
 		ReadReplica replica = new ReadReplica();
-		replica.setStatus((byte) 0);
+		replica.setStatus(Constants.FAILURE);
 		File mbFile = new File(edge.getDatapath() + "/" + mbId + ".data");
 		try {
 			byte[] byteArray = FileUtils.readFileToByteArray(mbFile);
@@ -88,6 +94,7 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 				} catch (ClassNotFoundException e) {
 					LOGGER.error("Microbatch metadata different from the expected format, not sending it");
 					e.printStackTrace();
+					return replica;
 				} finally {
 					objStream.close();
 					fiStream.close();
@@ -96,8 +103,37 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 		} catch (IOException e) {
 			LOGGER.error("Error while reading the microbatchId : " + mbId);
 			e.printStackTrace();
+			return replica;
 		}
-		replica.setStatus((byte) 1);
+		replica.setStatus(Constants.SUCCESS);
+		return replica;
+	}
+	
+	@Override
+	public ReadReplica getMetadata(String mbId) throws TException {
+		ReadReplica replica = new ReadReplica();
+		replica.setStatus(Constants.FAILURE);
+		File metaFile = new File(edge.getDatapath() + "/" + mbId + ".meta");
+		try {
+			FileInputStream fiStream = new FileInputStream(metaFile);
+			ObjectInputStream objStream = new ObjectInputStream(fiStream);
+			try {
+				Metadata mbMetadata = (Metadata) objStream.readObject();
+				replica.setMetadata(mbMetadata);
+			} catch (ClassNotFoundException e) {
+				LOGGER.error("Microbatch metadata different from the expected format, not sending it");
+				e.printStackTrace();
+				return replica;
+			} finally {
+				objStream.close();
+				fiStream.close();
+			}
+		} catch (IOException ex) {
+			LOGGER.error("Error while reading metadata for the microbatchId : " + mbId);
+			ex.printStackTrace();
+			return replica;
+		}
+		replica.setStatus(Constants.SUCCESS);
 		return replica;
 	}
 

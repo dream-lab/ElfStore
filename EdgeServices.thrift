@@ -67,8 +67,9 @@ struct Metadata {
 	1: required string mbId,
 	2: required string streamId,
 	3: required i64 timestamp, //This is actually a metadata
+	4: optional string checksum,
 	//this is similar to key value pairs as received for the stream
-	4: optional string properties;
+	5: optional string properties,
 }
 
 struct EdgeInfoData {
@@ -92,6 +93,13 @@ struct ReadReplica {
 	3: optional Metadata metadata;
 }
 
+struct WriteResponse {
+	1: required byte status;
+	//in case write to edge is successful, we will be sending
+	//back to client the reliability of the edge, value between 1 to 100
+	2: optional byte reliability;
+}
+
 
 service EdgeService {
 
@@ -108,9 +116,14 @@ service EdgeService {
 
    i32 add(1:i32 num1, 2:i32 num2),
 
-   byte write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
+   //byte write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
+   
+   WriteResponse write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
 
    ReadReplica read(1:string mbId, 2:byte fetchMetadata),
+   
+   //this only returns the metadata
+   ReadReplica getMetadata(1:string mbId),
 
    /**
     * This method has a oneway modifier. That means the client only makes

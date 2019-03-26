@@ -95,26 +95,6 @@ struct MessagePayload {
 	
 }
 
-//struct BuddyPayload {
-//	1:required i16 nodeId;
-//	2:optional string ip;
-//	3:optional i32 port;
-//	4:optional i16 poolId;
-//	5: optional double reliability;
-//	6:optional binary bloomFilterUpdates;
-//	7:optional list<binary> stats;
-//}
-
-//struct NeighborPayload {
-//	1:required i16 nodeId;
-//	2:optional string ip;
-//	3:optional i32 port;
-//	4:optional i16 poolId;
-//	5: optional double reliability;
-//	6:optional binary bloomFilterUpdates;
-//	7:optional binary stats;
-//}
-
 struct BuddyPayload {
 	1:required binary payload;
 }
@@ -152,8 +132,9 @@ struct Metadata {
 	1: required string mbId,
 	2: required string streamId,
 	3: required i64 timestamp,
+	4: optional string checksum,
 	//this is similar to key value pairs as received for the stream
-	4: optional string properties;
+	5: optional string properties;
 }
 
 enum WritePreference {
@@ -213,6 +194,13 @@ struct ReadReplica {
 
 struct QueryReplica {
 	1: required map<string, list<NodeInfoData>> matchingNodes;
+}
+
+struct WriteResponse {
+	1: required byte status;
+	//in case write to edge is successful, we will be sending
+	//back to client the reliability of the edge, value between 1 to 100
+	2: optional byte reliability;
 }
 
 // the interfaces belonging to Fog Interface
@@ -276,13 +264,13 @@ service FogService {
 	StreamMetadata getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
 	
 	//Returns a list of Fog Locations
+	//list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 
+	//										3: list<i16> blackListedFogs, 4:EdgeInfoData selfInfo);
 	list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 
-											3: list<i16> blackListedFogs, 4:EdgeInfoData selfInfo);
+											3: list<i16> blackListedFogs, 4:bool isEdge);
 	
-	//once the above write call return the prospective fog devices, client
-	//should send the actual metadata and data for the microbatch 
-	//the insertMetadata may not be needed any more
-	byte write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
+	//byte write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
+	WriteResponse write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
 
 	// does a test and set tupe of thing, returns the same set of locations as done previously
 	list<NodeInfoData> writeNext(1: string sessionId, 2: Metadata mbData, 3: byte dataLength);
@@ -295,14 +283,6 @@ service FogService {
 	
 	byte insertMetadata(1: Metadata mbMetadata, 2: EdgeInfoData edgeInfoData);
 
-	// Read a specific microbatch
-	//ReadResponse read(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
-	//ReadResponse read(1: string microbatchId, 2:bool checkLocal, 3:bool checkNeighbors, 4:bool checkBuddies,
-	 //5:EdgeInfoData selfInfo, 6:bool fetchMetadata);
-
-	// Find a microbatch based on query, this is a metadata based search for micro batch
-	//FindResponse findUsingMetadata(1: string metadataKey, 2:string metadataValue, 3:bool checkNeighbors, 4:bool checkBuddies);
-
 	// Find the next micro bactch satisfying the query
 	binary findNext(1: string microbatchId);
 	
@@ -312,4 +292,7 @@ service FogService {
 	ReadReplica read(1: string microbatchId, 2:bool fetchMetadata);
 
 	QueryReplica findUsingQuery(1: string metadataKey, 2:string metadataValue, 3:bool checkNeighbors, 4:bool checkBuddies);
+	
+	//only returning metadata in this operation
+	ReadReplica getMeta(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
 }
