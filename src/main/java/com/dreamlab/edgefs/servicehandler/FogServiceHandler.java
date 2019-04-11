@@ -1253,19 +1253,18 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 		
 		if(checkNeighbors) {
-			
+			getMatchListFromNeighbors(metadataKey, metadataValue, response);
 		}
 		
 		if(checkBuddies) {
-			
+			getMatchListFromBuddies(metadataKey, metadataValue, response);
 		}
 		return response;
 	}
 
-	private QueryReplica getListFromNeighbors(String searchKey, String searchValue) {
-		QueryReplica replica = new QueryReplica();
-		replica.setMatchingNodes(new HashMap<>());
-		Map<String, List<NodeInfoData>> matchingNodes = replica.getMatchingNodes();
+	private void getMatchListFromNeighbors(String searchKey, String searchValue, 
+			QueryReplica currentState) {
+		Map<String, List<NodeInfoData>> matchingNodes = currentState.getMatchingNodes();
 		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
 			FogExchangeInfo nInfo = entry.getValue();
@@ -1276,16 +1275,24 @@ public class FogServiceHandler implements FogService.Iface {
 					NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
 					QueryReplica nReplica = fetchDataListFromOtherFog(neighbor.getNode().getNodeIP(),
 							neighbor.getNode().getPort(), searchKey, searchValue, false, false);
-					
+					if(nReplica != null) {
+						Map<String, List<NodeInfoData>> nMatchingNodes = nReplica.getMatchingNodes();
+						for(String mbId : nMatchingNodes.keySet()) {
+							if(matchingNodes.containsKey(mbId)) {
+								matchingNodes.get(mbId).addAll(nMatchingNodes.get(mbId));
+							} else {
+								matchingNodes.put(mbId, nMatchingNodes.get(mbId));
+							}
+						}
+					}
 				}
 			}
 		}
-		return replica;
 	}
 
-	private QueryReplica getListFromBuddies(String searchKey, String searchValue) {
-		QueryReplica replica = new QueryReplica();
-		replica.setMatchingNodes(new HashMap<>());
+	private void getMatchListFromBuddies(String searchKey, String searchValue,
+			QueryReplica currentState) {
+		Map<String, List<NodeInfoData>> matchingNodes = currentState.getMatchingNodes();
 		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
 			FogExchangeInfo buddyInfo = entry.getValue();
@@ -1297,22 +1304,30 @@ public class FogServiceHandler implements FogService.Iface {
 					QueryReplica bReplica = fetchDataListFromOtherFog(buddy.getNodeIP(), buddy.getPort(), 
 							searchKey, searchValue, true, false);
 					if (bReplica != null) {
-						
+						Map<String, List<NodeInfoData>> bMatchingNodes = bReplica.getMatchingNodes();
+						for(String mbId : bMatchingNodes.keySet()) {
+							if(matchingNodes.containsKey(mbId)) {
+								matchingNodes.get(mbId).addAll(bMatchingNodes.get(mbId));
+							} else {
+								matchingNodes.put(mbId, bMatchingNodes.get(mbId));
+							}
+						}
 					}
 				}
 			}
 		}
-		return replica;
 	}
 
 	private QueryReplica fetchDataListFromOtherFog(String ip, int port, String searchKey, 
 			String searchValue, boolean checkNeighbors, boolean checkBuddies) {
-		QueryReplica replica = null;
+		QueryReplica replica = new QueryReplica();
+		replica.setMatchingNodes(new HashMap<>());
 		TTransport transport = new TFramedTransport(new TSocket(ip, port));
 		try {
 			transport.open();
 		} catch (TTransportException e) {
 			transport.close();
+			LOGGER.error("Error while connecting to Fog ip : " + ip, e);
 			e.printStackTrace();
 			return replica;
 		}
@@ -1321,6 +1336,7 @@ public class FogServiceHandler implements FogService.Iface {
 		try {
 			replica = fogClient.findUsingQuery(searchKey, searchValue, checkNeighbors, checkBuddies);
 		} catch (TException e) {
+			LOGGER.error("Error while querying data from Fog ip : " + ip, e);
 			e.printStackTrace();
 		} finally {
 			transport.close();
@@ -1668,6 +1684,17 @@ public class FogServiceHandler implements FogService.Iface {
 		checkAndInsertEntry(searchKey, mbMetadata.getMbId());
 		//no need to do for streamId as we have a separate map which provides the 
 		//functionality to get list of microbatches given a streamId i.e. streamMbIdMap
+		
+		//LATEST: To support query using key value pair instead of a microbatchId, either
+		//update the logic for findUsingQuery to check if the field being searched is present
+		//in other local maintained data structures or make a generic method which supports 
+		//every query serviced from here which is what the updated logic is doing now by adding
+		//fields are present elsewhere as well
+		searchKey = Constants.MICROBATCH_METADATA_ID + ":" + mbMetadata.getMbId();
+		checkAndInsertEntry(searchKey, mbMetadata.getMbId());
+		searchKey = Constants.STREAM_METADATA_ID + ":" + mbMetadata.getStreamId();
+		checkAndInsertEntry(searchKey, mbMetadata.getMbId());
+		
 		String properties = mbMetadata.getProperties();
 		if(properties != null) {
 			//assuming properties is a map

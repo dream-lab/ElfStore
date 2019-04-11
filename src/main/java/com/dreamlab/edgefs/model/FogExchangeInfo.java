@@ -12,7 +12,7 @@ import com.dreamlab.edgefs.misc.Constants;
 public class FogExchangeInfo {
 
 	//this will be individual for neighbors and (buddy + its neighbors)
-	//for buddies, taking 128 bit bloom filter
+	//for buddies, taking 160 bit bloom filter
 	private byte[] bloomFilterUpdates = new byte[Constants.BLOOM_FILTER_BYTES];
 	
 	//this is similar to the above structure but the above structure handles 
