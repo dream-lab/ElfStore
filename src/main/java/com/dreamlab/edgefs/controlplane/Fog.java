@@ -56,6 +56,9 @@ public class Fog {
 	//this is for the microbatch search
 	private byte[] personalBloomFilter = new byte[Constants.BLOOM_FILTER_BYTES];
 	
+	//An attempt at fixing issue #25
+	private Map<Short, byte[]> edgeBloomFilters = new HashMap<>();
+	
 	//this is for the stream search
 	private byte[] personalStreamBFilter = new byte[Constants.BLOOM_FILTER_BYTES];
 	
@@ -463,6 +466,14 @@ public class Fog {
 	}
 
 
+	public Map<Short, byte[]> getEdgeBloomFilters() {
+		return edgeBloomFilters;
+	}
+
+	public void setEdgeBloomFilters(Map<Short, byte[]> edgeBloomFilters) {
+		this.edgeBloomFilters = edgeBloomFilters;
+	}
+
 	public byte[] getPersonalStreamBFilter() {
 		return personalStreamBFilter;
 	}
@@ -694,6 +705,7 @@ public class Fog {
 		}
 	}
 	
+	//This will go, only here as it is used for some unit testing
 	public LocalEdgeStats computeLocalInformation() {
 		LocalStatsHandler lHandler = new LocalStatsHandler(localEdgesMap, 
 				coarseGrainedStats, localEdgeMapping, noStorageEdges);
@@ -793,10 +805,29 @@ public class Fog {
 		// should involve computing the local stats so that updated 10 bytes
 		// are sent to the subscribers and buddies
 		if (newUpdates) {
+			//some edge device died, so the bloom filter of the fog should
+			//be updated to reflect the change. Also we should update the 
+			//most recent time of self bloom filter update to send the update
+			//when the timer hits for sending heartbeats
+			updatePersonalBloomFilter();
+			setMostRecentSelfBFUpdate(System.currentTimeMillis());
 			setMostRecentEdgeUpdate(System.currentTimeMillis());
 		}
 	}
 	
+	private void updatePersonalBloomFilter() {
+		byte[] fogBFilter = new byte[Constants.BLOOM_FILTER_BYTES];
+		for(Map.Entry<Short, EdgeInfo> entry : localEdgesMap.entrySet()) {
+			if(entry.getValue().getStatus().equals("A")) {
+				byte[] edgeBFilter = getEdgeBloomFilters().get(entry.getKey());
+				for(int i = 0; i < edgeBFilter.length; i++) {
+					fogBFilter[i] = (byte) (fogBFilter[i] | edgeBFilter[i]);
+				}
+			}
+		}
+		setPersonalBloomFilter(fogBFilter);
+	}
+
 	public void sendHeartbeatBuddies(boolean sendBF, boolean forceSendBF, 
 			boolean sendStats, boolean forceSendStats) {
 		Collection<FogInfo> buddies = buddyMap.values();

@@ -771,6 +771,8 @@ public class FogServiceHandler implements FogService.Iface {
 			edgeInfo.setMissedHeartbeats(0);
 			// we may need to update the status of the EdgeInfo in case
 			// it was D and starts sending heartbeats
+			// there are some issues open regarding how to deal with edge
+			// coming back, need more clarity on those
 			if (edgePayload.isSetEncodedStorage()) {
 				long freeSpace = Constants.interpretByteAsLong(edgePayload.getEncodedStorage());
 				edgeInfo.getStats().setStorage(freeSpace);
@@ -820,11 +822,15 @@ public class FogServiceHandler implements FogService.Iface {
 		fog.setMostRecentEdgeUpdate(System.currentTimeMillis());
 		// add this edge to map containing edge to list of microbatch mapping
 		fog.getEdgeMicrobatchMap().put(nodeId, new ArrayList<>());
+		
+		//as a fix to issue #25, we need to maintain an individual bloom filter for
+		//each edge, so create an entry in the edgeBloomFilters of the Fog while joining
+		fog.getEdgeBloomFilters().put(edgeInfoData.getNodeId(), new byte[Constants.BLOOM_FILTER_BYTES]);
 
 		// please set a consistent value of return values, keep success fixed as 0 or 1
-		return 0;
+		return 1;
 	}
-
+	
 	/**
 	 * unregister the stream ID, this is the call from the edge client which is
 	 * producing the stream
@@ -1598,8 +1604,8 @@ public class FogServiceHandler implements FogService.Iface {
 		//metadata 'key:value' to the microbatchId map
 		updateMetadataMap(mbMetadata, edgeInfo);
 		
-		//update the bloomfilter
-		updatePersonalBloomFilter(mbMetadata);
+		//update the edge bloomfilter as well as fog's personal bloomfilter
+		updateBloomFilters(mbMetadata, edgeInfo);
 		
 		//add the MD5 checksum for the block of data as well
 		//Note:: This call can come from the write() or insertMetadata()
@@ -1649,12 +1655,15 @@ public class FogServiceHandler implements FogService.Iface {
 	//personal bloomfilter is sent to subscribers and also in consolidated
 	//form to neighbors. Its aim is to purely facilitate microbatch searches
 	//based on microbatch metadata (though streamId can also be used)
-	private void updatePersonalBloomFilter(Metadata mbMetadata) {
-		byte[] personalBFilter = fog.getPersonalBloomFilter();
-		BloomFilter.storeEntry(Constants.MICROBATCH_METADATA_ID, mbMetadata.getMbId(), personalBFilter);
-		BloomFilter.storeEntry(Constants.STREAM_METADATA_ID, mbMetadata.getStreamId(), personalBFilter);
-		BloomFilter.storeEntry(Constants.MICROBATCH_METADATA_TIMESTAMP, String.valueOf(
-				mbMetadata.getTimestamp()), personalBFilter);
+	private void updateBloomFilters(Metadata mbMetadata, EdgeInfo edgeInfo) {
+		byte[] fogBFilter = fog.getPersonalBloomFilter();
+		byte[] edgeBFilter = fog.getEdgeBloomFilters().get(edgeInfo.getNodeId());
+		updateFogAndEdgeBloomFilters(Constants.MICROBATCH_METADATA_ID, mbMetadata.getMbId(),
+				fogBFilter, edgeBFilter);
+		updateFogAndEdgeBloomFilters(Constants.STREAM_METADATA_ID, mbMetadata.getStreamId(), 
+				fogBFilter, edgeBFilter);
+		updateFogAndEdgeBloomFilters(Constants.MICROBATCH_METADATA_TIMESTAMP, String.valueOf(
+				mbMetadata.getTimestamp()), fogBFilter, edgeBFilter);
 		String properties = mbMetadata.getProperties();
 		if(properties != null) {
 			//assuming properties is a map
@@ -1670,10 +1679,16 @@ public class FogServiceHandler implements FogService.Iface {
 				String key = entry.getKey();
 				Object value = entry.getValue();
 				if(key != null && value != null) {
-					BloomFilter.storeEntry(key, String.valueOf(value), personalBFilter);
+					updateFogAndEdgeBloomFilters(key, String.valueOf(value), fogBFilter, edgeBFilter);
 				}
 			}
 		}
+	}
+	
+	private void updateFogAndEdgeBloomFilters(String key, String value, 
+			byte[] fogBFilter, byte[] edgeBFilter) {
+		BloomFilter.storeEntry(key, value, fogBFilter);
+		BloomFilter.storeEntry(key, value, edgeBFilter);
 	}
 
 	private void updateMetadataMap(Metadata mbMetadata, EdgeInfo edgeInfo) {
@@ -1869,7 +1884,6 @@ public class FogServiceHandler implements FogService.Iface {
 	 */
 	@Override
 	public byte edgeLeave(EdgeInfoData edgeInfoData) throws TException {
-
 		// an edge leaving should trigger local stats calculation
 		fog.setMostRecentEdgeUpdate(System.currentTimeMillis());
 		return 0;
