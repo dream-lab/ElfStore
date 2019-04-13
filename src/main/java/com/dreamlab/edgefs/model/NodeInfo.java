@@ -1,6 +1,13 @@
 package com.dreamlab.edgefs.model;
 
-public class NodeInfo {
+import java.io.Serializable;
+
+public class NodeInfo implements Serializable {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -65517896953193541L;
 	
 	private String nodeIP;
 	private short nodeID;

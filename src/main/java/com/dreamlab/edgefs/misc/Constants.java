@@ -93,6 +93,8 @@ public final class Constants {
 	//200MB is the limit when we stop writing to an edge
 	public static int DISK_WATERMARK = 200;
 	
+	public static String SERIALIZATION_FILE = "fog.ser";
+	
 	public static long interpretByteAsLong(byte b) {
 		int diskSpace = (int) b;
 

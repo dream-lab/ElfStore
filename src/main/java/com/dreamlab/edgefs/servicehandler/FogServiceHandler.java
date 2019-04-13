@@ -1,6 +1,8 @@
 package com.dreamlab.edgefs.servicehandler;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -1974,6 +1976,26 @@ public class FogServiceHandler implements FogService.Iface {
 			fog.setMostRecentFogStatsUpdate(System.currentTimeMillis());
 		}
 
+	}
+
+	@Override
+	public byte serializeState() throws TException {
+		LOGGER.info("The serialization started at {}", System.currentTimeMillis());
+		FileOutputStream fos = null;
+		ObjectOutputStream oos = null;
+		try {
+			fos = new FileOutputStream(Constants.SERIALIZATION_FILE);
+			oos = new ObjectOutputStream(fos);
+			oos.writeObject(fog);
+			oos.close();
+			fos.close();
+		} catch (IOException ex) {
+			LOGGER.error("Error while serializing state");
+			LOGGER.error("The error is ", ex);
+			return Constants.FAILURE;
+		}
+		LOGGER.info("The serialization completed at {}", System.currentTimeMillis());
+		return Constants.SUCCESS;
 	}
 	
 }

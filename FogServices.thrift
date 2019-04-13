@@ -295,4 +295,6 @@ service FogService {
 	
 	//only returning metadata in this operation
 	ReadReplica getMeta(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
+	
+	byte serializeState();
 }

@@ -1,5 +1,9 @@
 package com.dreamlab.edgefs.controlplane;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -9,8 +13,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -41,15 +43,29 @@ import com.dreamlab.edgefs.thrift.Metadata;
 import com.dreamlab.edgefs.thrift.NeighborPayload;
 import com.dreamlab.edgefs.thrift.StreamMetadata;
 
-public class Fog {
+public class Fog implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5150041291949158338L;
+
+	/**
+	 * This and the other classes participating will be implementing the Serializable
+	 * interface, three types of fields are marked transient. First are those which can
+	 * be reconstructed when the FogServer is restarted. Second are those
+	 * which should be calculated from the beginning of the start of the FogServer such as
+	 * the various fields maintaing the last time an update was sent. Third are those which
+	 * are not currently used such as sessionClientMap
+	 */
+	
 	private static final Logger LOGGER = LoggerFactory.getLogger(FogServer.class);
 	
 	/*************************** Fog Class members *****************************/
 	private FogInfo myFogInfo;
-	private float poolReliability;
-	private int kMin,kMax;
-	private int k;
+	//private float poolReliability;
+	private transient int kMin,kMax;
+	private transient int k;
 	
 	private long edgeDiskWatermark;
 	
@@ -68,12 +84,12 @@ public class Fog {
 	// time of most recent update to my personal bloomfilter
 	// update this whenever a local write happens, also update
 	// mostRecentNeighborBFUpdate as well
-	private long mostRecentSelfBFUpdate = Long.MIN_VALUE;
+	private transient long mostRecentSelfBFUpdate = Long.MIN_VALUE;
 	
 	// this is the last time I sent an update to my subscribers
 	// compare this with my most recent update to personal bloomfilter
 	// and send if needed
-	private long lastpersonalBFSent = Long.MIN_VALUE;
+	private transient long lastpersonalBFSent = Long.MIN_VALUE;
 	
 	
 	//self entry can be placed in this map, this doesn't contain stats
@@ -88,11 +104,11 @@ public class Fog {
 	//update this when a neighbor gives updated information about bloomfilters
 	//include self if there is a change in local bloomfilter as well
 	//(useful for Bbloom)
-	private long mostRecentNeighborBFUpdate = Long.MIN_VALUE;
+	private transient long mostRecentNeighborBFUpdate = Long.MIN_VALUE;
 	
 	//time when last (self + neighbor) bloomfilter was sent
 	//(useful for Bbloom)
-	private long lastNeighborBFSent = Long.MIN_VALUE;
+	private transient long lastNeighborBFSent = Long.MIN_VALUE;
 	
 	
 	/*
@@ -109,13 +125,13 @@ public class Fog {
 	private CoarseGrainedStats coarseGrainedStats = new CoarseGrainedStats();
 	
 	//time of most recent local stats calculation
-	private long lastLocalUpdatedTime = Long.MIN_VALUE;
+	private transient long lastLocalUpdatedTime = Long.MIN_VALUE;
 	
 	//local stats are sent only to subscribers
-	private long lastLocalStatsSent = Long.MIN_VALUE;
+	private transient long lastLocalStatsSent = Long.MIN_VALUE;
 	
 	//update this when an Edge gives updated disk utilization
-	private long mostRecentEdgeUpdate = Long.MIN_VALUE;
+	private transient long mostRecentEdgeUpdate = Long.MIN_VALUE;
 	
 	
 	//information at the level of each Fog
@@ -143,11 +159,11 @@ public class Fog {
 	//include self if there is a change in local stats as well
 	//For self, need to keep the more recent of the neighbor stats and
 	//the lastLocalUpdatedTime (useful for Bstats)
-	private long mostRecentNeighborStatsUpdate = Long.MIN_VALUE;
+	private transient long mostRecentNeighborStatsUpdate = Long.MIN_VALUE;
 
 	//time when last (self + neighbor) stats was sent
 	//(useful for Bstats)
-	private long lastNeighborStatsSent = Long.MIN_VALUE;
+	private transient long lastNeighborStatsSent = Long.MIN_VALUE;
 	
 	
 	//this is our global stats
@@ -159,10 +175,10 @@ public class Fog {
 	//or a buddy. This is to check whether to compute global stats or not
 	//If this time is more recent than the lastGlobalStatsUpdatedTime, we
 	//need to recompute the globalStats
-	private long mostRecentFogStatsUpdate = Long.MIN_VALUE;
+	private transient long mostRecentFogStatsUpdate = Long.MIN_VALUE;
 	
 	// this is set when we last computed the global stats
-	private long lastGlobalStatsUpdatedTime = Long.MIN_VALUE;
+	private transient long lastGlobalStatsUpdatedTime = Long.MIN_VALUE;
 	/****************************************************************************/
 	
 	
@@ -191,12 +207,12 @@ public class Fog {
 	//need to maintain the poolSize so that when this Fog is sending
 	//heartbeats to its neighbors, size of the whole system at any time
 	//can be calculated using similar information from its buddies
-	private short poolSize;
+	private transient short poolSize;
 	//an approximate poolSize can be calculated based on heartbeats from
 	//neighbors and buddies. From neighbors, get their poolsize but all 
 	//pools might not be covered with local neighbors. From the buddies,
 	//get their poolSizeMap to get total picture.
-	private Map<Short, Short> poolSizeMap = new HashMap<>();
+	private transient Map<Short, Short> poolSizeMap = new HashMap<>();
 	
 	/********************************************************************************************/
 	
@@ -213,7 +229,8 @@ public class Fog {
 
 	
 
-
+	//the locks are not used currently, so commenting for now
+/*
 	//this to update most recent Edge update
 	//used to properly update mostRecentEdgeUpdate
 	private final Lock edgeLock = new ReentrantLock();
@@ -228,8 +245,7 @@ public class Fog {
 	//in the next window
 	//used to properly update mostRecentFogStatsUpdate
 	private final Lock globalStatsLock = new ReentrantLock();
-	/**************************************************************************/
-	
+	*/
 	
 	/************************Metadata querying********************************************/
 	/**
@@ -237,10 +253,10 @@ public class Fog {
 	 * remove operation over the map. If yes, replace with the ConcurrentHashMap.
 	 */
 	//This is to maintain a session between Client and a transaction
-	private Map<Short,String> sessionClientMap = new HashMap<Short, String>(); //needs to be cleared out on every timeout
+	private transient Map<Short,String> sessionClientMap = new HashMap<Short, String>(); //needs to be cleared out on every timeout
 	
 	//This is to maintian a previous allocation that I made for a particular write for a session
-	private Map<String, List<NodeInfo>> sessionLocations = new HashMap<String, List<NodeInfo>>();
+	private transient Map<String, List<NodeInfo>> sessionLocations = new HashMap<String, List<NodeInfo>>();
 	
 	//This is used to have a mapping between micro-batchId to the EdgeID
 	private Map<String,Short> mbIDLocationMap = new ConcurrentHashMap<>();
@@ -305,22 +321,6 @@ public class Fog {
 		this.microBatchToStream = microBatchToStream;
 	}
 
-	/** Getters and Setters **/
-//	public Map<String, StreamMetadata> getStreamToStreamMetadata() {
-//		return streamToStreamMetadata;
-//	}
-	
-//	public Map<Short, String> getEdgeIDstreamIDMap() {
-//		return edgeIDstreamIDMap;
-//	}
-//	
-//	public Map<String, Short> getStreamIDEdgeIDMap() {
-//		return streamIDEdgeIDMap;
-//	}
-//
-//	public void setStreamIDEdgeIDMap(Map<String, Short> streamIDEdgeIDMap) {
-//		this.streamIDEdgeIDMap = streamIDEdgeIDMap;
-//	}
 	public Map<StorageReliability, Short> getEdgeDistributionMap() {
 		return edgeDistributionMap;
 	}
@@ -376,15 +376,7 @@ public class Fog {
 	public void setkMin(int kMin) {
 		this.kMin = kMin;
 	}
-
-	public CoarseGrainedStats getCoarseGrainedStats() {
-		return coarseGrainedStats;
-	}
-
-	public void setCoarseGrainedStats(CoarseGrainedStats coarseGrainedStats) {
-		this.coarseGrainedStats = coarseGrainedStats;
-	}
-
+	
 	public int getkMax() {
 		return kMax;
 	}
@@ -400,7 +392,15 @@ public class Fog {
 	public void setK(int size) {
 		this.k = size;
 	}
-	
+
+	public CoarseGrainedStats getCoarseGrainedStats() {
+		return coarseGrainedStats;
+	}
+
+	public void setCoarseGrainedStats(CoarseGrainedStats coarseGrainedStats) {
+		this.coarseGrainedStats = coarseGrainedStats;
+	}
+
 	public void setBuddyPoolId(short argbuddyPoolID) {
 		buddyPoolId = argbuddyPoolID;
 	}
@@ -650,22 +650,6 @@ public class Fog {
 
 	public void setBlockMetadata(Map<String, Metadata> blockMetadata) {
 		this.blockMetadata = blockMetadata;
-	}
-
-	public Lock getEdgeLock() {
-		return edgeLock;
-	}
-
-	public Lock getNeighborStatsLock() {
-		return neighborStatsLock;
-	}
-
-	public Lock getNeighborBloomLock() {
-		return neighborBloomLock;
-	}
-
-	public Lock getGlobalStatsLock() {
-		return globalStatsLock;
 	}
 
 	//called when the thread wakes up after a fixed window to check
@@ -953,6 +937,23 @@ public class Fog {
 				transport.close();
 			}
 		}
+	}
+	
+	public static Fog deserializeInstance() {
+		LOGGER.info("The deserialization started at {}", System.currentTimeMillis());
+		Fog fogInput = null;
+		FileInputStream fis = null;
+		ObjectInputStream ois = null;
+		try {
+			fis = new FileInputStream(Constants.SERIALIZATION_FILE);
+			ois = new ObjectInputStream(fis);
+			fogInput = (Fog) ois.readObject();
+		} catch (IOException | ClassNotFoundException ex) {
+			LOGGER.error("Error while deserializing instance");
+			LOGGER.error("The error is ", ex);
+		}
+		LOGGER.info("The deserialization completed at {}", System.currentTimeMillis());
+		return fogInput;
 	}
 	
 	

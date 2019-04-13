@@ -86,30 +86,40 @@ public class FogServer {
 		short buddyPoolId = Short.parseShort(args[2]);
 		short fogId = Short.parseShort(args[3]);
 		float reliability = Float.parseFloat(args[4]);
+		//this is a new argument added. This can be zero or nonzero
+		//A zero indicates that we are starting fresh and no deserialization is needed
+		//A nonzero means we need to deserialize the Fog state
+		int restoreState = Integer.parseInt(args[5]);
 
 		boolean newFog = false;
-
+		
+		//commenting the part when a Fog want to join a pool
+		//currently serving through a static configuration only
+/*
 		// Assuming when the node wants to join a pool, the argument
 		// for buddyPoolId is not used
-		if (args.length > 5) { /** This means a Fog is trying to join a Pool **/
+		if (args.length > 5) { *//** This means a Fog is trying to join a Pool **//*
 			referrerFogIp = args[5];
 			referrerPort = Integer.parseInt(args[6]);
 			newFog = true;
 		}
-
+*/
 		/** set the kmax to 5 in the constants file **/
-		Fog self = new Fog(fogIp, fogId, serverPort, buddyPoolId, reliability);
-		self.setkMax(Constants.KMAX);
+		FogHolder self = new FogHolder(new Fog(fogIp, fogId, serverPort, buddyPoolId, reliability));
+		self.getFog().setkMax(Constants.KMAX);
+		//set kMin as well if you want to as these fields will be transient
+		//so in case we restart a Fog instance, we won't be able to recover them
+		
 		// set the disk watermark for Edge
 		if (properties.containsKey(Constants.EDGE_DISK_WATERMARK)) {
-			self.setEdgeDiskWatermark(Long.parseLong(properties.getProperty(Constants.EDGE_DISK_WATERMARK)));
+			self.getFog().setEdgeDiskWatermark(Long.parseLong(properties.getProperty(Constants.EDGE_DISK_WATERMARK)));
 		} else {
 			// set some absolute constant as the watermark
-			self.setEdgeDiskWatermark(Constants.CONSTANT_DISK_WATERMARK_EDGE);
+			self.getFog().setEdgeDiskWatermark(Constants.CONSTANT_DISK_WATERMARK_EDGE);
 		}
 
 		try {
-			fogHandler = new FogServiceHandler(self);
+			fogHandler = new FogServiceHandler(self.getFog());
 			eventProcessor = new FogService.Processor(fogHandler);
 
 			Runnable fogRunnable = new Runnable() {
@@ -119,6 +129,15 @@ public class FogServer {
 					bootstrapFog(eventProcessor, serverPort);
 				}
 			};
+			
+			Thread t1 = new Thread(fogRunnable);
+			t1.start();
+			
+			if(restoreState == 0) {
+				populateBuddiesAndNeighborsFromClusterConf(Constants.CONF_PATH, self.getFog());
+			} else {
+				self.setFog(Fog.deserializeInstance());
+			}
 
 			Runnable buddyHeartBeat = new Runnable() {
 
@@ -169,7 +188,7 @@ public class FogServer {
 							e.printStackTrace();
 						}
 						// LOGGER.info("Sending heartbeat to my buddy");
-						self.sendHeartbeatBuddies(bloomFilterSend, forceBFSend, statsSend, forceStatsSend);
+						self.getFog().sendHeartbeatBuddies(bloomFilterSend, forceBFSend, statsSend, forceStatsSend);
 						bloomFilterSend = false;
 						statsSend = false;
 						forceBFSend = false;
@@ -178,24 +197,22 @@ public class FogServer {
 				}
 			};
 
-			Thread t1 = new Thread(fogRunnable);
-			t1.start();
-
 			// When we read the cluster.conf, we start sending subscribe
 			// requests to other nodes. So once binding of a Fog node to
 			// a port is done, wait for few seconds and then start sending
 			// subscribe requests
 
-			if (((referrerFogIp == null) || (referrerFogIp.isEmpty()))) {
+			//again a portion which is related to joining an existing pool, commenting it
+			/*if (((referrerFogIp == null) || (referrerFogIp.isEmpty()))) {
 				populateBuddiesAndNeighborsFromClusterConf(Constants.CONF_PATH, self);
 			} else {
-				/** NodeX is trying to join **/
+				*//** NodeX is trying to join **//*
 				LOGGER.info("New Node joining ");
-			}
-
+			}*/
+			
 			if (newFog) {
 				/** Attempt to join a pool **/
-				String result = requestToJoinBuddyPool(self, referrerFogIp, referrerPort);
+				String result = requestToJoinBuddyPool(self.getFog(), referrerFogIp, referrerPort);
 				LOGGER.info("Joined Pool Successfully " + result);
 			}
 
@@ -250,7 +267,8 @@ public class FogServer {
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
-						self.sendHeartbeatSubscribers(bloomFilterSend, forceBFSend, statsSend, forceStatsSend);
+						self.getFog().sendHeartbeatSubscribers(bloomFilterSend, forceBFSend, 
+								statsSend, forceStatsSend);
 						bloomFilterSend = false;
 						statsSend = false;
 						forceBFSend = false;
@@ -284,8 +302,8 @@ public class FogServer {
 						// missing heartbeats should be updated for the Edge
 						// should we do as part of local stats calculation or
 						// do periodically via another thread
-						self.updateMissingHeartBeats(edgeHeartbeatInterval * 1000, maxMissingHeartbeats);
-						self.localStatsCalculate();
+						self.getFog().updateMissingHeartBeats(edgeHeartbeatInterval * 1000, maxMissingHeartbeats);
+						self.getFog().localStatsCalculate();
 					}
 				}
 			};
@@ -307,7 +325,7 @@ public class FogServer {
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
-						self.globalStatsCalculate();
+						self.getFog().globalStatsCalculate();
 					}
 				}
 			};
@@ -322,7 +340,7 @@ public class FogServer {
 			BlockingQueue<Runnable> queue = new PriorityBlockingQueue<Runnable>();
 			ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 20, 10000, TimeUnit.MILLISECONDS, queue);
 			// CheckerTask checker = new CheckerTask(self, queue, fogHandler);
-			CheckerTask checker = new CheckerTask(self, executor, fogHandler, queue);
+			CheckerTask checker = new CheckerTask(self.getFog(), executor, fogHandler, queue);
 
 			Thread t6 = new Thread(checker);
 			t6.start();

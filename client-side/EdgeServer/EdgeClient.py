@@ -1,5 +1,6 @@
 import sys
-sys.path.append('/edgefs/gen-py')
+#sys.path.append('/edgefs/gen-py')
+sys.path.append('../gen-py')
 import math
 import random
 import time
@@ -758,17 +759,23 @@ class EdgeClient:
 
         return_dict[process_index] = (fogReplicaMap, yetAnotherMap)
 
+    def serializeFogState(self):
+        client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
+        result = client.serializeState()
+        print "the serialization result is " + str(result)
+        self.closeSocket(transport)
+
 
 #MAIN MEthod
 if __name__ == '__main__':
 
     myEdge = EdgeClient()
        
-    if(len(sys.argv)!=14):
+    if(len(sys.argv)!=15):
         print "Usage: python EdgeClient.py 1 127.0.0.1 5000 85 127.0.0.1 9090 "
         print "python EdgeClient.py edge_conf.txt",len(sys.argv)
-        with open('edge_conf.txt','r') as f:
-            print f.read()
+        #with open('edge_conf.txt','r') as f:
+            #print f.read()
         exit(0)
 
     # with open('edge_conf.txt') as data_file:    
@@ -827,6 +834,8 @@ if __name__ == '__main__':
     yetAnotherMap = {}
 
     print "Starting to client/write ...",choice
+    if(choice == 10):
+        myEdge.serializeFogState()
     if(choice==0):        
         myEdge.readFromEdge(microbatchid)
     elif(choice==1):

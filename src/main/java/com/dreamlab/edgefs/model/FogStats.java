@@ -1,9 +1,16 @@
 package com.dreamlab.edgefs.model;
 
+import java.io.Serializable;
+
 import com.dreamlab.edgefs.misc.Constants;
 
-public class FogStats {
+public class FogStats implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7069595468981854614L;
+	
 	private long minStorage;
 	private long medianStorage;
 	private long maxStorage;

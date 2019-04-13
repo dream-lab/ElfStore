@@ -1,5 +1,7 @@
 package com.dreamlab.edgefs.model;
 
+import java.io.Serializable;
+
 import com.dreamlab.edgefs.misc.Constants;
 
 //this class is only to maintain the exchange info
@@ -9,7 +11,12 @@ import com.dreamlab.edgefs.misc.Constants;
 //from all Fogs, so having this info embedded in FogInfo is
 //not correct since this info is only for buddies and neighbors
 //and not for everyone while FogStats is for everyone
-public class FogExchangeInfo {
+public class FogExchangeInfo implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6266651101250244957L;
 
 	//this will be individual for neighbors and (buddy + its neighbors)
 	//for buddies, taking 160 bit bloom filter
@@ -20,19 +27,19 @@ public class FogExchangeInfo {
 	private byte[] streamBFilterUpdates = new byte[Constants.BLOOM_FILTER_BYTES];
 	
 	//time of last heartbeat
-	private long lastHeartBeatTime;
+	private transient long lastHeartBeatTime;
 	//most recent bloomfilter update time
-	private long lastUpdatedBFTime = Long.MIN_VALUE;
+	private transient long lastUpdatedBFTime = Long.MIN_VALUE;
 	//most recent stats update time
-	private long lastUpdatedStatsTime = Long.MIN_VALUE;
+	private transient long lastUpdatedStatsTime = Long.MIN_VALUE;
 	//number of missed heartbeats
-	private int missedHeartbeats;
+	private transient int missedHeartbeats;
 	
 	//bloomfilter updates and heartbeats are from buddies and
 	//neighbors and Fog has info about both of them available,
 	//so maintaining this is not necessary. However FogStats needs
 	//to maintain this for everyone (check the comment there)
-	private NodeInfo nodeInfo;
+	private transient NodeInfo nodeInfo;
 	
 	public FogExchangeInfo() {
 		
