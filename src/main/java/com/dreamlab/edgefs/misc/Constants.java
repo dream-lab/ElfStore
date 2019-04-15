@@ -95,6 +95,8 @@ public final class Constants {
 	
 	public static String SERIALIZATION_FILE = "fog.ser";
 	
+	public static int RECOVERY_QUEUE_SIZE = 100;
+	
 	public static long interpretByteAsLong(byte b) {
 		int diskSpace = (int) b;
 

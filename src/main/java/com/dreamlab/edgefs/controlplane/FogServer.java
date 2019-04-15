@@ -337,8 +337,9 @@ public class FogServer {
 			t5.start();
 
 			// place the to be recovered microbatches in this queue
-			BlockingQueue<Runnable> queue = new PriorityBlockingQueue<Runnable>();
-			ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 20, 10000, TimeUnit.MILLISECONDS, queue);
+			BlockingQueue<Runnable> queue = new PriorityBlockingQueue<Runnable>(Constants.RECOVERY_QUEUE_SIZE);
+			ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 20, 60000, TimeUnit.MILLISECONDS, 
+					queue, new RecoveryRejectedHandler());
 			// CheckerTask checker = new CheckerTask(self, queue, fogHandler);
 			CheckerTask checker = new CheckerTask(self.getFog(), executor, fogHandler, queue);
 
