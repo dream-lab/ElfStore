@@ -1,6 +1,5 @@
 import sys
-#sys.path.append('/edgefs/gen-py')
-sys.path.append('../gen-py')
+sys.path.append('/edgefs/gen-py')
 import math
 import random
 import time
@@ -18,6 +17,7 @@ import collections
 import json
 import multiprocessing
 from pprint import pprint
+import hashlib
 
 ######################################################IGNORE ALL THIS ######################################################
 MAX_REPRESENTABLE_DISK_SPACE = 32
@@ -250,7 +250,7 @@ class EdgeClient:
        
         self.closeSocket(transport)
         timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
-        myLogs = open(BASE_LOG+ '/logs.txt','a')
+        myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
         myLogs.close()
 
@@ -320,7 +320,8 @@ class EdgeClient:
 
 
         timestamp_record_getWrite=  microbatchID  +   ","  +   str(-100) +  ", local, "  + "getWriteLocations ,starttime = " + str(time.time())  + ","
-        result = myClient.getWriteLocations(encodedSpace,metaData,blackListedFogs,edgeInfo) #datalength,
+        #result = myClient.getWriteLocations(encodedSpace,metaData,blackListedFogs,edgeInfo) #datalength,
+        result = myClient.getWriteLocations(encodedSpace,metaData,blackListedFogs,True)
         timestamp_record_getWrite = timestamp_record_getWrite +"endtime = " + str(time.time()) +" , " + str(sizeChoice) + '\n'
 	
 	#we are calculating replicas using getWriteLocations()
@@ -358,7 +359,7 @@ class EdgeClient:
 	yetAnotherMap[microbatchID] = insideDict
 
 
-        #myLogs = open(BASE_LOG+ str(EDGE_ID)+'_logs.txt','a')
+        #myLogs = open(BASE_LOG+ +'logs.txt','a')
         # myLogs.write(timestamp_record1)
         #myLogs.close()
 
@@ -381,7 +382,7 @@ class EdgeClient:
         self.closeSocket(transport)
 
         timestamp_record = timestamp_record +"endtime = " + str(time.time())+" , " + str(sizeChoice) + '\n'
-        myLogs = open(BASE_LOG+ '/logs.txt','a')
+        myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
 	myLogs.write(timestamp_record_getWrite)#write timestamp for getWrite Locations
         myLogs.close()
@@ -439,11 +440,12 @@ class EdgeClient:
             #byte write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData) 
 
 	    #local read -150
-	    timestamp_record_local = microbatchID+","+str(-150)+",local,write req,starttime = "+localTime+","       
+	    timestamp_record_local = microbatchID+","+str(-150)+",local,write req,starttime = "+localTime+","
+       #the response is not a byte anymore, its a WriteResponse
             response = client.write(microbatchID,metaData,data)
 	    timestamp_record_local = timestamp_record_local +"endtime = " + str(time.time())+" , " + str(sizeChoice) + '\n'
 	    
-            print "response from the edge ",response
+            print "response from the edge ",response.status
 
             transport.close()
 
@@ -451,21 +453,30 @@ class EdgeClient:
             client,transport = self.openSocketConnection(nodeInfo.NodeIP,nodeInfo.port,FOG_SERVICE)
 
             #byte insertMetadata(1: Metadata mbMetadata, 2: EdgeInfoData edgeInfoData);
-            edgeInfoData = EdgeInfoData()
-            edgeInfoData.nodeId = EDGE_ID
-            edgeInfoData.nodeIp = EDGE_IP
-            edgeInfoData.port = EDGE_PORT
-            edgeInfoData.reliability = EDGE_RELIABILITY            
-            edgeInfoData.storage = 12 #This value is not useful for computation
+            
+            #this was valid as per previous implementation in which we assumed that a local
+            #write means that the client will be writing to itself. However as per the new
+            #implementation, it is not necessary and a local write means a write that is written
+            #to itself or any other edge managed by the same Fog i.e. a neighbor edge of the client
+            #edgeInfoData = EdgeInfoData()
+            #edgeInfoData.nodeId = EDGE_ID
+            #edgeInfoData.nodeIp = EDGE_IP
+            #edgeInfoData.port = EDGE_PORT
+            #edgeInfoData.reliability = EDGE_RELIABILITY
+            #edgeInfoData.storage = 12 #This value is not useful for computation
 
-
+            #update the metadata with the checksum
+            hash_md5 = hashlib.md5()
+            hash_md5.update(data)
+            metaData.checksum = hash_md5.hexdigest()
+            
 	    #metadata read -50
 	    timeMetadata = microbatchID+","+str(-50)+",local ,metadata req,starttime = "+str(time.time())+","
             response = client.insertMetadata(metaData, edgeInfoData)
 	    timeMetadata = timeMetadata + " endTime = "+str(time.time())+" , " + str(sizeChoice)+'\n'
 
 
-	    myLogs = open(BASE_LOG+ '/logs.txt','a')
+	    myLogs = open(BASE_LOG+ 'logs.txt','a')
 	    myLogs.write(timestamp_record_local)
 	    myLogs.write(timeMetadata)
             myLogs.close()
@@ -479,16 +490,17 @@ class EdgeClient:
             # byte write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
             client,transport = self.openSocketConnection(nodeInfo.NodeIP,nodeInfo.port,FOG_SERVICE)
 
+            #response is now a WriteResponse and not a byte
             response = client.write(metaData, data, writable.preference)
 	
 	
-            print "the response from the fog for write ",response
+            print "the response from the fog for write ",response.status
             self.closeSocket(transport)
 
         timestamp_record = timestamp_record +"endtime = " + str(time.time())+" , " + str(sizeChoice) + '\n'
         print "the time stamp for write request is ",timestamp_record
         
-        myLogs = open(BASE_LOG+ '/logs.txt','a')
+        myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
         myLogs.close()
 
@@ -509,7 +521,7 @@ class EdgeClient:
         response = client.read(microbatchID,True,True,True,edgeInfoData,True)#last bit is for recovery
         timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
 
-        myLogs = open(BASE_LOG+ '/logs.txt','a')
+        myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
         myLogs.close()
 
@@ -600,7 +612,7 @@ class EdgeClient:
 
         response = client.registerStream(streamId,streamPayload)
         timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
-        myLogs = open(BASE_LOG+ '/logs.txt','a')
+        myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
         myLogs.close()
 
@@ -660,7 +672,7 @@ class EdgeClient:
         timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
         print "the time stamp for find request is ",timestamp_record
         
-        myLogs = open(BASE_LOG+'/logs.txt','a')
+        myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
         myLogs.close()
 
@@ -679,8 +691,8 @@ class EdgeClient:
 
                  transport = TSocket.TSocket(edgeInfoData.nodeIp,edgeInfoData.port)
 
-        #         # Buffering is critical. Raw sockets are very slow
-        #         transport = TTransport.TFramedTransport(transport)
+                 # Buffering is critical. Raw sockets are very slow
+                 transport = TTransport.TFramedTransport(transport)
 
                  # Wrap in a protocol
                  protocol = TBinaryProtocol.TBinaryProtocol(transport)
@@ -691,12 +703,12 @@ class EdgeClient:
                  # Connect!
                  transport.open()
                 
-        #         timestamp_record = microbatchId+", 25 , "+ str(findReplica.node.nodeId) + " , Read req,starttime = "+str(time.time())+","
-        #         response = client.read(microbatchId,0) #this is for recovery
-        #         timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
-        #         myLogs = open(BASE_LOG+ "/logs.txt",'a')
-        #         myLogs.write(timestamp_record)
-        #         myLogs.close()
+                 timestamp_record = microbatchId+", 25 , "+ str(findReplica.node.nodeId) + " , Read req,starttime = "+str(time.time())+","
+                 response = client.read(microbatchId,0) #this is for recovery
+                 timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+                 myLogs = open(BASE_LOG+ "logs.txt",'a')
+                 myLogs.write(timestamp_record)
+                 myLogs.close()
                 
                  print "Read status is ",response.status
 
@@ -715,17 +727,17 @@ class EdgeClient:
 
                  client,transport = self.openSocketConnection(fogNode.NodeIP,fogNode.port,FOG_SERVICE)
 
-        #         timestamp_record = microbatchId+", 27 ,"+str(findReplica.node.nodeId)  + ",write req,starttime = "+str(time.time())+","
-        #         response = client.read(microbatchId,0)
-        #         timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
-        #         myLogs = open(BASE_LOG+ "/logs.txt",'a')
-        #         myLogs.write(timestamp_record)
-        #         myLogs.close()
-        #         if(response.status == 1):
-        #             print "Fog Amount of bytes read ",len(response.data)
-        #             return 1 #successful read
-        #         else:
-        #             print "The queried fog does not have data"
+                 timestamp_record = microbatchId+", 27 ,"+str(findReplica.node.nodeId)  + ",write req,starttime = "+str(time.time())+","
+                 response = client.read(microbatchId,0)
+                 timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+                 myLogs = open(BASE_LOG+ "logs.txt",'a')
+                 myLogs.write(timestamp_record)
+                 myLogs.close()
+                 if(response.status == 1):
+                     print "Fog Amount of bytes read ",len(response.data)
+                     return 1 #successful read
+                 else:
+                     print "The queried fog does not have data"
 
                  self.closeSocket(transport)
              else:
@@ -759,23 +771,17 @@ class EdgeClient:
 
         return_dict[process_index] = (fogReplicaMap, yetAnotherMap)
 
-    def serializeFogState(self):
-        client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
-        result = client.serializeState()
-        print "the serialization result is " + str(result)
-        self.closeSocket(transport)
-
 
 #MAIN MEthod
 if __name__ == '__main__':
 
     myEdge = EdgeClient()
        
-    if(len(sys.argv)!=15):
+    if(len(sys.argv)!=14):
         print "Usage: python EdgeClient.py 1 127.0.0.1 5000 85 127.0.0.1 9090 "
         print "python EdgeClient.py edge_conf.txt",len(sys.argv)
-        #with open('edge_conf.txt','r') as f:
-            #print f.read()
+        with open('edge_conf.txt','r') as f:
+            print f.read()
         exit(0)
 
     # with open('edge_conf.txt') as data_file:    
@@ -804,7 +810,6 @@ if __name__ == '__main__':
     START = int(sys.argv[11])
     STREAM_RELIABILITY = int(sys.argv[12])
     FILE_SIZE = int(sys.argv[13])
-    READ_RANGE = int(sys.argv[14])
 
     sizeChoice = 1
 
@@ -834,8 +839,6 @@ if __name__ == '__main__':
     yetAnotherMap = {}
 
     print "Starting to client/write ...",choice
-    if(choice == 10):
-        myEdge.serializeFogState()
     if(choice==0):        
         myEdge.readFromEdge(microbatchid)
     elif(choice==1):
@@ -896,7 +899,7 @@ if __name__ == '__main__':
 	numReads = 0
 	while(numReads<100):
 
-	    sample = random.randint(0,1600*READ_RANGE)
+	    sample = random.randint(0,1599)
 	    print "find and get with the id =>",sample
 	    myEdge.findAndRead(str(sample))
 	    numReads = numReads + 1

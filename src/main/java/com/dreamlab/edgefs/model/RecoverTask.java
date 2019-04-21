@@ -3,6 +3,7 @@ package com.dreamlab.edgefs.model;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -27,6 +28,7 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(RecoverTask.class);
 	
+	private short edgeId;
 	private Integer reliability;
 	private String microbatchId;
 	private FogServiceHandler handler;
@@ -35,11 +37,20 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 		
 	}
 	
-	public RecoverTask(Integer reliability, String microbatchId, FogServiceHandler handler) {
+	public RecoverTask(short edgeId, Integer reliability, String microbatchId, FogServiceHandler handler) {
 		super();
+		this.edgeId = edgeId;
 		this.reliability = reliability;
 		this.microbatchId = microbatchId;
 		this.handler = handler;
+	}
+	
+	public short getEdgeId() {
+		return edgeId;
+	}
+
+	public void setEdgeId(short edgeId) {
+		this.edgeId = edgeId;
 	}
 
 	public Integer getReliability() {
@@ -57,7 +68,7 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 
 	@Override
 	public void run() {
-		Short edgeId = handler.getFog().getMbIDLocationMap().get(microbatchId);
+		Short edgeId = getEdgeId();
 		if(edgeId == null)
 			return;
 		EdgeInfo edgeInfo = handler.getFog().getLocalEdgesMap().get(edgeId);
@@ -104,10 +115,11 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 			//identifyreplicas take MB size of datalength
 			datalength = datalength/(1024 * 1024);
 //			newReplicas = handler.identifyReplicas(datalength, null, (double) (edgeReliability * 1.0) / 100, 1, 2);
-			newReplicas = handler.identifyReplicas(datalength, true, (double) (edgeReliability * 1.0) / 100, 1, 2);
+			newReplicas = handler.identifyReplicas(microBatchId, datalength, true, (double) (edgeReliability * 1.0) / 100, 1, 2);
 		}
 		if (read != null && read.getStatus() == Constants.SUCCESS) {
 			LOGGER.info("Found new replicas for writing");
+			//WRITE_FAILURE:: Write failures are not handled in current implementation
 			for (WritableFogData fogData : newReplicas) {
 				NodeInfoData node = fogData.getNode();
 				TTransport transport = new TFramedTransport(new TSocket(node.getNodeIP(), node.getPort()));
@@ -130,7 +142,7 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 					fogClient.write(read.getMetadata(), buffer, WritePreference.HHH);
 					
 				} catch (TException e) {
-					LOGGER.error("Error while reading data during recovery : " + e);
+					LOGGER.error("Error while writing data during recovery : " + e);
 					e.printStackTrace();
 					continue;
 				} finally {
@@ -144,12 +156,12 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 			
 			//remove the microbatch from the list of microbatches the edge has
 			//fetch edge from MbIdLocation map and remove this microbatchId
-			//Since the microbatchId is removed from the list, make sure to not
+			//Since the microbatchId is removed from the set, make sure to not
 			//use iterator while adding this microbatchId as we are removing here
 			//and adding in Checker (ConcurrentModificationException)
-			List<String> list = handler.getFog().getEdgeMicrobatchMap().get(edgeId);
-			list.remove(microBatchId);
-			if (list.size() == 0) {
+			Set<String> set = handler.getFog().getEdgeMicrobatchMap().get(edgeId);
+			set.remove(microBatchId);
+			if (set.size() == 0) {
 				LOGGER.info("All microbatches recovered for EdgeId: " + edgeId + " at " + System.currentTimeMillis());
 			}
 		}

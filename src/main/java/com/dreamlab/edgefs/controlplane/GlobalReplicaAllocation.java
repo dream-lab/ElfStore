@@ -29,7 +29,6 @@ public class GlobalReplicaAllocation {
 	private List<String> choiceList = new ArrayList<String>();
 	private List<NodeInfo> fogsChosen = new ArrayList<NodeInfo>();
 	private List<Double> reliabilityContribution = new ArrayList<Double>();
-	private List<Integer> buddyPoolId = new ArrayList<Integer>();
 	private int replicaCount = 0;
 	private Map<Short, NodeInfo> fogSet = new ConcurrentHashMap<Short, NodeInfo>();
 	private Map<Short, List<String>> fogChoiceList = new ConcurrentHashMap<Short, List<String>>();
@@ -54,7 +53,9 @@ public class GlobalReplicaAllocation {
 			Map<StorageReliability, List<Short>> storageFogMap, Map<Short, FogStats> fogUpdateMap,
 			double expectedReliability, int minReplica, int maxReplica) {
 
-		LOGGER.info("Min replica is " + minReplica + " max replica is" + maxReplica+ " the expected reliability " + expectedReliability);
+		LOGGER.info("Min replica is " + minReplica + " max replica is" + maxReplica);
+
+		LOGGER.info("the expected reliability " + expectedReliability);
 
 		LOGGER.info("Identify Replicas Function ");
 		LOGGER.info("elfstore the maps are globalStorageMap " + globalStorageMap.toString() + " storage fog map"
@@ -441,7 +442,7 @@ public class GlobalReplicaAllocation {
 
 		while ((achievedReliability < expectedReliability) || ((replicaCount < minReplica))) {
 
-			if (replicaCount >= (maxReplica)) /** This is an important decision **/
+			if (replicaCount >= (maxReplica))
 				break;
 
 			LOGGER.info("in the tank");
@@ -480,12 +481,12 @@ public class GlobalReplicaAllocation {
 
 						if (fogIdRandomIndex.contains(fogId) == false && fogSet
 								.containsKey(fogId) == false) { /** So that we don't choose a fog already chosen **/
-							
+
 							LOGGER.info("choice test Fog is " + fogId);
 							breakLoop++;
 							fogIdRandomIndex.add(fogId); /** To make sure this value is not used again **/
 
-							if (fogUpdateMap.containsKey(fogId) == false || (buddyPoolId.contains((int) fogSet.get(fogId).getBuddyPoolId()))) /** This is important **/
+							if (fogUpdateMap.containsKey(fogId) == false)
 								continue;
 
 							FogStats fStat = fogUpdateMap.get(fogId);
@@ -506,10 +507,8 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("HHL");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made HHL" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
-									LOGGER.info("Achieved reliability is " + achievedReliability);
+									LOGGER.info("Choice made HHL" + fStat.toString());
 								}
 								break;
 
@@ -527,10 +526,8 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("HHH");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made HHH" + fStat.toString()+ "from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
-									LOGGER.info("Achieved reliability is " + achievedReliability);
+									LOGGER.info("Choice made HHH" + fStat.toString());
 								}
 								break;
 
@@ -571,8 +568,7 @@ public class GlobalReplicaAllocation {
 
 							breakLoop++;
 							fogIdRandomIndex.add(fogId);
-							
-							if (fogUpdateMap.containsKey(fogId) == false || (buddyPoolId.contains((int) fogSet.get(fogId).getBuddyPoolId()))) /** This is important **/
+							if (fogUpdateMap.containsKey(fogId) == false)
 								continue;
 
 							FogStats fStat = fogUpdateMap.get(fogId);
@@ -591,11 +587,8 @@ public class GlobalReplicaAllocation {
 									fogList.add(fStat.getNodeInfo());
 									fogSet.put(fogId, fStat.getNodeInfo()); /**/
 									choiceList.add("HHL");
-									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made HHL" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
-									LOGGER.info("Achieved reliability is " + achievedReliability);
+									LOGGER.info("Choice made HHL" + fStat.toString());
 								}
 								break;
 
@@ -613,10 +606,8 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());/**/
 									choiceList.add("HHH");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made HHH" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
-									LOGGER.info("Achieved reliability is " + achievedReliability);
+									LOGGER.info("Choice made HHH" + fStat.toString());
 								}
 								break;
 
@@ -690,8 +681,7 @@ public class GlobalReplicaAllocation {
 
 							fogIdRandomIndex.add(fogId);
 							breakLoop++;
-							
-							if (fogUpdateMap.containsKey(fogId) == false || (buddyPoolId.contains((int) fogSet.get(fogId).getBuddyPoolId()))) /** This is important **/
+							if (fogUpdateMap.containsKey(fogId) == false)
 								continue;
 							FogStats fStat = fogUpdateMap.get(fogId);
 
@@ -715,9 +705,8 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("HLH");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made HLH" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
+									LOGGER.info("Choice made HLH" + fStat.toString());
 									LOGGER.info("Achieved reliability is " + achievedReliability);
 								}
 								break;
@@ -736,9 +725,8 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("HLL");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made HLL" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
+									LOGGER.info("Choice made HLL" + fStat.toString());
 									LOGGER.info("Achieved reliability is " + achievedReliability);
 								}
 								break;
@@ -782,7 +770,7 @@ public class GlobalReplicaAllocation {
 								fogId) == false) {/** So that we don't choose a Fog already chosen before **/
 
 							breakLoop++;
-							if (fogUpdateMap.containsKey(fogId) == false || (buddyPoolId.contains((int) fogSet.get(fogId).getBuddyPoolId()))) /** This is important **/
+							if (fogUpdateMap.containsKey(fogId) == false)
 								continue;
 
 							FogStats fStat = fogUpdateMap.get(fogId);
@@ -809,9 +797,8 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("HLH");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made HLH" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
+									LOGGER.info("Choice made HLH" + fStat.toString());
 									LOGGER.info("Achieved reliability is " + achievedReliability);
 								}
 								break;
@@ -831,9 +818,8 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("HLL");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made HLL" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
+									LOGGER.info("Choice made HLL" + fStat.toString());
 									LOGGER.info("Achieved reliability is " + achievedReliability);
 								}
 								break;
@@ -945,7 +931,7 @@ public class GlobalReplicaAllocation {
 							breakLoop++;
 							fogIdRandomIndex.add(fogId); /** To make sure this value is not used again **/
 
-							if (fogUpdateMap.containsKey(fogId) == false || (buddyPoolId.contains((int) fogSet.get(fogId).getBuddyPoolId()))) /** This is important **/
+							if (fogUpdateMap.containsKey(fogId) == false)
 								continue;
 
 							FogStats fStat = fogUpdateMap.get(fogId);
@@ -966,10 +952,8 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("LHL");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made LHL" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
-									LOGGER.info("Achieved reliability is " + achievedReliability);
+									LOGGER.info("Choice made LHL" + fStat.toString());
 								}
 								break;
 
@@ -987,10 +971,8 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("LHH");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made LHH" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
-									LOGGER.info("Achieved reliability is " + achievedReliability);
+									LOGGER.info("Choice made LHH" + fStat.toString());
 								}
 								break;
 
@@ -1031,7 +1013,7 @@ public class GlobalReplicaAllocation {
 
 							breakLoop++;
 							fogIdRandomIndex.add(fogId);
-							if (fogUpdateMap.containsKey(fogId) == false || (buddyPoolId.contains((int) fogSet.get(fogId).getBuddyPoolId()))) /** This is important **/
+							if (fogUpdateMap.containsKey(fogId) == false)
 								continue;
 
 							FogStats fStat = fogUpdateMap.get(fogId);
@@ -1050,11 +1032,8 @@ public class GlobalReplicaAllocation {
 									fogList.add(fStat.getNodeInfo());
 									fogSet.put(fogId, fStat.getNodeInfo()); /**/
 									choiceList.add("LHL");
-									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made HHL" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
-									LOGGER.info("Achieved reliability is " + achievedReliability);
+									LOGGER.info("Choice made HHL" + fStat.toString());
 								}
 								break;
 
@@ -1072,10 +1051,8 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());/**/
 									choiceList.add("LHH");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made LHH" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
-									LOGGER.info("Achieved reliability is " + achievedReliability);
+									LOGGER.info("Choice made LHH" + fStat.toString());
 								}
 								break;
 
@@ -1149,7 +1126,7 @@ public class GlobalReplicaAllocation {
 
 							fogIdRandomIndex.add(fogId);
 							breakLoop++;
-							if (fogUpdateMap.containsKey(fogId) == false || (buddyPoolId.contains((int) fogSet.get(fogId).getBuddyPoolId()))) /** This is important **/
+							if (fogUpdateMap.containsKey(fogId) == false)
 								continue;
 							FogStats fStat = fogUpdateMap.get(fogId);
 
@@ -1173,9 +1150,8 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("LLH");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made LLH" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());									
+									LOGGER.info("Choice made LLH" + fStat.toString());
 									LOGGER.info("Achieved reliability is " + achievedReliability);
 								}
 								break;
@@ -1194,10 +1170,9 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("LLL");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made LLL" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
-									LOGGER.info("Achieved reliability is " + achievedReliability);									
+									LOGGER.info("Choice made LLL" + fStat.toString());
+									LOGGER.info("Achieved reliability is " + achievedReliability);
 								}
 								break;
 
@@ -1240,7 +1215,7 @@ public class GlobalReplicaAllocation {
 								fogId) == false) {/** So that we don't choose a Fog already chosen before **/
 
 							breakLoop++;
-							if (fogUpdateMap.containsKey(fogId) == false || (buddyPoolId.contains((int) fogSet.get(fogId).getBuddyPoolId()))) /** This is important **/
+							if (fogUpdateMap.containsKey(fogId) == false)
 								continue;
 
 							FogStats fStat = fogUpdateMap.get(fogId);
@@ -1267,10 +1242,9 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("LLH");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made LLH" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
-									LOGGER.info("Achieved reliability is " + achievedReliability);									
+									LOGGER.info("Choice made LLH" + fStat.toString());
+									LOGGER.info("Achieved reliability is " + achievedReliability);
 								}
 								break;
 
@@ -1289,10 +1263,9 @@ public class GlobalReplicaAllocation {
 									fogSet.put(fogId, fStat.getNodeInfo());
 									choiceList.add("LLL");
 									fogsChosen.add(fStat.getNodeInfo());
-									buddyPoolId.add((int) fogSet.get(fogId).getBuddyPoolId());
 									reliabilityContribution.add(reliability);
-									LOGGER.info("Choice made LLL" + fStat.toString()+ " from buddy pool "+fogSet.get(fogId).getBuddyPoolId());
-									LOGGER.info("Achieved reliability is " + achievedReliability);									
+									LOGGER.info("Choice made LLL" + fStat.toString());
+									LOGGER.info("Achieved reliability is " + achievedReliability);
 								}
 								break;
 

@@ -1,7 +1,9 @@
 package com.dreamlab.edgefs.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -48,14 +50,16 @@ public class CheckerTask implements Runnable {
 				//or check for "D" (Dead edge where microbatch recovery not started yet)
 				if (edgeInfo != null && edgeInfo.getStatus().equals("D")) {
 					LOGGER.info("Found a dead edge");
-					List<String> mbList = fog.getEdgeMicrobatchMap().get(entry.getKey());
+					List<String> mbList = new ArrayList<>();
+					mbList.addAll(fog.getEdgeMicrobatchMap().get(entry.getKey()));
 					if (mbList != null) {
 						LOGGER.info("Dead EdgeId: " + edgeInfo.getNodeId() + " had " + mbList.size()
 								+ " microbatches, adding to executor queue at :" + System.currentTimeMillis());
 						int size = mbList.size();
 						for (int i = 0; i < size; i++) {
 							executor.execute(
-									new RecoverTask(edgeInfo.getStats().getReliability(), mbList.get(i), handler));
+									new RecoverTask(entry.getKey(), edgeInfo.getStats().getReliability(), 
+											mbList.get(i), handler));
 						}
 					}
 					//once all microbatches of the dead edge are added to the executor queue

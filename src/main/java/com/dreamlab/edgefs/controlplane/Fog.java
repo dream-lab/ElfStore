@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -259,14 +260,28 @@ public class Fog implements Serializable {
 	private transient Map<String, List<NodeInfo>> sessionLocations = new HashMap<String, List<NodeInfo>>();
 	
 	//This is used to have a mapping between micro-batchId to the EdgeID
-	private Map<String,Short> mbIDLocationMap = new ConcurrentHashMap<>();
+	//private Map<String,Short> mbIDLocationMap = new ConcurrentHashMap<>();
+	
+	//IMPORTANT::it might happen that same microbatchId maybe present on multiple edges
+	//of a single Fog, then it will create a lot of trouble since we need to
+	//make sure that we are not writing the same microbatch to the same edge
+	//as writes are concurrent and also while recovery, we should not write 
+	//the microbatch to an edge already having a replica of it
+	
+	//IMPL_NOTE::the issue with keeping a set of shorts is it can throw ConcurrentModificationException
+	//as we are updating as well as iterating at the same time. However updates are done
+	//at data writes and iterations during reads and these two are separate in time but 
+	//still for keeping the separation clean, resorting to a map with implementation
+	//a ConcurrentHashMap. Java doesn't have a ConcurrentHashSet and such a feature in
+	//use is anyways backed by a ConcurrentHashMap
+	private Map<String,Map<Short,Byte>> mbIDLocationMap = new ConcurrentHashMap<>();
 	
 	//the stream level metadata is stored but not used for searching. This is stored
 	//when the stream is first registered
 	private Map<String, StreamMetadata> streamMetadata = new ConcurrentHashMap<>();
 	
 	//This is used to have a mapping between StreamID and a set of Microbatches
-	private Map<String, List<String>> streamMbIdMap =  new ConcurrentHashMap<>();
+	private Map<String, Set<String>> streamMbIdMap =  new ConcurrentHashMap<>();
 	
 	//This is used to have a mapping between metadata values and micro batches
 	//Sumit:The microbatch metadata containing key value pairs
@@ -281,12 +296,26 @@ public class Fog implements Serializable {
 	//for recovery when an edge device dies and the Fog on learning this needs to start
 	//the recovery thereby becoming a client in the process to get the lost data from 
 	//other replicas
-	private Map<Short, List<String>> edgeMicrobatchMap = new ConcurrentHashMap<>();
+	private Map<Short, Set<String>> edgeMicrobatchMap = new ConcurrentHashMap<>();
 	
 	private Map<String, String> microBatchToStream = new ConcurrentHashMap<>();
 	
 	private Map<String, Metadata> blockMetadata = new ConcurrentHashMap<>();
 	
+	//CONCURRENT WRITES::during replica identification phase, we first fetch a local edge
+	//to the contacted Fog and then move to our algorithm similar to a finite state machine
+	//to pick next devices (Fog) to write to. During FSM phase, we pick a Fog only once but 
+	//there is a possibility of getting a local edge and then the same Fog in the FSM phase
+	//so we need to make sure that during a remote write case, a different edge is picked.
+	//During recovery, this case is less likely to happen since we can then use mbIDLocationMap
+	//to not pick duplicate edges but during writing this can happen as client is making
+	//parallel writes and we need to make sure that a microbatch is strictly replicated on
+	//different edges. So during replica identification, for the local edge case, we insert
+	//the microbatchId in the set and check it during the remote write to make sure the replica
+	//identified by Fog for writing is different from the one picked earlier. Also when the
+	//insertMetadata request comes for the local edge write, we remove this microbatchId from
+	//the set since mbIDLocationMap can do the job now in case of recovery
+	private transient Map<String, Short> localEdgeWritesInProgress = new ConcurrentHashMap<>();
 	
 	/****************************************************************************/
 	
@@ -333,19 +362,27 @@ public class Fog implements Serializable {
 		this.storageFogMap = storageFogMap;
 	}
 
-	public Map<String, Short> getMbIDLocationMap() {
+	/*public Map<String, Short> getMbIDLocationMap() {
 		return mbIDLocationMap;
 	}
 
 	public void setMbIDLocationMap(Map<String, Short> mbIDLocationMap) {
 		this.mbIDLocationMap = mbIDLocationMap;
+	}*/
+	
+	public Map<String, Map<Short, Byte>> getMbIDLocationMap() {
+		return mbIDLocationMap;
 	}
 
-	public Map<String, List<String>> getStreamMbIdMap() {
+	public void setMbIDLocationMap(Map<String, Map<Short, Byte>> mbIDLocationMap) {
+		this.mbIDLocationMap = mbIDLocationMap;
+	}
+
+	public Map<String, Set<String>> getStreamMbIdMap() {
 		return streamMbIdMap;
 	}
 
-	public void setStreamMbIdMap(HashMap<String, List<String>> streamMbIdMap) {
+	public void setStreamMbIdMap(Map<String, Set<String>> streamMbIdMap) {
 		this.streamMbIdMap = streamMbIdMap;
 	}
 
@@ -628,11 +665,11 @@ public class Fog implements Serializable {
 		this.streamMetadata = streamMetadata;
 	}
 
-	public Map<Short, List<String>> getEdgeMicrobatchMap() {
+	public Map<Short, Set<String>> getEdgeMicrobatchMap() {
 		return edgeMicrobatchMap;
 	}
 
-	public void setEdgeMicrobatchMap(Map<Short, List<String>> edgeMicrobatchMap) {
+	public void setEdgeMicrobatchMap(Map<Short, Set<String>> edgeMicrobatchMap) {
 		this.edgeMicrobatchMap = edgeMicrobatchMap;
 	}
 
@@ -651,7 +688,15 @@ public class Fog implements Serializable {
 	public void setBlockMetadata(Map<String, Metadata> blockMetadata) {
 		this.blockMetadata = blockMetadata;
 	}
+	
+	public Map<String, Short> getLocalEdgeWritesInProgress() {
+		return localEdgeWritesInProgress;
+	}
 
+	public void setLocalEdgeWritesInProgress(Map<String, Short> localEdgeWritesInProgress) {
+		this.localEdgeWritesInProgress = localEdgeWritesInProgress;
+	}
+	
 	//called when the thread wakes up after a fixed window to check
 	//any recent updates in this window
 	public void localStatsCalculate() {
@@ -955,6 +1000,5 @@ public class Fog implements Serializable {
 		LOGGER.info("The deserialization completed at {}", System.currentTimeMillis());
 		return fogInput;
 	}
-	
-	
+
 }
