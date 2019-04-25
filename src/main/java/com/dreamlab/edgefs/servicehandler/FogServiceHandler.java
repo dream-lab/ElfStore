@@ -1518,22 +1518,108 @@ public class FogServiceHandler implements FogService.Iface {
 	public StreamMetadataInfo getStreamMetadata(String streamId, boolean checkNeighbors, boolean checkBuddies)
 			throws TException {
 
-		StreamMetadataInfo metadata = null;
-		if (fog.getStreamMetadata().containsKey(streamId))
-			return fog.getStreamMetadata().get(streamId);
+		StreamMetadataInfo metadataInfo = null;
+		if (fog.getStreamMetadata().containsKey(streamId)) {
+			StreamMetadataInfo streamMetadataInfo = fog.getStreamMetadata().get(streamId);
+			if (!streamMetadataInfo.isCached()) {
+				// this node is the owner of the stream
+				return streamMetadataInfo;
+			} else {
+				// cache validation time is set in seconds in the property file
+				if (System.currentTimeMillis()
+						- streamMetadataInfo.getCacheTime() > fog.getStreamMetaCacheInvalidation() * 1000) {
+					NodeInfoPrimary ownerInfo = streamMetadataInfo.getStreamMetadata().getOwner().getValue();
+					StreamMetadata metadata = fetchMetadataFromOwner(streamId, ownerInfo.getNodeIP(),
+							ownerInfo.getPort());
+					streamMetadataInfo.setStreamMetadata(metadata);
+					streamMetadataInfo.setCacheTime(System.currentTimeMillis());
+					fog.getStreamMetadata().put(streamId, streamMetadataInfo);
+					return streamMetadataInfo;
+				} else {
+					return fog.getStreamMetadata().get(streamId);
+				}
+			}
+		}
 		if (checkNeighbors) {
-			metadata = getStreamFromNeighbors(Constants.STREAM_METADATA_ID, streamId);
-			if(metadata != null)
-				return metadata;
+			metadataInfo = getStreamFromNeighbors(Constants.STREAM_METADATA_ID, streamId);
+			if (metadataInfo != null) {
+				// currently if the node doesn't have the metadata, it will get it from
+				// its neighbors or its buddies. In case none of them is the owner, then
+				// a call is made to the owner to return the latest metadata which is cached
+				if (!metadataInfo.isCached()) {
+					// it means this metadata is fetched directly from the owner
+					// setting it in the local Fog's map by marking it as cached
+					metadataInfo.setCached(true);
+					metadataInfo.setCacheTime(System.currentTimeMillis());
+					fog.getStreamMetadata().put(streamId, metadataInfo);
+				} else {
+					// this metadata is fetched from another node's cached copy
+					// get latest from the owner itself
+					NodeInfoPrimary ownerFog = metadataInfo.getStreamMetadata().getOwner().getValue();
+					StreamMetadata metadata = fetchMetadataFromOwner(streamId, ownerFog.getNodeIP(),
+							ownerFog.getPort());
+					metadataInfo = new StreamMetadataInfo();
+					metadataInfo.setStreamMetadata(metadata);
+					metadataInfo.setCached(true);
+					metadataInfo.setCacheTime(System.currentTimeMillis());
+					fog.getStreamMetadata().put(streamId, metadataInfo);
+				}
+				return metadataInfo;
+			}
 		}
 
 		if (checkBuddies) {
-			metadata = getStreamFromBuddies(Constants.STREAM_METADATA_ID, streamId);
-			if(metadata != null)
-				return metadata;
+			metadataInfo = getStreamFromBuddies(Constants.STREAM_METADATA_ID, streamId);
+			if (metadataInfo != null) {
+				if (!metadataInfo.isCached()) {
+					// it means this metadata is fetched directly from the owner
+					// setting it in the local Fog's map by marking it as cached
+					metadataInfo.setCached(true);
+					metadataInfo.setCacheTime(System.currentTimeMillis());
+					fog.getStreamMetadata().put(streamId, metadataInfo);
+				} else {
+					// this metadata is fetched from another node's cached copy
+					// get latest from the owner itself
+					NodeInfoPrimary ownerFog = metadataInfo.getStreamMetadata().getOwner().getValue();
+					StreamMetadata metadata = fetchMetadataFromOwner(streamId, ownerFog.getNodeIP(),
+							ownerFog.getPort());
+					metadataInfo = new StreamMetadataInfo();
+					metadataInfo.setStreamMetadata(metadata);
+					metadataInfo.setCached(true);
+					metadataInfo.setCacheTime(System.currentTimeMillis());
+					fog.getStreamMetadata().put(streamId, metadataInfo);
+				}
+			}
 		}
 
+		return metadataInfo;
+	}
+	
+	private StreamMetadata fetchMetadataFromOwner(String streamId, String nodeIP, int port) {
+		TTransport transport = new TFramedTransport(new TSocket(nodeIP, port));
+		StreamMetadata metadata = null;
+		try {
+			transport.open();
+		} catch (TTransportException e) {
+			transport.close();
+			e.printStackTrace();
+			return metadata;
+		}
+		TProtocol protocol = new TBinaryProtocol(transport);
+		FogService.Client fogClient = new FogService.Client(protocol);
+		try {
+			metadata = fogClient.getStreamMetadataFromOwner(streamId);
+		} catch (TException e) {
+			e.printStackTrace();
+		} finally {
+			transport.close();
+		}
 		return metadata;
+	}
+
+	@Override
+	public StreamMetadata getStreamMetadataFromOwner(String streamId) throws TException {
+		return fog.getStreamMetadata().get(streamId).getStreamMetadata();
 	}
 
 	private StreamMetadataInfo getStreamFromNeighbors(String searchKey, String searchValue) {
@@ -2136,5 +2222,5 @@ public class FogServiceHandler implements FogService.Iface {
 		LOGGER.info("The serialization completed at {}", System.currentTimeMillis());
 		return Constants.SUCCESS;
 	}
-	
+
 }

@@ -246,6 +246,8 @@ struct StreamMetadata {
 struct StreamMetadataInfo {
 	1: required StreamMetadata streamMetadata;
 	2: required bool cached;
+	//assuming this time is the local time at the Fog when the metadata
+	//was cached at the Fog
 	3: optional i64 cacheTime;
 }
 
@@ -354,6 +356,8 @@ service FogService {
 
 	//StreamMetadata getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
 	StreamMetadataInfo getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
+	
+	StreamMetadata getStreamMetadataFromOwner(1:string streamId);
 	
 	//Returns a list of Fog Locations
 	//list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 
