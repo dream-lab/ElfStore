@@ -355,7 +355,8 @@ service FogService {
 	string intentToWrite(1: byte clientId);
 
 	//StreamMetadata getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
-	StreamMetadataInfo getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
+	StreamMetadataInfo getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies,
+											4:bool forceLatest);
 	
 	StreamMetadata getStreamMetadataFromOwner(1:string streamId);
 	

@@ -1488,7 +1488,7 @@ public class FogServiceHandler implements FogService.Iface {
 		LOGGER.info("Fetching the locations for write operation for microbatchId : " + metadata.getMbId());
 		LOGGER.info("MicrobatchId : " + metadata.getMbId() + ", getWriteLocations, startTime=" +
 		System.currentTimeMillis());
-		StreamMetadataInfo strMetadata = getStreamMetadata(metadata.getStreamId(), true, true);
+		StreamMetadataInfo strMetadata = getStreamMetadata(metadata.getStreamId(), true, true, false);
 		if(strMetadata == null) {
 			LOGGER.info("Unable to locate the stream metadata for streamId : " + metadata.getStreamId());
 			return null;
@@ -1515,8 +1515,8 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 	
 	@Override
-	public StreamMetadataInfo getStreamMetadata(String streamId, boolean checkNeighbors, boolean checkBuddies)
-			throws TException {
+	public StreamMetadataInfo getStreamMetadata(String streamId, boolean checkNeighbors, boolean checkBuddies,
+			boolean forceLatest) throws TException {
 
 		StreamMetadataInfo metadataInfo = null;
 		if (fog.getStreamMetadata().containsKey(streamId)) {
@@ -1526,22 +1526,29 @@ public class FogServiceHandler implements FogService.Iface {
 				return streamMetadataInfo;
 			} else {
 				// cache validation time is set in seconds in the property file
-				if (System.currentTimeMillis()
-						- streamMetadataInfo.getCacheTime() > fog.getStreamMetaCacheInvalidation() * 1000) {
+				if ((System.currentTimeMillis()
+						- streamMetadataInfo.getCacheTime() > fog.getStreamMetaCacheInvalidation() * 1000)
+						|| forceLatest) {
 					NodeInfoPrimary ownerInfo = streamMetadataInfo.getStreamMetadata().getOwner().getValue();
 					StreamMetadata metadata = fetchMetadataFromOwner(streamId, ownerInfo.getNodeIP(),
 							ownerInfo.getPort());
-					streamMetadataInfo.setStreamMetadata(metadata);
-					streamMetadataInfo.setCacheTime(System.currentTimeMillis());
-					fog.getStreamMetadata().put(streamId, streamMetadataInfo);
-					return streamMetadataInfo;
+					if (metadata != null) {
+						streamMetadataInfo.setStreamMetadata(metadata);
+						streamMetadataInfo.setCacheTime(System.currentTimeMillis());
+						fog.getStreamMetadata().put(streamId, streamMetadataInfo);
+						return streamMetadataInfo;
+					}
 				} else {
 					return fog.getStreamMetadata().get(streamId);
 				}
 			}
 		}
 		if (checkNeighbors) {
-			metadataInfo = getStreamFromNeighbors(Constants.STREAM_METADATA_ID, streamId);
+			// no need to force the neighbor or buddy to get the latest stream metadata
+			// if this node wants the latest metadata, it should get the latest one by
+			// knowing the owner from its neighbor or buddy and then fetching the latest
+			// metadata from the owner
+			metadataInfo = getStreamFromNeighbors(Constants.STREAM_METADATA_ID, streamId, false);
 			if (metadataInfo != null) {
 				// currently if the node doesn't have the metadata, it will get it from
 				// its neighbors or its buddies. In case none of them is the owner, then
@@ -1554,7 +1561,9 @@ public class FogServiceHandler implements FogService.Iface {
 					fog.getStreamMetadata().put(streamId, metadataInfo);
 				} else {
 					// this metadata is fetched from another node's cached copy
-					// get latest from the owner itself
+					// get latest from the owner itself, the behavious as of this
+					// implementation is to force to get the latest version but this
+					// can be relaxed
 					NodeInfoPrimary ownerFog = metadataInfo.getStreamMetadata().getOwner().getValue();
 					StreamMetadata metadata = fetchMetadataFromOwner(streamId, ownerFog.getNodeIP(),
 							ownerFog.getPort());
@@ -1569,7 +1578,7 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 
 		if (checkBuddies) {
-			metadataInfo = getStreamFromBuddies(Constants.STREAM_METADATA_ID, streamId);
+			metadataInfo = getStreamFromBuddies(Constants.STREAM_METADATA_ID, streamId, false);
 			if (metadataInfo != null) {
 				if (!metadataInfo.isCached()) {
 					// it means this metadata is fetched directly from the owner
@@ -1622,7 +1631,7 @@ public class FogServiceHandler implements FogService.Iface {
 		return fog.getStreamMetadata().get(streamId).getStreamMetadata();
 	}
 
-	private StreamMetadataInfo getStreamFromNeighbors(String searchKey, String searchValue) {
+	private StreamMetadataInfo getStreamFromNeighbors(String searchKey, String searchValue, boolean fetchLatest) {
 		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
 			FogExchangeInfo nInfo = entry.getValue();
@@ -1632,7 +1641,7 @@ public class FogServiceHandler implements FogService.Iface {
 					// match with BloomFilter, now contact the node to see if data present or not
 					NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
 					StreamMetadataInfo metadata = fetchStreamFromOtherFog(neighbor.getNode().getNodeIP(),
-							neighbor.getNode().getPort(), searchKey, searchValue, false, false);
+							neighbor.getNode().getPort(), searchKey, searchValue, false, false, fetchLatest);
 					if (metadata != null)
 						return metadata;
 				}
@@ -1641,7 +1650,7 @@ public class FogServiceHandler implements FogService.Iface {
 		return null;
 	}
 
-	private StreamMetadataInfo getStreamFromBuddies(String searchKey, String searchValue) {
+	private StreamMetadataInfo getStreamFromBuddies(String searchKey, String searchValue, boolean fetchLatest) {
 		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
 			FogExchangeInfo buddyInfo = entry.getValue();
@@ -1651,7 +1660,7 @@ public class FogServiceHandler implements FogService.Iface {
 					// match with BloomFilter, now contact the node to see if data present or not
 					FogInfo buddy = fog.getBuddyMap().get(entry.getKey());
 					StreamMetadataInfo metadata = fetchStreamFromOtherFog(buddy.getNodeIP(), buddy.getPort(), 
-							searchKey, searchValue, true, false);
+							searchKey, searchValue, true, false, fetchLatest);
 					if (metadata != null) {
 						return metadata;
 					}
@@ -1662,7 +1671,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 	
 	private StreamMetadataInfo fetchStreamFromOtherFog(String nodeIP, int port, String searchKey,
-			String searchValue, boolean checkNeighbors, boolean checkBuddies) {
+			String searchValue, boolean checkNeighbors, boolean checkBuddies, boolean fetchLatest) {
 		StreamMetadataInfo metadata = null;
 		TTransport transport = new TFramedTransport(new TSocket(nodeIP, port));
 		try {
@@ -1675,7 +1684,7 @@ public class FogServiceHandler implements FogService.Iface {
 		TProtocol protocol = new TBinaryProtocol(transport);
 		FogService.Client fogClient = new FogService.Client(protocol);
 		try {
-			metadata = fogClient.getStreamMetadata(searchValue, checkNeighbors, checkBuddies);
+			metadata = fogClient.getStreamMetadata(searchValue, checkNeighbors, checkBuddies, fetchLatest);
 		} catch (TException e) {
 			e.printStackTrace();
 		} finally {

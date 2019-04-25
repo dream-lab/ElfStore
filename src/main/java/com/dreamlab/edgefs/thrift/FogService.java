@@ -52,7 +52,7 @@ public class FogService {
 
     public java.lang.String intentToWrite(byte clientId) throws org.apache.thrift.TException;
 
-    public StreamMetadataInfo getStreamMetadata(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies) throws org.apache.thrift.TException;
+    public StreamMetadataInfo getStreamMetadata(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies, boolean forceLatest) throws org.apache.thrift.TException;
 
     public StreamMetadata getStreamMetadataFromOwner(java.lang.String streamId) throws org.apache.thrift.TException;
 
@@ -120,7 +120,7 @@ public class FogService {
 
     public void intentToWrite(byte clientId, org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler) throws org.apache.thrift.TException;
 
-    public void getStreamMetadata(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies, org.apache.thrift.async.AsyncMethodCallback<StreamMetadataInfo> resultHandler) throws org.apache.thrift.TException;
+    public void getStreamMetadata(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies, boolean forceLatest, org.apache.thrift.async.AsyncMethodCallback<StreamMetadataInfo> resultHandler) throws org.apache.thrift.TException;
 
     public void getStreamMetadataFromOwner(java.lang.String streamId, org.apache.thrift.async.AsyncMethodCallback<StreamMetadata> resultHandler) throws org.apache.thrift.TException;
 
@@ -602,18 +602,19 @@ public class FogService {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "intentToWrite failed: unknown result");
     }
 
-    public StreamMetadataInfo getStreamMetadata(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies) throws org.apache.thrift.TException
+    public StreamMetadataInfo getStreamMetadata(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies, boolean forceLatest) throws org.apache.thrift.TException
     {
-      send_getStreamMetadata(streamId, checkNeighbors, checkBuddies);
+      send_getStreamMetadata(streamId, checkNeighbors, checkBuddies, forceLatest);
       return recv_getStreamMetadata();
     }
 
-    public void send_getStreamMetadata(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies) throws org.apache.thrift.TException
+    public void send_getStreamMetadata(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies, boolean forceLatest) throws org.apache.thrift.TException
     {
       getStreamMetadata_args args = new getStreamMetadata_args();
       args.setStreamId(streamId);
       args.setCheckNeighbors(checkNeighbors);
       args.setCheckBuddies(checkBuddies);
+      args.setForceLatest(forceLatest);
       sendBase("getStreamMetadata", args);
     }
 
@@ -1557,9 +1558,9 @@ public class FogService {
       }
     }
 
-    public void getStreamMetadata(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies, org.apache.thrift.async.AsyncMethodCallback<StreamMetadataInfo> resultHandler) throws org.apache.thrift.TException {
+    public void getStreamMetadata(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies, boolean forceLatest, org.apache.thrift.async.AsyncMethodCallback<StreamMetadataInfo> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      getStreamMetadata_call method_call = new getStreamMetadata_call(streamId, checkNeighbors, checkBuddies, resultHandler, this, ___protocolFactory, ___transport);
+      getStreamMetadata_call method_call = new getStreamMetadata_call(streamId, checkNeighbors, checkBuddies, forceLatest, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
@@ -1568,11 +1569,13 @@ public class FogService {
       private java.lang.String streamId;
       private boolean checkNeighbors;
       private boolean checkBuddies;
-      public getStreamMetadata_call(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies, org.apache.thrift.async.AsyncMethodCallback<StreamMetadataInfo> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private boolean forceLatest;
+      public getStreamMetadata_call(java.lang.String streamId, boolean checkNeighbors, boolean checkBuddies, boolean forceLatest, org.apache.thrift.async.AsyncMethodCallback<StreamMetadataInfo> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.streamId = streamId;
         this.checkNeighbors = checkNeighbors;
         this.checkBuddies = checkBuddies;
+        this.forceLatest = forceLatest;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
@@ -1581,6 +1584,7 @@ public class FogService {
         args.setStreamId(streamId);
         args.setCheckNeighbors(checkNeighbors);
         args.setCheckBuddies(checkBuddies);
+        args.setForceLatest(forceLatest);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -2567,7 +2571,7 @@ public class FogService {
 
       public getStreamMetadata_result getResult(I iface, getStreamMetadata_args args) throws org.apache.thrift.TException {
         getStreamMetadata_result result = new getStreamMetadata_result();
-        result.success = iface.getStreamMetadata(args.streamId, args.checkNeighbors, args.checkBuddies);
+        result.success = iface.getStreamMetadata(args.streamId, args.checkNeighbors, args.checkBuddies, args.forceLatest);
         return result;
       }
     }
@@ -4125,7 +4129,7 @@ public class FogService {
       }
 
       public void start(I iface, getStreamMetadata_args args, org.apache.thrift.async.AsyncMethodCallback<StreamMetadataInfo> resultHandler) throws org.apache.thrift.TException {
-        iface.getStreamMetadata(args.streamId, args.checkNeighbors, args.checkBuddies,resultHandler);
+        iface.getStreamMetadata(args.streamId, args.checkNeighbors, args.checkBuddies, args.forceLatest,resultHandler);
       }
     }
 
@@ -18843,6 +18847,7 @@ public class FogService {
     private static final org.apache.thrift.protocol.TField STREAM_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("streamId", org.apache.thrift.protocol.TType.STRING, (short)1);
     private static final org.apache.thrift.protocol.TField CHECK_NEIGHBORS_FIELD_DESC = new org.apache.thrift.protocol.TField("checkNeighbors", org.apache.thrift.protocol.TType.BOOL, (short)2);
     private static final org.apache.thrift.protocol.TField CHECK_BUDDIES_FIELD_DESC = new org.apache.thrift.protocol.TField("checkBuddies", org.apache.thrift.protocol.TType.BOOL, (short)3);
+    private static final org.apache.thrift.protocol.TField FORCE_LATEST_FIELD_DESC = new org.apache.thrift.protocol.TField("forceLatest", org.apache.thrift.protocol.TType.BOOL, (short)4);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getStreamMetadata_argsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getStreamMetadata_argsTupleSchemeFactory();
@@ -18850,12 +18855,14 @@ public class FogService {
     public java.lang.String streamId; // required
     public boolean checkNeighbors; // required
     public boolean checkBuddies; // required
+    public boolean forceLatest; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
       STREAM_ID((short)1, "streamId"),
       CHECK_NEIGHBORS((short)2, "checkNeighbors"),
-      CHECK_BUDDIES((short)3, "checkBuddies");
+      CHECK_BUDDIES((short)3, "checkBuddies"),
+      FORCE_LATEST((short)4, "forceLatest");
 
       private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -18876,6 +18883,8 @@ public class FogService {
             return CHECK_NEIGHBORS;
           case 3: // CHECK_BUDDIES
             return CHECK_BUDDIES;
+          case 4: // FORCE_LATEST
+            return FORCE_LATEST;
           default:
             return null;
         }
@@ -18918,6 +18927,7 @@ public class FogService {
     // isset id assignments
     private static final int __CHECKNEIGHBORS_ISSET_ID = 0;
     private static final int __CHECKBUDDIES_ISSET_ID = 1;
+    private static final int __FORCELATEST_ISSET_ID = 2;
     private byte __isset_bitfield = 0;
     public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
@@ -18927,6 +18937,8 @@ public class FogService {
       tmpMap.put(_Fields.CHECK_NEIGHBORS, new org.apache.thrift.meta_data.FieldMetaData("checkNeighbors", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
       tmpMap.put(_Fields.CHECK_BUDDIES, new org.apache.thrift.meta_data.FieldMetaData("checkBuddies", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+      tmpMap.put(_Fields.FORCE_LATEST, new org.apache.thrift.meta_data.FieldMetaData("forceLatest", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getStreamMetadata_args.class, metaDataMap);
@@ -18938,7 +18950,8 @@ public class FogService {
     public getStreamMetadata_args(
       java.lang.String streamId,
       boolean checkNeighbors,
-      boolean checkBuddies)
+      boolean checkBuddies,
+      boolean forceLatest)
     {
       this();
       this.streamId = streamId;
@@ -18946,6 +18959,8 @@ public class FogService {
       setCheckNeighborsIsSet(true);
       this.checkBuddies = checkBuddies;
       setCheckBuddiesIsSet(true);
+      this.forceLatest = forceLatest;
+      setForceLatestIsSet(true);
     }
 
     /**
@@ -18958,6 +18973,7 @@ public class FogService {
       }
       this.checkNeighbors = other.checkNeighbors;
       this.checkBuddies = other.checkBuddies;
+      this.forceLatest = other.forceLatest;
     }
 
     public getStreamMetadata_args deepCopy() {
@@ -18971,6 +18987,8 @@ public class FogService {
       this.checkNeighbors = false;
       setCheckBuddiesIsSet(false);
       this.checkBuddies = false;
+      setForceLatestIsSet(false);
+      this.forceLatest = false;
     }
 
     public java.lang.String getStreamId() {
@@ -19043,6 +19061,29 @@ public class FogService {
       __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __CHECKBUDDIES_ISSET_ID, value);
     }
 
+    public boolean isForceLatest() {
+      return this.forceLatest;
+    }
+
+    public getStreamMetadata_args setForceLatest(boolean forceLatest) {
+      this.forceLatest = forceLatest;
+      setForceLatestIsSet(true);
+      return this;
+    }
+
+    public void unsetForceLatest() {
+      __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __FORCELATEST_ISSET_ID);
+    }
+
+    /** Returns true if field forceLatest is set (has been assigned a value) and false otherwise */
+    public boolean isSetForceLatest() {
+      return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __FORCELATEST_ISSET_ID);
+    }
+
+    public void setForceLatestIsSet(boolean value) {
+      __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __FORCELATEST_ISSET_ID, value);
+    }
+
     public void setFieldValue(_Fields field, java.lang.Object value) {
       switch (field) {
       case STREAM_ID:
@@ -19069,6 +19110,14 @@ public class FogService {
         }
         break;
 
+      case FORCE_LATEST:
+        if (value == null) {
+          unsetForceLatest();
+        } else {
+          setForceLatest((java.lang.Boolean)value);
+        }
+        break;
+
       }
     }
 
@@ -19082,6 +19131,9 @@ public class FogService {
 
       case CHECK_BUDDIES:
         return isCheckBuddies();
+
+      case FORCE_LATEST:
+        return isForceLatest();
 
       }
       throw new java.lang.IllegalStateException();
@@ -19100,6 +19152,8 @@ public class FogService {
         return isSetCheckNeighbors();
       case CHECK_BUDDIES:
         return isSetCheckBuddies();
+      case FORCE_LATEST:
+        return isSetForceLatest();
       }
       throw new java.lang.IllegalStateException();
     }
@@ -19146,6 +19200,15 @@ public class FogService {
           return false;
       }
 
+      boolean this_present_forceLatest = true;
+      boolean that_present_forceLatest = true;
+      if (this_present_forceLatest || that_present_forceLatest) {
+        if (!(this_present_forceLatest && that_present_forceLatest))
+          return false;
+        if (this.forceLatest != that.forceLatest)
+          return false;
+      }
+
       return true;
     }
 
@@ -19160,6 +19223,8 @@ public class FogService {
       hashCode = hashCode * 8191 + ((checkNeighbors) ? 131071 : 524287);
 
       hashCode = hashCode * 8191 + ((checkBuddies) ? 131071 : 524287);
+
+      hashCode = hashCode * 8191 + ((forceLatest) ? 131071 : 524287);
 
       return hashCode;
     }
@@ -19202,6 +19267,16 @@ public class FogService {
           return lastComparison;
         }
       }
+      lastComparison = java.lang.Boolean.valueOf(isSetForceLatest()).compareTo(other.isSetForceLatest());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetForceLatest()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.forceLatest, other.forceLatest);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       return 0;
     }
 
@@ -19236,6 +19311,10 @@ public class FogService {
       if (!first) sb.append(", ");
       sb.append("checkBuddies:");
       sb.append(this.checkBuddies);
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("forceLatest:");
+      sb.append(this.forceLatest);
       first = false;
       sb.append(")");
       return sb.toString();
@@ -19306,6 +19385,14 @@ public class FogService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
+            case 4: // FORCE_LATEST
+              if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+                struct.forceLatest = iprot.readBool();
+                struct.setForceLatestIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -19331,6 +19418,9 @@ public class FogService {
         oprot.writeFieldEnd();
         oprot.writeFieldBegin(CHECK_BUDDIES_FIELD_DESC);
         oprot.writeBool(struct.checkBuddies);
+        oprot.writeFieldEnd();
+        oprot.writeFieldBegin(FORCE_LATEST_FIELD_DESC);
+        oprot.writeBool(struct.forceLatest);
         oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
@@ -19359,7 +19449,10 @@ public class FogService {
         if (struct.isSetCheckBuddies()) {
           optionals.set(2);
         }
-        oprot.writeBitSet(optionals, 3);
+        if (struct.isSetForceLatest()) {
+          optionals.set(3);
+        }
+        oprot.writeBitSet(optionals, 4);
         if (struct.isSetStreamId()) {
           oprot.writeString(struct.streamId);
         }
@@ -19369,12 +19462,15 @@ public class FogService {
         if (struct.isSetCheckBuddies()) {
           oprot.writeBool(struct.checkBuddies);
         }
+        if (struct.isSetForceLatest()) {
+          oprot.writeBool(struct.forceLatest);
+        }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, getStreamMetadata_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-        java.util.BitSet incoming = iprot.readBitSet(3);
+        java.util.BitSet incoming = iprot.readBitSet(4);
         if (incoming.get(0)) {
           struct.streamId = iprot.readString();
           struct.setStreamIdIsSet(true);
@@ -19386,6 +19482,10 @@ public class FogService {
         if (incoming.get(2)) {
           struct.checkBuddies = iprot.readBool();
           struct.setCheckBuddiesIsSet(true);
+        }
+        if (incoming.get(3)) {
+          struct.forceLatest = iprot.readBool();
+          struct.setForceLatestIsSet(true);
         }
       }
     }
