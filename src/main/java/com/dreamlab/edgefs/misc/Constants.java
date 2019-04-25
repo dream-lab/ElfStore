@@ -73,7 +73,7 @@ public final class Constants {
 	
 	//in case the property EDGE_DISK_WATERMARK is missing, we will be
 	//using this value as our default watermark
-	public static long CONSTANT_DISK_WATERMARK_EDGE = 100;
+	public static int DEFAULT_DISK_WATERMARK_EDGE = 100;
 	
 	public static int EDGE_CONTENTION_SLEEP_TIME = 50;
 	
@@ -108,6 +108,14 @@ public final class Constants {
 	public static String STREAM_HARD_LEASE_TIME = "stream.hard.lease.time";
 	
 	public static int DEFAULT_STREAM_HARD_LEASE_TIME = 180;
+	
+	public static String REPLICA_CACHING_ENABLE = "replica.caching.enable";
+	
+	public static int DEFAULT_REPLICA_CACHING_ENABLE = 0;
+	
+	public static String REPLICA_CACHING_TIME = "replica.caching.time";
+	
+	public static int DEFAULT_REPLICA_CACHING_TIME = 40;
 	
 	public static long interpretByteAsLong(byte b) {
 		int diskSpace = (int) b;

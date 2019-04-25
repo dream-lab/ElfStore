@@ -67,7 +67,7 @@ public class Fog implements Serializable {
 	private transient int kMin,kMax;
 	private transient int k;
 	
-	private long edgeDiskWatermark;
+	private int edgeDiskWatermark;
 	
 	//this is for the microbatch search
 	private byte[] personalBloomFilter = new byte[Constants.BLOOM_FILTER_BYTES];
@@ -325,6 +325,10 @@ public class Fog implements Serializable {
 	
 	private transient int streamHardLease;
 	
+	private transient boolean isReplicaCachingEnabled;
+	
+	private transient int replicaCachingTime;
+	
 	/****************************************************************************/
 	
 	public Fog() {
@@ -527,11 +531,11 @@ public class Fog implements Serializable {
 		this.personalStreamBFilter = personalStreamBFilter;
 	}
 
-	public long getEdgeDiskWatermark() {
+	public int getEdgeDiskWatermark() {
 		return edgeDiskWatermark;
 	}
 
-	public void setEdgeDiskWatermark(long edgeDiskWatermark) {
+	public void setEdgeDiskWatermark(int edgeDiskWatermark) {
 		this.edgeDiskWatermark = edgeDiskWatermark;
 	}
 
@@ -725,6 +729,22 @@ public class Fog implements Serializable {
 
 	public void setStreamHardLease(int streamHardLease) {
 		this.streamHardLease = streamHardLease;
+	}
+	
+	public boolean isReplicaCachingEnabled() {
+		return isReplicaCachingEnabled;
+	}
+
+	public void setReplicaCachingEnabled(boolean isReplicaCachingEnabled) {
+		this.isReplicaCachingEnabled = isReplicaCachingEnabled;
+	}
+
+	public int getReplicaCachingTime() {
+		return replicaCachingTime;
+	}
+
+	public void setReplicaCachingTime(int replicaCachingTime) {
+		this.replicaCachingTime = replicaCachingTime;
 	}
 
 	//called when the thread wakes up after a fixed window to check

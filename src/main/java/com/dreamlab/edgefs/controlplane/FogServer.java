@@ -115,40 +115,8 @@ public class FogServer {
 		 * Will be cleaning this mess by having a method that checks for property and 
 		 * in its absence sets a default value, for now bear with me
 		 */
-		// set the disk watermark for Edge
-		if (properties.containsKey(Constants.EDGE_DISK_WATERMARK)) {
-			self.getFog().setEdgeDiskWatermark(Long.parseLong(properties.getProperty(Constants.EDGE_DISK_WATERMARK)));
-		} else {
-			// set some absolute constant as the watermark
-			self.getFog().setEdgeDiskWatermark(Constants.CONSTANT_DISK_WATERMARK_EDGE);
-		}
+		initializeFogProperty(self);
 		
-		//set the cache invalidation time for stream metadata
-		if(properties.containsKey(Constants.STREAM_METADATA_CACHE_INVALIDATION_TIMEOUT)) {
-			self.getFog().setStreamMetaCacheInvalidation(Integer.parseInt(
-					properties.getProperty(Constants.STREAM_METADATA_CACHE_INVALIDATION_TIMEOUT)));
-		} else {
-			self.getFog().setStreamMetaCacheInvalidation(
-					Constants.DEFAULT_STREAM_METADATA_CACHE_INVALIDATION_TIMEOUT);
-		}
-		
-		//stream soft lease time
-		if(properties.containsKey(Constants.STREAM_SOFT_LEASE_TIME)) {
-			self.getFog().setStreamSoftLease(Integer.parseInt(
-					properties.getProperty(Constants.STREAM_SOFT_LEASE_TIME)));
-		} else {
-			self.getFog().setStreamSoftLease(
-					Constants.DEFAULT_STREAM_SOFT_LEASE_TIME);
-		}
-		
-		// stream hard lease time
-		if (properties.containsKey(Constants.STREAM_HARD_LEASE_TIME)) {
-			self.getFog()
-					.setStreamHardLease(Integer.parseInt(properties.getProperty(Constants.STREAM_HARD_LEASE_TIME)));
-		} else {
-			self.getFog().setStreamHardLease(Constants.DEFAULT_STREAM_HARD_LEASE_TIME);
-		}
-
 		try {
 			fogHandler = new FogServiceHandler(self.getFog());
 			eventProcessor = new FogService.Processor(fogHandler);
@@ -382,6 +350,63 @@ public class FogServer {
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
+		}
+
+	}
+	
+	private static void initializeFogProperty(FogHolder self) {
+		// set the disk watermark for Edge
+		if (properties.containsKey(Constants.EDGE_DISK_WATERMARK)) {
+			self.getFog().setEdgeDiskWatermark(Integer.parseInt(properties.getProperty(Constants.EDGE_DISK_WATERMARK)));
+		} else {
+			// set some absolute constant as the watermark
+			self.getFog().setEdgeDiskWatermark(Constants.DEFAULT_DISK_WATERMARK_EDGE);
+		}
+
+		// set the cache invalidation time for stream metadata
+		if (properties.containsKey(Constants.STREAM_METADATA_CACHE_INVALIDATION_TIMEOUT)) {
+			self.getFog().setStreamMetaCacheInvalidation(
+					Integer.parseInt(properties.getProperty(Constants.STREAM_METADATA_CACHE_INVALIDATION_TIMEOUT)));
+		} else {
+			self.getFog().setStreamMetaCacheInvalidation(Constants.DEFAULT_STREAM_METADATA_CACHE_INVALIDATION_TIMEOUT);
+		}
+
+		// stream soft lease time
+		if (properties.containsKey(Constants.STREAM_SOFT_LEASE_TIME)) {
+			self.getFog()
+					.setStreamSoftLease(Integer.parseInt(properties.getProperty(Constants.STREAM_SOFT_LEASE_TIME)));
+		} else {
+			self.getFog().setStreamSoftLease(Constants.DEFAULT_STREAM_SOFT_LEASE_TIME);
+		}
+
+		// stream hard lease time
+		if (properties.containsKey(Constants.STREAM_HARD_LEASE_TIME)) {
+			self.getFog()
+					.setStreamHardLease(Integer.parseInt(properties.getProperty(Constants.STREAM_HARD_LEASE_TIME)));
+		} else {
+			self.getFog().setStreamHardLease(Constants.DEFAULT_STREAM_HARD_LEASE_TIME);
+		}
+
+		// replica caching enable/disable
+		if (properties.containsKey(Constants.REPLICA_CACHING_ENABLE)) {
+			int cachingEnabled = Integer.parseInt(properties.getProperty(Constants.REPLICA_CACHING_ENABLE));
+			if (cachingEnabled == 0)
+				self.getFog().setReplicaCachingEnabled(false);
+			else
+				self.getFog().setReplicaCachingEnabled(true);
+		} else {
+			if (Constants.DEFAULT_REPLICA_CACHING_ENABLE == 0)
+				self.getFog().setReplicaCachingEnabled(false);
+			else
+				self.getFog().setReplicaCachingEnabled(true);
+		}
+
+		// replica caching time
+		if (properties.containsKey(Constants.REPLICA_CACHING_TIME)) {
+			self.getFog()
+					.setReplicaCachingTime(Integer.parseInt(properties.getProperty(Constants.REPLICA_CACHING_TIME)));
+		} else {
+			self.getFog().setReplicaCachingTime(Constants.DEFAULT_REPLICA_CACHING_TIME);
 		}
 
 	}
