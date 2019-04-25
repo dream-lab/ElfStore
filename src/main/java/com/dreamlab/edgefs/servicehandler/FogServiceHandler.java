@@ -61,9 +61,12 @@ import com.dreamlab.edgefs.thrift.NeighborCount;
 import com.dreamlab.edgefs.thrift.NeighborInfoData;
 import com.dreamlab.edgefs.thrift.NeighborPayload;
 import com.dreamlab.edgefs.thrift.NodeInfoData;
+import com.dreamlab.edgefs.thrift.NodeInfoPrimary;
+import com.dreamlab.edgefs.thrift.NodeInfoPrimaryTypeStreamMetadata;
 import com.dreamlab.edgefs.thrift.QueryReplica;
 import com.dreamlab.edgefs.thrift.ReadReplica;
 import com.dreamlab.edgefs.thrift.StreamMetadata;
+import com.dreamlab.edgefs.thrift.StreamMetadataInfo;
 import com.dreamlab.edgefs.thrift.TwoPhaseCommitRequest;
 import com.dreamlab.edgefs.thrift.TwoPhaseCommitResponse;
 import com.dreamlab.edgefs.thrift.TwoPhasePreCommitRequest;
@@ -866,10 +869,19 @@ public class FogServiceHandler implements FogService.Iface {
 		return 0;
 	}
 
+	//registerStream is equivalent of the create()
 	@Override
 	public byte registerStream(String streamId, StreamMetadata metadata) throws TException {
 		if (metadata != null) {
-			fog.getStreamMetadata().put(streamId, metadata);
+			//set the owner of the stream to this Fog
+			NodeInfoPrimaryTypeStreamMetadata ownerFog = new NodeInfoPrimaryTypeStreamMetadata(
+					new NodeInfoPrimary(fog.getMyFogInfo().getNodeIP(), fog.getMyFogInfo().getPort()),
+					false);
+			metadata.setOwner(ownerFog);
+			StreamMetadataInfo metadataInfo = new StreamMetadataInfo();
+			metadataInfo.setStreamMetadata(metadata);
+			metadataInfo.setCached(false);
+			fog.getStreamMetadata().put(streamId, metadataInfo);
 		}
 		
 		// once stream is registered, initialize the set of microbatches for the stream
@@ -886,7 +898,7 @@ public class FogServiceHandler implements FogService.Iface {
 		byte[] streamBloomFilter = fog.getPersonalStreamBFilter();
 		BloomFilter.storeEntry(Constants.STREAM_METADATA_ID, streamId, streamBloomFilter);
 		BloomFilter.storeEntry(Constants.STREAM_METADATA_START_TIME, String.valueOf(
-				streamMetadata.getStartTime()), streamBloomFilter);
+				streamMetadata.getStartTime().getValue()), streamBloomFilter);
 		//others can also be hashed and stored in BF but since search is supported on top of
 		//streamId only to fetch the StreamMetadata, for now this will do
 		
@@ -1476,7 +1488,7 @@ public class FogServiceHandler implements FogService.Iface {
 		LOGGER.info("Fetching the locations for write operation for microbatchId : " + metadata.getMbId());
 		LOGGER.info("MicrobatchId : " + metadata.getMbId() + ", getWriteLocations, startTime=" +
 		System.currentTimeMillis());
-		StreamMetadata strMetadata = getStreamMetadata(metadata.getStreamId(), true, true);
+		StreamMetadataInfo strMetadata = getStreamMetadata(metadata.getStreamId(), true, true);
 		if(strMetadata == null) {
 			LOGGER.info("Unable to locate the stream metadata for streamId : " + metadata.getStreamId());
 			return null;
@@ -1485,11 +1497,14 @@ public class FogServiceHandler implements FogService.Iface {
 		fog.getStreamMetadata().put(metadata.getStreamId(), strMetadata);
 		
 		long decodedLength = Constants.interpretByteAsLong(dataLength);
-		double expectedReliability = strMetadata.getReliability();
+//		double expectedReliability = strMetadata.getReliability();
+		double expectedReliability = strMetadata.getStreamMetadata().getReliability().getValue();
+		int minReplica = strMetadata.getStreamMetadata().getMinReplica().getValue();
+		int maxReplica = strMetadata.getStreamMetadata().getMaxReplica().getValue();
 		LOGGER.info("MicrobatchId : " + metadata.getMbId() + ", identifyReplicas, startTime=" +
 				System.currentTimeMillis());
 //		List<WritableFogData> fogLocations = identifyReplicas(decodedLength, clientEdgeInfo,expectedReliability, strMetadata.getMinReplica(), strMetadata.getMaxReplica());
-		List<WritableFogData> fogLocations = identifyReplicas(metadata.getMbId(), decodedLength, isEdge,expectedReliability, strMetadata.getMinReplica(), strMetadata.getMaxReplica());
+		List<WritableFogData> fogLocations = identifyReplicas(metadata.getMbId(), decodedLength, isEdge,expectedReliability, minReplica, maxReplica);
 		LOGGER.info("MicrobatchId : " + metadata.getMbId() + ", identifyReplicas, endTime=" +
 				System.currentTimeMillis());
 		
@@ -1500,10 +1515,10 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 	
 	@Override
-	public StreamMetadata getStreamMetadata(String streamId, boolean checkNeighbors, boolean checkBuddies)
+	public StreamMetadataInfo getStreamMetadata(String streamId, boolean checkNeighbors, boolean checkBuddies)
 			throws TException {
 
-		StreamMetadata metadata = null;
+		StreamMetadataInfo metadata = null;
 		if (fog.getStreamMetadata().containsKey(streamId))
 			return fog.getStreamMetadata().get(streamId);
 		if (checkNeighbors) {
@@ -1521,7 +1536,7 @@ public class FogServiceHandler implements FogService.Iface {
 		return metadata;
 	}
 
-	private StreamMetadata getStreamFromNeighbors(String searchKey, String searchValue) {
+	private StreamMetadataInfo getStreamFromNeighbors(String searchKey, String searchValue) {
 		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
 			FogExchangeInfo nInfo = entry.getValue();
@@ -1530,7 +1545,7 @@ public class FogServiceHandler implements FogService.Iface {
 				if (BloomFilter.search(searchKey, searchValue, bloomFilter)) {
 					// match with BloomFilter, now contact the node to see if data present or not
 					NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
-					StreamMetadata metadata = fetchStreamFromOtherFog(neighbor.getNode().getNodeIP(),
+					StreamMetadataInfo metadata = fetchStreamFromOtherFog(neighbor.getNode().getNodeIP(),
 							neighbor.getNode().getPort(), searchKey, searchValue, false, false);
 					if (metadata != null)
 						return metadata;
@@ -1540,7 +1555,7 @@ public class FogServiceHandler implements FogService.Iface {
 		return null;
 	}
 
-	private StreamMetadata getStreamFromBuddies(String searchKey, String searchValue) {
+	private StreamMetadataInfo getStreamFromBuddies(String searchKey, String searchValue) {
 		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
 			FogExchangeInfo buddyInfo = entry.getValue();
@@ -1549,7 +1564,7 @@ public class FogServiceHandler implements FogService.Iface {
 				if (BloomFilter.search(searchKey, searchValue, consolidateBFilter)) {
 					// match with BloomFilter, now contact the node to see if data present or not
 					FogInfo buddy = fog.getBuddyMap().get(entry.getKey());
-					StreamMetadata metadata = fetchStreamFromOtherFog(buddy.getNodeIP(), buddy.getPort(), 
+					StreamMetadataInfo metadata = fetchStreamFromOtherFog(buddy.getNodeIP(), buddy.getPort(), 
 							searchKey, searchValue, true, false);
 					if (metadata != null) {
 						return metadata;
@@ -1560,9 +1575,9 @@ public class FogServiceHandler implements FogService.Iface {
 		return null;
 	}
 	
-	private StreamMetadata fetchStreamFromOtherFog(String nodeIP, int port, String searchKey,
+	private StreamMetadataInfo fetchStreamFromOtherFog(String nodeIP, int port, String searchKey,
 			String searchValue, boolean checkNeighbors, boolean checkBuddies) {
-		StreamMetadata metadata = null;
+		StreamMetadataInfo metadata = null;
 		TTransport transport = new TFramedTransport(new TSocket(nodeIP, port));
 		try {
 			transport.open();

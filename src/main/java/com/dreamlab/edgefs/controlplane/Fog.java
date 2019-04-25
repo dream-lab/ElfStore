@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -42,7 +41,7 @@ import com.dreamlab.edgefs.thrift.BuddyPayload;
 import com.dreamlab.edgefs.thrift.FogService;
 import com.dreamlab.edgefs.thrift.Metadata;
 import com.dreamlab.edgefs.thrift.NeighborPayload;
-import com.dreamlab.edgefs.thrift.StreamMetadata;
+import com.dreamlab.edgefs.thrift.StreamMetadataInfo;
 
 public class Fog implements Serializable {
 
@@ -278,7 +277,7 @@ public class Fog implements Serializable {
 	
 	//the stream level metadata is stored but not used for searching. This is stored
 	//when the stream is first registered
-	private Map<String, StreamMetadata> streamMetadata = new ConcurrentHashMap<>();
+	private Map<String, StreamMetadataInfo> streamMetadata = new ConcurrentHashMap<>();
 	
 	//This is used to have a mapping between StreamID and a set of Microbatches
 	private Map<String, Set<String>> streamMbIdMap =  new ConcurrentHashMap<>();
@@ -316,6 +315,15 @@ public class Fog implements Serializable {
 	//insertMetadata request comes for the local edge write, we remove this microbatchId from
 	//the set since mbIDLocationMap can do the job now in case of recovery
 	private transient Map<String, Short> localEdgeWritesInProgress = new ConcurrentHashMap<>();
+	
+	//this is the system-wide cache invalidation time for cached stream metadata
+	//transient as it can read from the system.properties during startup
+	private transient int streamMetaCacheInvalidation;
+	
+	//stream soft and hard lease times
+	private transient int streamSoftLease;
+	
+	private transient int streamHardLease;
 	
 	/****************************************************************************/
 	
@@ -655,13 +663,11 @@ public class Fog implements Serializable {
 		this.mostRecentFogStatsUpdate = mostRecentFogStatsUpdate;
 	}
 
-
-
-	public Map<String, StreamMetadata> getStreamMetadata() {
+	public Map<String, StreamMetadataInfo> getStreamMetadata() {
 		return streamMetadata;
 	}
 
-	public void setStreamMetadata(Map<String, StreamMetadata> streamMetadata) {
+	public void setStreamMetadata(Map<String, StreamMetadataInfo> streamMetadata) {
 		this.streamMetadata = streamMetadata;
 	}
 
@@ -697,6 +703,30 @@ public class Fog implements Serializable {
 		this.localEdgeWritesInProgress = localEdgeWritesInProgress;
 	}
 	
+	public int getStreamMetaCacheInvalidation() {
+		return streamMetaCacheInvalidation;
+	}
+
+	public void setStreamMetaCacheInvalidation(int streamMetaCacheInvalidation) {
+		this.streamMetaCacheInvalidation = streamMetaCacheInvalidation;
+	}
+	
+	public int getStreamSoftLease() {
+		return streamSoftLease;
+	}
+
+	public void setStreamSoftLease(int streamSoftLease) {
+		this.streamSoftLease = streamSoftLease;
+	}
+
+	public int getStreamHardLease() {
+		return streamHardLease;
+	}
+
+	public void setStreamHardLease(int streamHardLease) {
+		this.streamHardLease = streamHardLease;
+	}
+
 	//called when the thread wakes up after a fixed window to check
 	//any recent updates in this window
 	public void localStatsCalculate() {

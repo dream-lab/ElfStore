@@ -97,6 +97,18 @@ public final class Constants {
 	
 	public static int RECOVERY_QUEUE_SIZE = 100;
 	
+	public static String STREAM_METADATA_CACHE_INVALIDATION_TIMEOUT = "stream.metadata.cache.invalidation.timeout";
+	
+	public static int DEFAULT_STREAM_METADATA_CACHE_INVALIDATION_TIMEOUT = 300; 
+	
+	public static String STREAM_SOFT_LEASE_TIME = "stream.soft.lease.time";
+	
+	public static int DEFAULT_STREAM_SOFT_LEASE_TIME = 60;
+	
+	public static String STREAM_HARD_LEASE_TIME = "stream.hard.lease.time";
+	
+	public static int DEFAULT_STREAM_HARD_LEASE_TIME = 180;
+	
 	public static long interpretByteAsLong(byte b) {
 		int diskSpace = (int) b;
 

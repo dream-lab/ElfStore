@@ -5,6 +5,12 @@ namespace py fogclient
 
 typedef i32 int32
 
+//know this name is shitty but the brain is dead currently
+struct NodeInfoPrimary {
+	1: required string NodeIP;
+	2: required i32 port;
+}
+
 //Node Class
 struct NodeInfoData {
 	//1: required string NodeID;
@@ -159,15 +165,100 @@ struct WritableFogData {
 	4:optional EdgeInfoData edgeInfo;
 }
 
-//this is converted to StreamMetadata for using inside FogServiceHandler
-//the format of the metadata should adhere to StreamMetadata
+//as per the new design, we want the metadata to consist of two types of
+//properties, one that is static and propagated via bloom filters and other
+//which is updatable where new fields can be added and old dynamic fields can
+//be modified or deleted. For this, each field should have a updatable flag
+//associated with it with true meaning that the field can be updated 
+
+############################################################################
+########################## STREAM METADATA #################################
+############################################################################
+
+//currently the approach is to have a struct for every type that we can have
+//going forward this may change but for now, nothing easier than this is coming
+//to mind so going ahead with this. Even to support this, we may need to add more
+//types if needed
+
+//no need for I8 as byte is provided which is equivalent
+struct I16TypeStreamMetadata {
+	1: required i16 value;
+	2: required bool updatable;
+}
+
+struct I32TypeStreamMetadata {
+	1: required i32 value;
+	2: required bool updatable;
+}
+
+struct I64TypeStreamMetadata {
+	1: required i64 value;
+	2: required bool updatable;
+}
+
+struct DoubleTypeStreamMetadata {
+	1: required double value;
+	2: required bool updatable;
+}
+
+struct ByteTypeStreamMetadata {
+	1: required byte value;
+	2: required bool updatable;
+}
+
+struct StringTypeStreamMetadata {
+	1: required string value;
+	2: required bool updatable;
+}
+
+//this is to support the owner of the stream
+struct NodeInfoPrimaryTypeStreamMetadata {
+	1: required NodeInfoPrimary value;
+	2: required bool updatable;
+}
+
+//this is to allow dynamic properties in the stream metadata.
+//this can support only the primitive types as all primitives
+//can be directly converted to their respective classes (clazz)
+//using the string value
+struct DynamicTypeStreamMetadata {
+	1: required string value;
+	2: required string clazz;
+	3: required bool updatable;
+}
+
+struct StreamMetadata {
+	1: required I64TypeStreamMetadata startTime;
+	2: optional I64TypeStreamMetadata endTime;
+	3: required DoubleTypeStreamMetadata reliability;
+	4: required ByteTypeStreamMetadata minReplica;
+	5: required ByteTypeStreamMetadata maxReplica;
+	//you create a stream with version 0 and everytime you fetch
+	//the stream metadata, you also get the version back
+	6: required I32TypeStreamMetadata version;
+	//initially the client calling the create method for the stream
+	//need not pass the owner information as the Fog node contacted
+	//will become the owner of the stream
+	7: optional NodeInfoPrimaryTypeStreamMetadata owner;
+	8: optional map<string, DynamicTypeStreamMetadata> otherProperties;
+}
+
+struct StreamMetadataInfo {
+	1: required StreamMetadata streamMetadata;
+	2: required bool cached;
+	3: optional i64 cacheTime;
+}
+
+
+/*
 struct StreamMetadata {
 	1:required i64 startTime;
 	2:optional i64 endTime;
 	3:required double reliability;
 	4:required byte minReplica;
 	5:required byte maxReplica;
-} 
+}
+*/ 
 
 struct ReadResponse {
 	1: required byte status;
@@ -261,7 +352,8 @@ service FogService {
 	// Returns a sessionID 
 	string intentToWrite(1: byte clientId);
 
-	StreamMetadata getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
+	//StreamMetadata getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
+	StreamMetadataInfo getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
 	
 	//Returns a list of Fog Locations
 	//list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 

@@ -110,12 +110,43 @@ public class FogServer {
 		//set kMin as well if you want to as these fields will be transient
 		//so in case we restart a Fog instance, we won't be able to recover them
 		
+		
+		/**
+		 * Will be cleaning this mess by having a method that checks for property and 
+		 * in its absence sets a default value, for now bear with me
+		 */
 		// set the disk watermark for Edge
 		if (properties.containsKey(Constants.EDGE_DISK_WATERMARK)) {
 			self.getFog().setEdgeDiskWatermark(Long.parseLong(properties.getProperty(Constants.EDGE_DISK_WATERMARK)));
 		} else {
 			// set some absolute constant as the watermark
 			self.getFog().setEdgeDiskWatermark(Constants.CONSTANT_DISK_WATERMARK_EDGE);
+		}
+		
+		//set the cache invalidation time for stream metadata
+		if(properties.containsKey(Constants.STREAM_METADATA_CACHE_INVALIDATION_TIMEOUT)) {
+			self.getFog().setStreamMetaCacheInvalidation(Integer.parseInt(
+					properties.getProperty(Constants.STREAM_METADATA_CACHE_INVALIDATION_TIMEOUT)));
+		} else {
+			self.getFog().setStreamMetaCacheInvalidation(
+					Constants.DEFAULT_STREAM_METADATA_CACHE_INVALIDATION_TIMEOUT);
+		}
+		
+		//stream soft lease time
+		if(properties.containsKey(Constants.STREAM_SOFT_LEASE_TIME)) {
+			self.getFog().setStreamSoftLease(Integer.parseInt(
+					properties.getProperty(Constants.STREAM_SOFT_LEASE_TIME)));
+		} else {
+			self.getFog().setStreamSoftLease(
+					Constants.DEFAULT_STREAM_SOFT_LEASE_TIME);
+		}
+		
+		// stream hard lease time
+		if (properties.containsKey(Constants.STREAM_HARD_LEASE_TIME)) {
+			self.getFog()
+					.setStreamHardLease(Integer.parseInt(properties.getProperty(Constants.STREAM_HARD_LEASE_TIME)));
+		} else {
+			self.getFog().setStreamHardLease(Constants.DEFAULT_STREAM_HARD_LEASE_TIME);
 		}
 
 		try {
@@ -137,6 +168,8 @@ public class FogServer {
 				populateBuddiesAndNeighborsFromClusterConf(Constants.CONF_PATH, self.getFog());
 			} else {
 				self.setFog(Fog.deserializeInstance());
+				//may need to do something for the transient fields
+				
 			}
 
 			Runnable buddyHeartBeat = new Runnable() {
@@ -345,7 +378,6 @@ public class FogServer {
 
 			Thread t6 = new Thread(checker);
 			t6.start();
-
 			
 		} catch (Exception e) {
 			// TODO: handle exception
