@@ -3,6 +3,7 @@ package com.dreamlab.edgefs.servicehandler;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -48,6 +49,8 @@ import com.dreamlab.edgefs.model.NeighborHeartbeatData;
 import com.dreamlab.edgefs.model.NeighborInfo;
 import com.dreamlab.edgefs.model.NodeInfo;
 import com.dreamlab.edgefs.model.StorageReliability;
+import com.dreamlab.edgefs.model.StreamMetadataComparator;
+import com.dreamlab.edgefs.model.StreamMetadataUpdateMessage;
 import com.dreamlab.edgefs.thrift.BuddyPayload;
 import com.dreamlab.edgefs.thrift.EdgeInfoData;
 import com.dreamlab.edgefs.thrift.EdgePayload;
@@ -56,6 +59,7 @@ import com.dreamlab.edgefs.thrift.FindReplica;
 //import com.dreamlab.edgefs.model.StorageUnit;
 import com.dreamlab.edgefs.thrift.FogInfoData;
 import com.dreamlab.edgefs.thrift.FogService;
+import com.dreamlab.edgefs.thrift.I32TypeStreamMetadata;
 import com.dreamlab.edgefs.thrift.Metadata;
 import com.dreamlab.edgefs.thrift.NeighborCount;
 import com.dreamlab.edgefs.thrift.NeighborInfoData;
@@ -67,6 +71,7 @@ import com.dreamlab.edgefs.thrift.QueryReplica;
 import com.dreamlab.edgefs.thrift.ReadReplica;
 import com.dreamlab.edgefs.thrift.StreamMetadata;
 import com.dreamlab.edgefs.thrift.StreamMetadataInfo;
+import com.dreamlab.edgefs.thrift.StreamMetadataUpdateResponse;
 import com.dreamlab.edgefs.thrift.TwoPhaseCommitRequest;
 import com.dreamlab.edgefs.thrift.TwoPhaseCommitResponse;
 import com.dreamlab.edgefs.thrift.TwoPhasePreCommitRequest;
@@ -98,6 +103,9 @@ public class FogServiceHandler implements FogService.Iface {
 	//and if not, we initialize it with value being a new empty set. We don't want to lose
 	//any updates so fine grained locking is necessary and sufficient
 	private final Lock edgeMicrobatchLock = new ReentrantLock();
+	
+	//this lock is for serializing stream metadata updates
+	private final Lock streamMetadataUpdateLock = new ReentrantLock();
 
 	public FogServiceHandler(Fog fog) {
 		super();
@@ -878,6 +886,10 @@ public class FogServiceHandler implements FogService.Iface {
 					new NodeInfoPrimary(fog.getMyFogInfo().getNodeIP(), fog.getMyFogInfo().getPort()),
 					false);
 			metadata.setOwner(ownerFog);
+			//the client library should assign a version 0 initially
+			//but placing here for safety which can be removed later
+			I32TypeStreamMetadata versionMeta = new I32TypeStreamMetadata(0, true);
+			metadata.setVersion(versionMeta);
 			StreamMetadataInfo metadataInfo = new StreamMetadataInfo();
 			metadataInfo.setStreamMetadata(metadata);
 			metadataInfo.setCached(false);
@@ -2237,6 +2249,50 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 		LOGGER.info("The serialization completed at {}", System.currentTimeMillis());
 		return Constants.SUCCESS;
+	}
+
+	@Override
+	public StreamMetadataUpdateResponse updateStreamMetadata(StreamMetadata metadata) throws TException {
+		//this method should be called only at the owner of the stream
+		//if called at any other Fog node, return 0 directly to indicate
+		//failure. Also it might happen that there are concurrent updates
+		//to the stream metadata. In that case that update will go through
+		//which has the same version as the current version of the metadata 
+		if(metadata == null) {
+			return new StreamMetadataUpdateResponse(Constants.FAILURE, 
+					StreamMetadataUpdateMessage.FAIL_NOT_EXISTS.getMessage());
+		}
+		StreamMetadataInfo metadataInfo = fog.getStreamMetadata().get(metadata.getStreamId());
+		//update can happen only at the owner Fog
+		if(metadataInfo.isCached()) {
+			return new StreamMetadataUpdateResponse(Constants.FAILURE,
+					StreamMetadataUpdateMessage.FAIL_NOT_OWNER.getMessage());
+		}
+		streamMetadataUpdateLock.lock();
+		StreamMetadataUpdateMessage updateStatus = checkForUpdateValidity(metadataInfo.getStreamMetadata(), metadata);
+		StreamMetadataUpdateResponse response = null;
+		if (updateStatus.getCode() > 0) {
+			metadataInfo.setStreamMetadata(metadata);
+			response = new StreamMetadataUpdateResponse(Constants.SUCCESS, updateStatus.getMessage());
+		} else {
+			response = new StreamMetadataUpdateResponse(Constants.FAILURE, updateStatus.getMessage());
+		}
+		streamMetadataUpdateLock.unlock();
+		return response;
+	}
+
+	private StreamMetadataUpdateMessage checkForUpdateValidity(StreamMetadata currentMetadata,
+			StreamMetadata metadata) {
+		//lets first check the version to see if need to stop rightaway
+		if(currentMetadata.getVersion().getValue() != metadata.getVersion().getValue()) {
+			LOGGER.error("Update of stream metadata failed due to version mismatch");
+			return StreamMetadataUpdateMessage.FAIL_VERSION_MISMATCH;
+		}
+		boolean semanticallyCorrect = StreamMetadataComparator.compare(currentMetadata, metadata);
+		if(!semanticallyCorrect) {
+			return StreamMetadataUpdateMessage.FAIL_SEMANTIC;
+		}
+		return StreamMetadataUpdateMessage.SUCCESS;
 	}
 
 }

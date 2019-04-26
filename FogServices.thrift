@@ -297,6 +297,11 @@ struct WriteResponse {
 	2: optional byte reliability;
 }
 
+struct StreamMetadataUpdateResponse {
+	1: required byte status;
+	2: required string message;
+}
+
 // the interfaces belonging to Fog Interface
 service FogService {
 
@@ -395,4 +400,7 @@ service FogService {
 	ReadReplica getMeta(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
 	
 	byte serializeState();
+	
+	//updating the StreamMetadata
+	StreamMetadataUpdateResponse updateStreamMetadata(1: StreamMetadata metadata);
 }
