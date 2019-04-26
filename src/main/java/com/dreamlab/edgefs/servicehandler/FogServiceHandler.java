@@ -1552,27 +1552,32 @@ public class FogServiceHandler implements FogService.Iface {
 			if (metadataInfo != null) {
 				// currently if the node doesn't have the metadata, it will get it from
 				// its neighbors or its buddies. In case none of them is the owner, then
-				// a call is made to the owner to return the latest metadata which is cached
+				// a call is made to the owner to return the latest metadata 
 				if (!metadataInfo.isCached()) {
 					// it means this metadata is fetched directly from the owner
 					// setting it in the local Fog's map by marking it as cached
-					metadataInfo.setCached(true);
-					metadataInfo.setCacheTime(System.currentTimeMillis());
-					fog.getStreamMetadata().put(streamId, metadataInfo);
+					LOGGER.info("StreamMetadata not locally present, got a copy from the owner");
 				} else {
 					// this metadata is fetched from another node's cached copy
-					// get latest from the owner itself, the behavious as of this
-					// implementation is to force to get the latest version but this
-					// can be relaxed
-					NodeInfoPrimary ownerFog = metadataInfo.getStreamMetadata().getOwner().getValue();
-					StreamMetadata metadata = fetchMetadataFromOwner(streamId, ownerFog.getNodeIP(),
-							ownerFog.getPort());
-					metadataInfo = new StreamMetadataInfo();
-					metadataInfo.setStreamMetadata(metadata);
-					metadataInfo.setCached(true);
-					metadataInfo.setCacheTime(System.currentTimeMillis());
-					fog.getStreamMetadata().put(streamId, metadataInfo);
+					// this portion of code can be invoked from the node the client
+					// contacted or a buddy of the contacted node. There is no need
+					// for the buddy to get the latest metadata from the owner since
+					// it can do so when needed. For the contacted node, the
+					// owner is contacted only if it is necessary to fetch the latest
+					// metadata i.e. forceLatest is set to true. Thats why on the call
+					// to neighbors and buddies, we are passing forceLatest as false to
+					// avoid this happening at them
+					if (forceLatest) {
+						NodeInfoPrimary ownerFog = metadataInfo.getStreamMetadata().getOwner().getValue();
+						StreamMetadata metadata = fetchMetadataFromOwner(streamId, ownerFog.getNodeIP(),
+								ownerFog.getPort());
+						metadataInfo = new StreamMetadataInfo();
+						metadataInfo.setStreamMetadata(metadata);
+					}
 				}
+				metadataInfo.setCached(true);
+				metadataInfo.setCacheTime(System.currentTimeMillis());
+				fog.getStreamMetadata().put(streamId, metadataInfo);
 				return metadataInfo;
 			}
 		}
@@ -1583,21 +1588,23 @@ public class FogServiceHandler implements FogService.Iface {
 				if (!metadataInfo.isCached()) {
 					// it means this metadata is fetched directly from the owner
 					// setting it in the local Fog's map by marking it as cached
-					metadataInfo.setCached(true);
-					metadataInfo.setCacheTime(System.currentTimeMillis());
-					fog.getStreamMetadata().put(streamId, metadataInfo);
+					LOGGER.info("StreamMetadata not locally present, got a copy from the owner");
 				} else {
 					// this metadata is fetched from another node's cached copy
-					// get latest from the owner itself
-					NodeInfoPrimary ownerFog = metadataInfo.getStreamMetadata().getOwner().getValue();
-					StreamMetadata metadata = fetchMetadataFromOwner(streamId, ownerFog.getNodeIP(),
-							ownerFog.getPort());
-					metadataInfo = new StreamMetadataInfo();
-					metadataInfo.setStreamMetadata(metadata);
-					metadataInfo.setCached(true);
-					metadataInfo.setCacheTime(System.currentTimeMillis());
-					fog.getStreamMetadata().put(streamId, metadataInfo);
+					// this part of the code can be executed only by the Fog node
+					// which is contacted by the client directly. If this node wants
+					// the latest metadata, send forceLatest as true or get a cached copy
+					if (forceLatest) {
+						NodeInfoPrimary ownerFog = metadataInfo.getStreamMetadata().getOwner().getValue();
+						StreamMetadata metadata = fetchMetadataFromOwner(streamId, ownerFog.getNodeIP(),
+								ownerFog.getPort());
+						metadataInfo = new StreamMetadataInfo();
+						metadataInfo.setStreamMetadata(metadata);
+					}
 				}
+				metadataInfo.setCached(true);
+				metadataInfo.setCacheTime(System.currentTimeMillis());
+				fog.getStreamMetadata().put(streamId, metadataInfo);
 			}
 		}
 

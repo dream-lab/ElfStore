@@ -228,19 +228,20 @@ struct DynamicTypeStreamMetadata {
 }
 
 struct StreamMetadata {
-	1: required I64TypeStreamMetadata startTime;
-	2: optional I64TypeStreamMetadata endTime;
-	3: required DoubleTypeStreamMetadata reliability;
-	4: required ByteTypeStreamMetadata minReplica;
-	5: required ByteTypeStreamMetadata maxReplica;
+	1: required string streamId;
+	2: required I64TypeStreamMetadata startTime;
+	3: optional I64TypeStreamMetadata endTime;
+	4: required DoubleTypeStreamMetadata reliability;
+	5: required ByteTypeStreamMetadata minReplica;
+	6: required ByteTypeStreamMetadata maxReplica;
 	//you create a stream with version 0 and everytime you fetch
 	//the stream metadata, you also get the version back
-	6: required I32TypeStreamMetadata version;
+	7: required I32TypeStreamMetadata version;
 	//initially the client calling the create method for the stream
 	//need not pass the owner information as the Fog node contacted
 	//will become the owner of the stream
-	7: optional NodeInfoPrimaryTypeStreamMetadata owner;
-	8: optional map<string, DynamicTypeStreamMetadata> otherProperties;
+	8: optional NodeInfoPrimaryTypeStreamMetadata owner;
+	9: optional map<string, DynamicTypeStreamMetadata> otherProperties;
 }
 
 struct StreamMetadataInfo {
