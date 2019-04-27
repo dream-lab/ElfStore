@@ -2268,16 +2268,27 @@ public class FogServiceHandler implements FogService.Iface {
 			return new StreamMetadataUpdateResponse(Constants.FAILURE,
 					StreamMetadataUpdateMessage.FAIL_NOT_OWNER.getMessage());
 		}
-		streamMetadataUpdateLock.lock();
-		StreamMetadataUpdateMessage updateStatus = checkForUpdateValidity(metadataInfo.getStreamMetadata(), metadata);
+		StreamMetadataUpdateMessage updateStatus = checkForUpdateValidity(metadataInfo.getStreamMetadata(),
+				metadata);
 		StreamMetadataUpdateResponse response = null;
 		if (updateStatus.getCode() > 0) {
-			metadataInfo.setStreamMetadata(metadata);
-			response = new StreamMetadataUpdateResponse(Constants.SUCCESS, updateStatus.getMessage());
+			streamMetadataUpdateLock.lock();
+			// multiple incoming update requests passed the semantic checker
+			if (metadataInfo.getStreamMetadata().getVersion().getValue() != metadata.getVersion().getValue()) {
+				LOGGER.error("Update of stream metadata failed due to version mismatch");
+				response = new StreamMetadataUpdateResponse(Constants.FAILURE,
+						StreamMetadataUpdateMessage.FAIL_VERSION_MISMATCH.getMessage());
+			} else {
+				//increment the version here
+				metadata.setVersion(new I32TypeStreamMetadata(metadata.getVersion().getValue() + 1, true));
+				metadataInfo.setStreamMetadata(metadata);
+				response = new StreamMetadataUpdateResponse(Constants.SUCCESS, updateStatus.getMessage());
+			}
+			streamMetadataUpdateLock.unlock();
 		} else {
 			response = new StreamMetadataUpdateResponse(Constants.FAILURE, updateStatus.getMessage());
 		}
-		streamMetadataUpdateLock.unlock();
+		
 		return response;
 	}
 
