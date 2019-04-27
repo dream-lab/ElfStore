@@ -30,14 +30,16 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 	
 	private short edgeId;
 	private Integer reliability;
-	private String microbatchId;
+//	private String microbatchId;
+	private Long microbatchId;
 	private FogServiceHandler handler;
 	
 	public RecoverTask() {
 		
 	}
 	
-	public RecoverTask(short edgeId, Integer reliability, String microbatchId, FogServiceHandler handler) {
+	public RecoverTask(short edgeId, Integer reliability, /*String microbatchId,*/
+			Long microbatchId, FogServiceHandler handler) {
 		super();
 		this.edgeId = edgeId;
 		this.reliability = reliability;
@@ -57,7 +59,7 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 		return reliability;
 	}
 
-	public String getMicrobatchId() {
+	public Long getMicrobatchId() {
 		return microbatchId;
 	}
 
@@ -75,7 +77,7 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 		if(edgeInfo == null)
 			return;
 		int edgeReliability = getReliability();
-		String microBatchId = getMicrobatchId();
+		Long microBatchId = getMicrobatchId();
 		LOGGER.info("Recovery for microbatchId : " + microBatchId + " belonging to EdgeId: " + edgeId
 		+ " starts at " + System.currentTimeMillis());
 		List<FindReplica> currentReplicas = new ArrayList<>();
@@ -159,7 +161,8 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 			//Since the microbatchId is removed from the set, make sure to not
 			//use iterator while adding this microbatchId as we are removing here
 			//and adding in Checker (ConcurrentModificationException)
-			Set<String> set = handler.getFog().getEdgeMicrobatchMap().get(edgeId);
+//			Set<String> set = handler.getFog().getEdgeMicrobatchMap().get(edgeId);
+			Set<Long> set = handler.getFog().getEdgeMicrobatchMap().get(edgeId);
 			set.remove(microBatchId);
 			if (set.size() == 0) {
 				LOGGER.info("All microbatches recovered for EdgeId: " + edgeId + " at " + System.currentTimeMillis());

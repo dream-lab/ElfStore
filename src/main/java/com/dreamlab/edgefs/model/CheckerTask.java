@@ -50,7 +50,8 @@ public class CheckerTask implements Runnable {
 				//or check for "D" (Dead edge where microbatch recovery not started yet)
 				if (edgeInfo != null && edgeInfo.getStatus().equals("D")) {
 					LOGGER.info("Found a dead edge");
-					List<String> mbList = new ArrayList<>();
+//					List<String> mbList = new ArrayList<>();
+					List<Long> mbList = new ArrayList<>();
 					mbList.addAll(fog.getEdgeMicrobatchMap().get(entry.getKey()));
 					if (mbList != null) {
 						LOGGER.info("Dead EdgeId: " + edgeInfo.getNodeId() + " had " + mbList.size()

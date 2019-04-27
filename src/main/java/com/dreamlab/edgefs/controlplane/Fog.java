@@ -274,14 +274,16 @@ public class Fog implements Serializable {
 	//still for keeping the separation clean, resorting to a map with implementation
 	//a ConcurrentHashMap. Java doesn't have a ConcurrentHashSet and such a feature in
 	//use is anyways backed by a ConcurrentHashMap
-	private Map<String,Map<Short,Byte>> mbIDLocationMap = new ConcurrentHashMap<>();
+//	private Map<String,Map<Short,Byte>> mbIDLocationMap = new ConcurrentHashMap<>();
+	private Map<Long,Map<Short,Byte>> mbIDLocationMap = new ConcurrentHashMap<>();
 	
 	//the stream level metadata is stored but not used for searching. This is stored
 	//when the stream is first registered
 	private Map<String, StreamMetadataInfo> streamMetadata = new ConcurrentHashMap<>();
 	
 	//This is used to have a mapping between StreamID and a set of Microbatches
-	private Map<String, Set<String>> streamMbIdMap =  new ConcurrentHashMap<>();
+//	private Map<String, Set<String>> streamMbIdMap =  new ConcurrentHashMap<>();
+	private Map<String, Set<Long>> streamMbIdMap =  new ConcurrentHashMap<>();
 	
 	//This is used to have a mapping between metadata values and micro batches
 	//Sumit:The microbatch metadata containing key value pairs
@@ -290,17 +292,21 @@ public class Fog implements Serializable {
 	//keys in this map and each has a different list instantiated for it, reason being there can
 	//be microbatches which have a common set of key value pairs but not the overall metadata
 	//which requires us to store a different list for each metadata value
-	private Map<String, List<String>> metaToMBIdListMap = new ConcurrentHashMap<>(); 
+//	private Map<String, List<String>> metaToMBIdListMap = new ConcurrentHashMap<>(); 
+	private Map<String, List<Long>> metaToMBIdListMap = new ConcurrentHashMap<>();
 	
 	//this map stores for every edge the list of microbatchIds it stores. This is useful
 	//for recovery when an edge device dies and the Fog on learning this needs to start
 	//the recovery thereby becoming a client in the process to get the lost data from 
 	//other replicas
-	private Map<Short, Set<String>> edgeMicrobatchMap = new ConcurrentHashMap<>();
+//	private Map<Short, Set<String>> edgeMicrobatchMap = new ConcurrentHashMap<>();
+	private Map<Short, Set<Long>> edgeMicrobatchMap = new ConcurrentHashMap<>();
 	
-	private Map<String, String> microBatchToStream = new ConcurrentHashMap<>();
+//	private Map<String, String> microBatchToStream = new ConcurrentHashMap<>();
+	private Map<Long, String> microBatchToStream = new ConcurrentHashMap<>();
 	
-	private Map<String, Metadata> blockMetadata = new ConcurrentHashMap<>();
+//	private Map<String, Metadata> blockMetadata = new ConcurrentHashMap<>();
+	private Map<Long, Metadata> blockMetadata = new ConcurrentHashMap<>();
 	
 	//CONCURRENT WRITES::during replica identification phase, we first fetch a local edge
 	//to the contacted Fog and then move to our algorithm similar to a finite state machine
@@ -315,7 +321,8 @@ public class Fog implements Serializable {
 	//identified by Fog for writing is different from the one picked earlier. Also when the
 	//insertMetadata request comes for the local edge write, we remove this microbatchId from
 	//the set since mbIDLocationMap can do the job now in case of recovery
-	private transient Map<String, Short> localEdgeWritesInProgress = new ConcurrentHashMap<>();
+//	private transient Map<String, Short> localEdgeWritesInProgress = new ConcurrentHashMap<>();
+	private transient Map<Long, Short> localEdgeWritesInProgress = new ConcurrentHashMap<>();
 	
 	//this is the system-wide cache invalidation time for cached stream metadata
 	//transient as it can read from the system.properties during startup
@@ -357,11 +364,11 @@ public class Fog implements Serializable {
 	}
 	/*********************************************************************************/
 	
-	public Map<String, String> getMicroBatchToStream() {
+	public Map<Long, String> getMicroBatchToStream() {
 		return microBatchToStream;
 	}
 
-	public void setMicroBatchToStream(Map<String, String> microBatchToStream) {
+	public void setMicroBatchToStream(Map<Long, String> microBatchToStream) {
 		this.microBatchToStream = microBatchToStream;
 	}
 
@@ -385,19 +392,19 @@ public class Fog implements Serializable {
 		this.mbIDLocationMap = mbIDLocationMap;
 	}*/
 	
-	public Map<String, Map<Short, Byte>> getMbIDLocationMap() {
+	public Map<Long, Map<Short, Byte>> getMbIDLocationMap() {
 		return mbIDLocationMap;
 	}
 
-	public void setMbIDLocationMap(Map<String, Map<Short, Byte>> mbIDLocationMap) {
+	public void setMbIDLocationMap(Map<Long, Map<Short, Byte>> mbIDLocationMap) {
 		this.mbIDLocationMap = mbIDLocationMap;
 	}
 
-	public Map<String, Set<String>> getStreamMbIdMap() {
+	public Map<String, Set<Long>> getStreamMbIdMap() {
 		return streamMbIdMap;
 	}
 
-	public void setStreamMbIdMap(Map<String, Set<String>> streamMbIdMap) {
+	public void setStreamMbIdMap(Map<String, Set<Long>> streamMbIdMap) {
 		this.streamMbIdMap = streamMbIdMap;
 	}
 
@@ -405,11 +412,11 @@ public class Fog implements Serializable {
 	 * 
 	 * @return a map with metadata being the key and List of micro-batch ids being the values
 	 */
-	public Map<String, List<String>> getMetaMbIdMap() {
+	public Map<String, List<Long>> getMetaMbIdMap() {
 		return metaToMBIdListMap;
 	}
 
-	public void setMetaMbIdMap(HashMap<String, List<String>> metaMbIdMap) {
+	public void setMetaMbIdMap(Map<String, List<Long>> metaMbIdMap) {
 		this.metaToMBIdListMap = metaMbIdMap;
 	}
 	
@@ -678,35 +685,35 @@ public class Fog implements Serializable {
 		this.streamMetadata = streamMetadata;
 	}
 
-	public Map<Short, Set<String>> getEdgeMicrobatchMap() {
+	public Map<Short, Set<Long>> getEdgeMicrobatchMap() {
 		return edgeMicrobatchMap;
 	}
 
-	public void setEdgeMicrobatchMap(Map<Short, Set<String>> edgeMicrobatchMap) {
+	public void setEdgeMicrobatchMap(Map<Short, Set<Long>> edgeMicrobatchMap) {
 		this.edgeMicrobatchMap = edgeMicrobatchMap;
 	}
 
-	public Map<String, List<String>> getMetaToMBIdListMap() {
+	public Map<String, List<Long>> getMetaToMBIdListMap() {
 		return metaToMBIdListMap;
 	}
 
-	public void setMetaToMBIdListMap(Map<String, List<String>> metaToMBIdListMap) {
+	public void setMetaToMBIdListMap(Map<String, List<Long>> metaToMBIdListMap) {
 		this.metaToMBIdListMap = metaToMBIdListMap;
 	}
 
-	public Map<String, Metadata> getBlockMetadata() {
+	public Map<Long, Metadata> getBlockMetadata() {
 		return blockMetadata;
 	}
 
-	public void setBlockMetadata(Map<String, Metadata> blockMetadata) {
+	public void setBlockMetadata(Map<Long, Metadata> blockMetadata) {
 		this.blockMetadata = blockMetadata;
 	}
 	
-	public Map<String, Short> getLocalEdgeWritesInProgress() {
+	public Map<Long, Short> getLocalEdgeWritesInProgress() {
 		return localEdgeWritesInProgress;
 	}
 
-	public void setLocalEdgeWritesInProgress(Map<String, Short> localEdgeWritesInProgress) {
+	public void setLocalEdgeWritesInProgress(Map<Long, Short> localEdgeWritesInProgress) {
 		this.localEdgeWritesInProgress = localEdgeWritesInProgress;
 	}
 	

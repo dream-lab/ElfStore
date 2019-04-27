@@ -29,7 +29,7 @@ public class RecoveryRejectedHandler implements RejectedExecutionHandler {
 	@Override
 	public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
 		RecoverTask recoverTask = (RecoverTask) r;
-		String rejectedBlockId = recoverTask.getMicrobatchId();
+		Long rejectedBlockId = recoverTask.getMicrobatchId();
 		LOGGER.info("The blockId : {} is rejected for recovery, hence will not be recovered", rejectedBlockId);
 	}
 

@@ -66,19 +66,23 @@ public class FogService {
 
     public java.nio.ByteBuffer findNext(java.lang.String microbatchId) throws org.apache.thrift.TException;
 
-    public java.util.List<FindReplica> find(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo) throws org.apache.thrift.TException;
+    public java.util.List<FindReplica> find(long microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo) throws org.apache.thrift.TException;
 
-    public ReadReplica read(java.lang.String microbatchId, boolean fetchMetadata) throws org.apache.thrift.TException;
+    public ReadReplica read(long microbatchId, boolean fetchMetadata) throws org.apache.thrift.TException;
 
     public QueryReplica findUsingQuery(java.lang.String metadataKey, java.lang.String metadataValue, boolean checkNeighbors, boolean checkBuddies) throws org.apache.thrift.TException;
 
-    public ReadReplica getMeta(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies) throws org.apache.thrift.TException;
+    public ReadReplica getMeta(long microbatchId, boolean checkNeighbors, boolean checkBuddies) throws org.apache.thrift.TException;
 
     public byte serializeState() throws org.apache.thrift.TException;
 
     public StreamMetadataUpdateResponse updateStreamMetadata(StreamMetadata metadata) throws org.apache.thrift.TException;
 
     public OpenStreamResponse open(java.lang.String streamId, java.lang.String clientId, long expectedLease) throws org.apache.thrift.TException;
+
+    public WriteResponse putNext(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference) throws org.apache.thrift.TException;
+
+    public BlockMetadataUpdateResponse incrementBlockCount(Metadata mbMetadata) throws org.apache.thrift.TException;
 
   }
 
@@ -138,19 +142,23 @@ public class FogService {
 
     public void findNext(java.lang.String microbatchId, org.apache.thrift.async.AsyncMethodCallback<java.nio.ByteBuffer> resultHandler) throws org.apache.thrift.TException;
 
-    public void find(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo, org.apache.thrift.async.AsyncMethodCallback<java.util.List<FindReplica>> resultHandler) throws org.apache.thrift.TException;
+    public void find(long microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo, org.apache.thrift.async.AsyncMethodCallback<java.util.List<FindReplica>> resultHandler) throws org.apache.thrift.TException;
 
-    public void read(java.lang.String microbatchId, boolean fetchMetadata, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler) throws org.apache.thrift.TException;
+    public void read(long microbatchId, boolean fetchMetadata, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler) throws org.apache.thrift.TException;
 
     public void findUsingQuery(java.lang.String metadataKey, java.lang.String metadataValue, boolean checkNeighbors, boolean checkBuddies, org.apache.thrift.async.AsyncMethodCallback<QueryReplica> resultHandler) throws org.apache.thrift.TException;
 
-    public void getMeta(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler) throws org.apache.thrift.TException;
+    public void getMeta(long microbatchId, boolean checkNeighbors, boolean checkBuddies, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler) throws org.apache.thrift.TException;
 
     public void serializeState(org.apache.thrift.async.AsyncMethodCallback<java.lang.Byte> resultHandler) throws org.apache.thrift.TException;
 
     public void updateStreamMetadata(StreamMetadata metadata, org.apache.thrift.async.AsyncMethodCallback<StreamMetadataUpdateResponse> resultHandler) throws org.apache.thrift.TException;
 
     public void open(java.lang.String streamId, java.lang.String clientId, long expectedLease, org.apache.thrift.async.AsyncMethodCallback<OpenStreamResponse> resultHandler) throws org.apache.thrift.TException;
+
+    public void putNext(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference, org.apache.thrift.async.AsyncMethodCallback<WriteResponse> resultHandler) throws org.apache.thrift.TException;
+
+    public void incrementBlockCount(Metadata mbMetadata, org.apache.thrift.async.AsyncMethodCallback<BlockMetadataUpdateResponse> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -783,13 +791,13 @@ public class FogService {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "findNext failed: unknown result");
     }
 
-    public java.util.List<FindReplica> find(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo) throws org.apache.thrift.TException
+    public java.util.List<FindReplica> find(long microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo) throws org.apache.thrift.TException
     {
       send_find(microbatchId, checkNeighbors, checkBuddies, selfInfo);
       return recv_find();
     }
 
-    public void send_find(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo) throws org.apache.thrift.TException
+    public void send_find(long microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo) throws org.apache.thrift.TException
     {
       find_args args = new find_args();
       args.setMicrobatchId(microbatchId);
@@ -809,13 +817,13 @@ public class FogService {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "find failed: unknown result");
     }
 
-    public ReadReplica read(java.lang.String microbatchId, boolean fetchMetadata) throws org.apache.thrift.TException
+    public ReadReplica read(long microbatchId, boolean fetchMetadata) throws org.apache.thrift.TException
     {
       send_read(microbatchId, fetchMetadata);
       return recv_read();
     }
 
-    public void send_read(java.lang.String microbatchId, boolean fetchMetadata) throws org.apache.thrift.TException
+    public void send_read(long microbatchId, boolean fetchMetadata) throws org.apache.thrift.TException
     {
       read_args args = new read_args();
       args.setMicrobatchId(microbatchId);
@@ -859,13 +867,13 @@ public class FogService {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "findUsingQuery failed: unknown result");
     }
 
-    public ReadReplica getMeta(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies) throws org.apache.thrift.TException
+    public ReadReplica getMeta(long microbatchId, boolean checkNeighbors, boolean checkBuddies) throws org.apache.thrift.TException
     {
       send_getMeta(microbatchId, checkNeighbors, checkBuddies);
       return recv_getMeta();
     }
 
-    public void send_getMeta(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies) throws org.apache.thrift.TException
+    public void send_getMeta(long microbatchId, boolean checkNeighbors, boolean checkBuddies) throws org.apache.thrift.TException
     {
       getMeta_args args = new getMeta_args();
       args.setMicrobatchId(microbatchId);
@@ -952,6 +960,54 @@ public class FogService {
         return result.success;
       }
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "open failed: unknown result");
+    }
+
+    public WriteResponse putNext(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference) throws org.apache.thrift.TException
+    {
+      send_putNext(mbMetadata, data, preference);
+      return recv_putNext();
+    }
+
+    public void send_putNext(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference) throws org.apache.thrift.TException
+    {
+      putNext_args args = new putNext_args();
+      args.setMbMetadata(mbMetadata);
+      args.setData(data);
+      args.setPreference(preference);
+      sendBase("putNext", args);
+    }
+
+    public WriteResponse recv_putNext() throws org.apache.thrift.TException
+    {
+      putNext_result result = new putNext_result();
+      receiveBase(result, "putNext");
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "putNext failed: unknown result");
+    }
+
+    public BlockMetadataUpdateResponse incrementBlockCount(Metadata mbMetadata) throws org.apache.thrift.TException
+    {
+      send_incrementBlockCount(mbMetadata);
+      return recv_incrementBlockCount();
+    }
+
+    public void send_incrementBlockCount(Metadata mbMetadata) throws org.apache.thrift.TException
+    {
+      incrementBlockCount_args args = new incrementBlockCount_args();
+      args.setMbMetadata(mbMetadata);
+      sendBase("incrementBlockCount", args);
+    }
+
+    public BlockMetadataUpdateResponse recv_incrementBlockCount() throws org.apache.thrift.TException
+    {
+      incrementBlockCount_result result = new incrementBlockCount_result();
+      receiveBase(result, "incrementBlockCount");
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "incrementBlockCount failed: unknown result");
     }
 
   }
@@ -1875,7 +1931,7 @@ public class FogService {
       }
     }
 
-    public void find(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo, org.apache.thrift.async.AsyncMethodCallback<java.util.List<FindReplica>> resultHandler) throws org.apache.thrift.TException {
+    public void find(long microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo, org.apache.thrift.async.AsyncMethodCallback<java.util.List<FindReplica>> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       find_call method_call = new find_call(microbatchId, checkNeighbors, checkBuddies, selfInfo, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
@@ -1883,11 +1939,11 @@ public class FogService {
     }
 
     public static class find_call extends org.apache.thrift.async.TAsyncMethodCall<java.util.List<FindReplica>> {
-      private java.lang.String microbatchId;
+      private long microbatchId;
       private boolean checkNeighbors;
       private boolean checkBuddies;
       private EdgeInfoData selfInfo;
-      public find_call(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo, org.apache.thrift.async.AsyncMethodCallback<java.util.List<FindReplica>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public find_call(long microbatchId, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo, org.apache.thrift.async.AsyncMethodCallback<java.util.List<FindReplica>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.microbatchId = microbatchId;
         this.checkNeighbors = checkNeighbors;
@@ -1916,7 +1972,7 @@ public class FogService {
       }
     }
 
-    public void read(java.lang.String microbatchId, boolean fetchMetadata, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler) throws org.apache.thrift.TException {
+    public void read(long microbatchId, boolean fetchMetadata, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       read_call method_call = new read_call(microbatchId, fetchMetadata, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
@@ -1924,9 +1980,9 @@ public class FogService {
     }
 
     public static class read_call extends org.apache.thrift.async.TAsyncMethodCall<ReadReplica> {
-      private java.lang.String microbatchId;
+      private long microbatchId;
       private boolean fetchMetadata;
-      public read_call(java.lang.String microbatchId, boolean fetchMetadata, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public read_call(long microbatchId, boolean fetchMetadata, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.microbatchId = microbatchId;
         this.fetchMetadata = fetchMetadata;
@@ -1992,7 +2048,7 @@ public class FogService {
       }
     }
 
-    public void getMeta(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler) throws org.apache.thrift.TException {
+    public void getMeta(long microbatchId, boolean checkNeighbors, boolean checkBuddies, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       getMeta_call method_call = new getMeta_call(microbatchId, checkNeighbors, checkBuddies, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
@@ -2000,10 +2056,10 @@ public class FogService {
     }
 
     public static class getMeta_call extends org.apache.thrift.async.TAsyncMethodCall<ReadReplica> {
-      private java.lang.String microbatchId;
+      private long microbatchId;
       private boolean checkNeighbors;
       private boolean checkBuddies;
-      public getMeta_call(java.lang.String microbatchId, boolean checkNeighbors, boolean checkBuddies, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public getMeta_call(long microbatchId, boolean checkNeighbors, boolean checkBuddies, org.apache.thrift.async.AsyncMethodCallback<ReadReplica> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.microbatchId = microbatchId;
         this.checkNeighbors = checkNeighbors;
@@ -2129,6 +2185,76 @@ public class FogService {
       }
     }
 
+    public void putNext(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference, org.apache.thrift.async.AsyncMethodCallback<WriteResponse> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      putNext_call method_call = new putNext_call(mbMetadata, data, preference, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class putNext_call extends org.apache.thrift.async.TAsyncMethodCall<WriteResponse> {
+      private Metadata mbMetadata;
+      private java.nio.ByteBuffer data;
+      private WritePreference preference;
+      public putNext_call(Metadata mbMetadata, java.nio.ByteBuffer data, WritePreference preference, org.apache.thrift.async.AsyncMethodCallback<WriteResponse> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.mbMetadata = mbMetadata;
+        this.data = data;
+        this.preference = preference;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("putNext", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        putNext_args args = new putNext_args();
+        args.setMbMetadata(mbMetadata);
+        args.setData(data);
+        args.setPreference(preference);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public WriteResponse getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new java.lang.IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_putNext();
+      }
+    }
+
+    public void incrementBlockCount(Metadata mbMetadata, org.apache.thrift.async.AsyncMethodCallback<BlockMetadataUpdateResponse> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      incrementBlockCount_call method_call = new incrementBlockCount_call(mbMetadata, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class incrementBlockCount_call extends org.apache.thrift.async.TAsyncMethodCall<BlockMetadataUpdateResponse> {
+      private Metadata mbMetadata;
+      public incrementBlockCount_call(Metadata mbMetadata, org.apache.thrift.async.AsyncMethodCallback<BlockMetadataUpdateResponse> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.mbMetadata = mbMetadata;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("incrementBlockCount", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        incrementBlockCount_args args = new incrementBlockCount_args();
+        args.setMbMetadata(mbMetadata);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public BlockMetadataUpdateResponse getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new java.lang.IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_incrementBlockCount();
+      }
+    }
+
   }
 
   public static class Processor<I extends Iface> extends org.apache.thrift.TBaseProcessor<I> implements org.apache.thrift.TProcessor {
@@ -2176,6 +2302,8 @@ public class FogService {
       processMap.put("serializeState", new serializeState());
       processMap.put("updateStreamMetadata", new updateStreamMetadata());
       processMap.put("open", new open());
+      processMap.put("putNext", new putNext());
+      processMap.put("incrementBlockCount", new incrementBlockCount());
       return processMap;
     }
 
@@ -3035,6 +3163,56 @@ public class FogService {
       }
     }
 
+    public static class putNext<I extends Iface> extends org.apache.thrift.ProcessFunction<I, putNext_args> {
+      public putNext() {
+        super("putNext");
+      }
+
+      public putNext_args getEmptyArgsInstance() {
+        return new putNext_args();
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      @Override
+      protected boolean handleRuntimeExceptions() {
+        return false;
+      }
+
+      public putNext_result getResult(I iface, putNext_args args) throws org.apache.thrift.TException {
+        putNext_result result = new putNext_result();
+        result.success = iface.putNext(args.mbMetadata, args.data, args.preference);
+        return result;
+      }
+    }
+
+    public static class incrementBlockCount<I extends Iface> extends org.apache.thrift.ProcessFunction<I, incrementBlockCount_args> {
+      public incrementBlockCount() {
+        super("incrementBlockCount");
+      }
+
+      public incrementBlockCount_args getEmptyArgsInstance() {
+        return new incrementBlockCount_args();
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      @Override
+      protected boolean handleRuntimeExceptions() {
+        return false;
+      }
+
+      public incrementBlockCount_result getResult(I iface, incrementBlockCount_args args) throws org.apache.thrift.TException {
+        incrementBlockCount_result result = new incrementBlockCount_result();
+        result.success = iface.incrementBlockCount(args.mbMetadata);
+        return result;
+      }
+    }
+
   }
 
   public static class AsyncProcessor<I extends AsyncIface> extends org.apache.thrift.TBaseAsyncProcessor<I> {
@@ -3082,6 +3260,8 @@ public class FogService {
       processMap.put("serializeState", new serializeState());
       processMap.put("updateStreamMetadata", new updateStreamMetadata());
       processMap.put("open", new open());
+      processMap.put("putNext", new putNext());
+      processMap.put("incrementBlockCount", new incrementBlockCount());
       return processMap;
     }
 
@@ -5109,6 +5289,128 @@ public class FogService {
 
       public void start(I iface, open_args args, org.apache.thrift.async.AsyncMethodCallback<OpenStreamResponse> resultHandler) throws org.apache.thrift.TException {
         iface.open(args.streamId, args.clientId, args.expectedLease,resultHandler);
+      }
+    }
+
+    public static class putNext<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, putNext_args, WriteResponse> {
+      public putNext() {
+        super("putNext");
+      }
+
+      public putNext_args getEmptyArgsInstance() {
+        return new putNext_args();
+      }
+
+      public org.apache.thrift.async.AsyncMethodCallback<WriteResponse> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
+        final org.apache.thrift.AsyncProcessFunction fcall = this;
+        return new org.apache.thrift.async.AsyncMethodCallback<WriteResponse>() { 
+          public void onComplete(WriteResponse o) {
+            putNext_result result = new putNext_result();
+            result.success = o;
+            try {
+              fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
+            } catch (org.apache.thrift.transport.TTransportException e) {
+              _LOGGER.error("TTransportException writing to internal frame buffer", e);
+              fb.close();
+            } catch (java.lang.Exception e) {
+              _LOGGER.error("Exception writing to internal frame buffer", e);
+              onError(e);
+            }
+          }
+          public void onError(java.lang.Exception e) {
+            byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
+            org.apache.thrift.TSerializable msg;
+            putNext_result result = new putNext_result();
+            if (e instanceof org.apache.thrift.transport.TTransportException) {
+              _LOGGER.error("TTransportException inside handler", e);
+              fb.close();
+              return;
+            } else if (e instanceof org.apache.thrift.TApplicationException) {
+              _LOGGER.error("TApplicationException inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = (org.apache.thrift.TApplicationException)e;
+            } else {
+              _LOGGER.error("Exception inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
+            }
+            try {
+              fcall.sendResponse(fb,msg,msgType,seqid);
+            } catch (java.lang.Exception ex) {
+              _LOGGER.error("Exception writing to internal frame buffer", ex);
+              fb.close();
+            }
+          }
+        };
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      public void start(I iface, putNext_args args, org.apache.thrift.async.AsyncMethodCallback<WriteResponse> resultHandler) throws org.apache.thrift.TException {
+        iface.putNext(args.mbMetadata, args.data, args.preference,resultHandler);
+      }
+    }
+
+    public static class incrementBlockCount<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, incrementBlockCount_args, BlockMetadataUpdateResponse> {
+      public incrementBlockCount() {
+        super("incrementBlockCount");
+      }
+
+      public incrementBlockCount_args getEmptyArgsInstance() {
+        return new incrementBlockCount_args();
+      }
+
+      public org.apache.thrift.async.AsyncMethodCallback<BlockMetadataUpdateResponse> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
+        final org.apache.thrift.AsyncProcessFunction fcall = this;
+        return new org.apache.thrift.async.AsyncMethodCallback<BlockMetadataUpdateResponse>() { 
+          public void onComplete(BlockMetadataUpdateResponse o) {
+            incrementBlockCount_result result = new incrementBlockCount_result();
+            result.success = o;
+            try {
+              fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
+            } catch (org.apache.thrift.transport.TTransportException e) {
+              _LOGGER.error("TTransportException writing to internal frame buffer", e);
+              fb.close();
+            } catch (java.lang.Exception e) {
+              _LOGGER.error("Exception writing to internal frame buffer", e);
+              onError(e);
+            }
+          }
+          public void onError(java.lang.Exception e) {
+            byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
+            org.apache.thrift.TSerializable msg;
+            incrementBlockCount_result result = new incrementBlockCount_result();
+            if (e instanceof org.apache.thrift.transport.TTransportException) {
+              _LOGGER.error("TTransportException inside handler", e);
+              fb.close();
+              return;
+            } else if (e instanceof org.apache.thrift.TApplicationException) {
+              _LOGGER.error("TApplicationException inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = (org.apache.thrift.TApplicationException)e;
+            } else {
+              _LOGGER.error("Exception inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
+            }
+            try {
+              fcall.sendResponse(fb,msg,msgType,seqid);
+            } catch (java.lang.Exception ex) {
+              _LOGGER.error("Exception writing to internal frame buffer", ex);
+              fb.close();
+            }
+          }
+        };
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      public void start(I iface, incrementBlockCount_args args, org.apache.thrift.async.AsyncMethodCallback<BlockMetadataUpdateResponse> resultHandler) throws org.apache.thrift.TException {
+        iface.incrementBlockCount(args.mbMetadata,resultHandler);
       }
     }
 
@@ -25665,7 +25967,7 @@ public class FogService {
   public static class find_args implements org.apache.thrift.TBase<find_args, find_args._Fields>, java.io.Serializable, Cloneable, Comparable<find_args>   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("find_args");
 
-    private static final org.apache.thrift.protocol.TField MICROBATCH_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("microbatchId", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField MICROBATCH_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("microbatchId", org.apache.thrift.protocol.TType.I64, (short)1);
     private static final org.apache.thrift.protocol.TField CHECK_NEIGHBORS_FIELD_DESC = new org.apache.thrift.protocol.TField("checkNeighbors", org.apache.thrift.protocol.TType.BOOL, (short)2);
     private static final org.apache.thrift.protocol.TField CHECK_BUDDIES_FIELD_DESC = new org.apache.thrift.protocol.TField("checkBuddies", org.apache.thrift.protocol.TType.BOOL, (short)3);
     private static final org.apache.thrift.protocol.TField SELF_INFO_FIELD_DESC = new org.apache.thrift.protocol.TField("selfInfo", org.apache.thrift.protocol.TType.STRUCT, (short)4);
@@ -25673,7 +25975,7 @@ public class FogService {
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new find_argsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new find_argsTupleSchemeFactory();
 
-    public java.lang.String microbatchId; // required
+    public long microbatchId; // required
     public boolean checkNeighbors; // required
     public boolean checkBuddies; // required
     public EdgeInfoData selfInfo; // required
@@ -25746,14 +26048,15 @@ public class FogService {
     }
 
     // isset id assignments
-    private static final int __CHECKNEIGHBORS_ISSET_ID = 0;
-    private static final int __CHECKBUDDIES_ISSET_ID = 1;
+    private static final int __MICROBATCHID_ISSET_ID = 0;
+    private static final int __CHECKNEIGHBORS_ISSET_ID = 1;
+    private static final int __CHECKBUDDIES_ISSET_ID = 2;
     private byte __isset_bitfield = 0;
     public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.MICROBATCH_ID, new org.apache.thrift.meta_data.FieldMetaData("microbatchId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
       tmpMap.put(_Fields.CHECK_NEIGHBORS, new org.apache.thrift.meta_data.FieldMetaData("checkNeighbors", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
       tmpMap.put(_Fields.CHECK_BUDDIES, new org.apache.thrift.meta_data.FieldMetaData("checkBuddies", org.apache.thrift.TFieldRequirementType.DEFAULT, 
@@ -25768,13 +26071,14 @@ public class FogService {
     }
 
     public find_args(
-      java.lang.String microbatchId,
+      long microbatchId,
       boolean checkNeighbors,
       boolean checkBuddies,
       EdgeInfoData selfInfo)
     {
       this();
       this.microbatchId = microbatchId;
+      setMicrobatchIdIsSet(true);
       this.checkNeighbors = checkNeighbors;
       setCheckNeighborsIsSet(true);
       this.checkBuddies = checkBuddies;
@@ -25787,9 +26091,7 @@ public class FogService {
      */
     public find_args(find_args other) {
       __isset_bitfield = other.__isset_bitfield;
-      if (other.isSetMicrobatchId()) {
-        this.microbatchId = other.microbatchId;
-      }
+      this.microbatchId = other.microbatchId;
       this.checkNeighbors = other.checkNeighbors;
       this.checkBuddies = other.checkBuddies;
       if (other.isSetSelfInfo()) {
@@ -25803,7 +26105,8 @@ public class FogService {
 
     @Override
     public void clear() {
-      this.microbatchId = null;
+      setMicrobatchIdIsSet(false);
+      this.microbatchId = 0;
       setCheckNeighborsIsSet(false);
       this.checkNeighbors = false;
       setCheckBuddiesIsSet(false);
@@ -25811,28 +26114,27 @@ public class FogService {
       this.selfInfo = null;
     }
 
-    public java.lang.String getMicrobatchId() {
+    public long getMicrobatchId() {
       return this.microbatchId;
     }
 
-    public find_args setMicrobatchId(java.lang.String microbatchId) {
+    public find_args setMicrobatchId(long microbatchId) {
       this.microbatchId = microbatchId;
+      setMicrobatchIdIsSet(true);
       return this;
     }
 
     public void unsetMicrobatchId() {
-      this.microbatchId = null;
+      __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __MICROBATCHID_ISSET_ID);
     }
 
     /** Returns true if field microbatchId is set (has been assigned a value) and false otherwise */
     public boolean isSetMicrobatchId() {
-      return this.microbatchId != null;
+      return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __MICROBATCHID_ISSET_ID);
     }
 
     public void setMicrobatchIdIsSet(boolean value) {
-      if (!value) {
-        this.microbatchId = null;
-      }
+      __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __MICROBATCHID_ISSET_ID, value);
     }
 
     public boolean isCheckNeighbors() {
@@ -25911,7 +26213,7 @@ public class FogService {
         if (value == null) {
           unsetMicrobatchId();
         } else {
-          setMicrobatchId((java.lang.String)value);
+          setMicrobatchId((java.lang.Long)value);
         }
         break;
 
@@ -25994,12 +26296,12 @@ public class FogService {
       if (this == that)
         return true;
 
-      boolean this_present_microbatchId = true && this.isSetMicrobatchId();
-      boolean that_present_microbatchId = true && that.isSetMicrobatchId();
+      boolean this_present_microbatchId = true;
+      boolean that_present_microbatchId = true;
       if (this_present_microbatchId || that_present_microbatchId) {
         if (!(this_present_microbatchId && that_present_microbatchId))
           return false;
-        if (!this.microbatchId.equals(that.microbatchId))
+        if (this.microbatchId != that.microbatchId)
           return false;
       }
 
@@ -26037,9 +26339,7 @@ public class FogService {
     public int hashCode() {
       int hashCode = 1;
 
-      hashCode = hashCode * 8191 + ((isSetMicrobatchId()) ? 131071 : 524287);
-      if (isSetMicrobatchId())
-        hashCode = hashCode * 8191 + microbatchId.hashCode();
+      hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(microbatchId);
 
       hashCode = hashCode * 8191 + ((checkNeighbors) ? 131071 : 524287);
 
@@ -26121,11 +26421,7 @@ public class FogService {
       boolean first = true;
 
       sb.append("microbatchId:");
-      if (this.microbatchId == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.microbatchId);
-      }
+      sb.append(this.microbatchId);
       first = false;
       if (!first) sb.append(", ");
       sb.append("checkNeighbors:");
@@ -26192,8 +26488,8 @@ public class FogService {
           }
           switch (schemeField.id) {
             case 1: // MICROBATCH_ID
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.microbatchId = iprot.readString();
+              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+                struct.microbatchId = iprot.readI64();
                 struct.setMicrobatchIdIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -26239,11 +26535,9 @@ public class FogService {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.microbatchId != null) {
-          oprot.writeFieldBegin(MICROBATCH_ID_FIELD_DESC);
-          oprot.writeString(struct.microbatchId);
-          oprot.writeFieldEnd();
-        }
+        oprot.writeFieldBegin(MICROBATCH_ID_FIELD_DESC);
+        oprot.writeI64(struct.microbatchId);
+        oprot.writeFieldEnd();
         oprot.writeFieldBegin(CHECK_NEIGHBORS_FIELD_DESC);
         oprot.writeBool(struct.checkNeighbors);
         oprot.writeFieldEnd();
@@ -26287,7 +26581,7 @@ public class FogService {
         }
         oprot.writeBitSet(optionals, 4);
         if (struct.isSetMicrobatchId()) {
-          oprot.writeString(struct.microbatchId);
+          oprot.writeI64(struct.microbatchId);
         }
         if (struct.isSetCheckNeighbors()) {
           oprot.writeBool(struct.checkNeighbors);
@@ -26305,7 +26599,7 @@ public class FogService {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet incoming = iprot.readBitSet(4);
         if (incoming.get(0)) {
-          struct.microbatchId = iprot.readString();
+          struct.microbatchId = iprot.readI64();
           struct.setMicrobatchIdIsSet(true);
         }
         if (incoming.get(1)) {
@@ -26748,13 +27042,13 @@ public class FogService {
   public static class read_args implements org.apache.thrift.TBase<read_args, read_args._Fields>, java.io.Serializable, Cloneable, Comparable<read_args>   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("read_args");
 
-    private static final org.apache.thrift.protocol.TField MICROBATCH_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("microbatchId", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField MICROBATCH_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("microbatchId", org.apache.thrift.protocol.TType.I64, (short)1);
     private static final org.apache.thrift.protocol.TField FETCH_METADATA_FIELD_DESC = new org.apache.thrift.protocol.TField("fetchMetadata", org.apache.thrift.protocol.TType.BOOL, (short)2);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new read_argsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new read_argsTupleSchemeFactory();
 
-    public java.lang.String microbatchId; // required
+    public long microbatchId; // required
     public boolean fetchMetadata; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
@@ -26819,13 +27113,14 @@ public class FogService {
     }
 
     // isset id assignments
-    private static final int __FETCHMETADATA_ISSET_ID = 0;
+    private static final int __MICROBATCHID_ISSET_ID = 0;
+    private static final int __FETCHMETADATA_ISSET_ID = 1;
     private byte __isset_bitfield = 0;
     public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.MICROBATCH_ID, new org.apache.thrift.meta_data.FieldMetaData("microbatchId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
       tmpMap.put(_Fields.FETCH_METADATA, new org.apache.thrift.meta_data.FieldMetaData("fetchMetadata", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
@@ -26836,11 +27131,12 @@ public class FogService {
     }
 
     public read_args(
-      java.lang.String microbatchId,
+      long microbatchId,
       boolean fetchMetadata)
     {
       this();
       this.microbatchId = microbatchId;
+      setMicrobatchIdIsSet(true);
       this.fetchMetadata = fetchMetadata;
       setFetchMetadataIsSet(true);
     }
@@ -26850,9 +27146,7 @@ public class FogService {
      */
     public read_args(read_args other) {
       __isset_bitfield = other.__isset_bitfield;
-      if (other.isSetMicrobatchId()) {
-        this.microbatchId = other.microbatchId;
-      }
+      this.microbatchId = other.microbatchId;
       this.fetchMetadata = other.fetchMetadata;
     }
 
@@ -26862,33 +27156,33 @@ public class FogService {
 
     @Override
     public void clear() {
-      this.microbatchId = null;
+      setMicrobatchIdIsSet(false);
+      this.microbatchId = 0;
       setFetchMetadataIsSet(false);
       this.fetchMetadata = false;
     }
 
-    public java.lang.String getMicrobatchId() {
+    public long getMicrobatchId() {
       return this.microbatchId;
     }
 
-    public read_args setMicrobatchId(java.lang.String microbatchId) {
+    public read_args setMicrobatchId(long microbatchId) {
       this.microbatchId = microbatchId;
+      setMicrobatchIdIsSet(true);
       return this;
     }
 
     public void unsetMicrobatchId() {
-      this.microbatchId = null;
+      __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __MICROBATCHID_ISSET_ID);
     }
 
     /** Returns true if field microbatchId is set (has been assigned a value) and false otherwise */
     public boolean isSetMicrobatchId() {
-      return this.microbatchId != null;
+      return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __MICROBATCHID_ISSET_ID);
     }
 
     public void setMicrobatchIdIsSet(boolean value) {
-      if (!value) {
-        this.microbatchId = null;
-      }
+      __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __MICROBATCHID_ISSET_ID, value);
     }
 
     public boolean isFetchMetadata() {
@@ -26920,7 +27214,7 @@ public class FogService {
         if (value == null) {
           unsetMicrobatchId();
         } else {
-          setMicrobatchId((java.lang.String)value);
+          setMicrobatchId((java.lang.Long)value);
         }
         break;
 
@@ -26977,12 +27271,12 @@ public class FogService {
       if (this == that)
         return true;
 
-      boolean this_present_microbatchId = true && this.isSetMicrobatchId();
-      boolean that_present_microbatchId = true && that.isSetMicrobatchId();
+      boolean this_present_microbatchId = true;
+      boolean that_present_microbatchId = true;
       if (this_present_microbatchId || that_present_microbatchId) {
         if (!(this_present_microbatchId && that_present_microbatchId))
           return false;
-        if (!this.microbatchId.equals(that.microbatchId))
+        if (this.microbatchId != that.microbatchId)
           return false;
       }
 
@@ -27002,9 +27296,7 @@ public class FogService {
     public int hashCode() {
       int hashCode = 1;
 
-      hashCode = hashCode * 8191 + ((isSetMicrobatchId()) ? 131071 : 524287);
-      if (isSetMicrobatchId())
-        hashCode = hashCode * 8191 + microbatchId.hashCode();
+      hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(microbatchId);
 
       hashCode = hashCode * 8191 + ((fetchMetadata) ? 131071 : 524287);
 
@@ -27060,11 +27352,7 @@ public class FogService {
       boolean first = true;
 
       sb.append("microbatchId:");
-      if (this.microbatchId == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.microbatchId);
-      }
+      sb.append(this.microbatchId);
       first = false;
       if (!first) sb.append(", ");
       sb.append("fetchMetadata:");
@@ -27116,8 +27404,8 @@ public class FogService {
           }
           switch (schemeField.id) {
             case 1: // MICROBATCH_ID
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.microbatchId = iprot.readString();
+              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+                struct.microbatchId = iprot.readI64();
                 struct.setMicrobatchIdIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -27146,11 +27434,9 @@ public class FogService {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.microbatchId != null) {
-          oprot.writeFieldBegin(MICROBATCH_ID_FIELD_DESC);
-          oprot.writeString(struct.microbatchId);
-          oprot.writeFieldEnd();
-        }
+        oprot.writeFieldBegin(MICROBATCH_ID_FIELD_DESC);
+        oprot.writeI64(struct.microbatchId);
+        oprot.writeFieldEnd();
         oprot.writeFieldBegin(FETCH_METADATA_FIELD_DESC);
         oprot.writeBool(struct.fetchMetadata);
         oprot.writeFieldEnd();
@@ -27180,7 +27466,7 @@ public class FogService {
         }
         oprot.writeBitSet(optionals, 2);
         if (struct.isSetMicrobatchId()) {
-          oprot.writeString(struct.microbatchId);
+          oprot.writeI64(struct.microbatchId);
         }
         if (struct.isSetFetchMetadata()) {
           oprot.writeBool(struct.fetchMetadata);
@@ -27192,7 +27478,7 @@ public class FogService {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
-          struct.microbatchId = iprot.readString();
+          struct.microbatchId = iprot.readI64();
           struct.setMicrobatchIdIsSet(true);
         }
         if (incoming.get(1)) {
@@ -28606,14 +28892,14 @@ public class FogService {
   public static class getMeta_args implements org.apache.thrift.TBase<getMeta_args, getMeta_args._Fields>, java.io.Serializable, Cloneable, Comparable<getMeta_args>   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getMeta_args");
 
-    private static final org.apache.thrift.protocol.TField MICROBATCH_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("microbatchId", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField MICROBATCH_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("microbatchId", org.apache.thrift.protocol.TType.I64, (short)1);
     private static final org.apache.thrift.protocol.TField CHECK_NEIGHBORS_FIELD_DESC = new org.apache.thrift.protocol.TField("checkNeighbors", org.apache.thrift.protocol.TType.BOOL, (short)2);
     private static final org.apache.thrift.protocol.TField CHECK_BUDDIES_FIELD_DESC = new org.apache.thrift.protocol.TField("checkBuddies", org.apache.thrift.protocol.TType.BOOL, (short)3);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMeta_argsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMeta_argsTupleSchemeFactory();
 
-    public java.lang.String microbatchId; // required
+    public long microbatchId; // required
     public boolean checkNeighbors; // required
     public boolean checkBuddies; // required
 
@@ -28682,14 +28968,15 @@ public class FogService {
     }
 
     // isset id assignments
-    private static final int __CHECKNEIGHBORS_ISSET_ID = 0;
-    private static final int __CHECKBUDDIES_ISSET_ID = 1;
+    private static final int __MICROBATCHID_ISSET_ID = 0;
+    private static final int __CHECKNEIGHBORS_ISSET_ID = 1;
+    private static final int __CHECKBUDDIES_ISSET_ID = 2;
     private byte __isset_bitfield = 0;
     public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.MICROBATCH_ID, new org.apache.thrift.meta_data.FieldMetaData("microbatchId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
       tmpMap.put(_Fields.CHECK_NEIGHBORS, new org.apache.thrift.meta_data.FieldMetaData("checkNeighbors", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
       tmpMap.put(_Fields.CHECK_BUDDIES, new org.apache.thrift.meta_data.FieldMetaData("checkBuddies", org.apache.thrift.TFieldRequirementType.DEFAULT, 
@@ -28702,12 +28989,13 @@ public class FogService {
     }
 
     public getMeta_args(
-      java.lang.String microbatchId,
+      long microbatchId,
       boolean checkNeighbors,
       boolean checkBuddies)
     {
       this();
       this.microbatchId = microbatchId;
+      setMicrobatchIdIsSet(true);
       this.checkNeighbors = checkNeighbors;
       setCheckNeighborsIsSet(true);
       this.checkBuddies = checkBuddies;
@@ -28719,9 +29007,7 @@ public class FogService {
      */
     public getMeta_args(getMeta_args other) {
       __isset_bitfield = other.__isset_bitfield;
-      if (other.isSetMicrobatchId()) {
-        this.microbatchId = other.microbatchId;
-      }
+      this.microbatchId = other.microbatchId;
       this.checkNeighbors = other.checkNeighbors;
       this.checkBuddies = other.checkBuddies;
     }
@@ -28732,35 +29018,35 @@ public class FogService {
 
     @Override
     public void clear() {
-      this.microbatchId = null;
+      setMicrobatchIdIsSet(false);
+      this.microbatchId = 0;
       setCheckNeighborsIsSet(false);
       this.checkNeighbors = false;
       setCheckBuddiesIsSet(false);
       this.checkBuddies = false;
     }
 
-    public java.lang.String getMicrobatchId() {
+    public long getMicrobatchId() {
       return this.microbatchId;
     }
 
-    public getMeta_args setMicrobatchId(java.lang.String microbatchId) {
+    public getMeta_args setMicrobatchId(long microbatchId) {
       this.microbatchId = microbatchId;
+      setMicrobatchIdIsSet(true);
       return this;
     }
 
     public void unsetMicrobatchId() {
-      this.microbatchId = null;
+      __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __MICROBATCHID_ISSET_ID);
     }
 
     /** Returns true if field microbatchId is set (has been assigned a value) and false otherwise */
     public boolean isSetMicrobatchId() {
-      return this.microbatchId != null;
+      return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __MICROBATCHID_ISSET_ID);
     }
 
     public void setMicrobatchIdIsSet(boolean value) {
-      if (!value) {
-        this.microbatchId = null;
-      }
+      __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __MICROBATCHID_ISSET_ID, value);
     }
 
     public boolean isCheckNeighbors() {
@@ -28815,7 +29101,7 @@ public class FogService {
         if (value == null) {
           unsetMicrobatchId();
         } else {
-          setMicrobatchId((java.lang.String)value);
+          setMicrobatchId((java.lang.Long)value);
         }
         break;
 
@@ -28885,12 +29171,12 @@ public class FogService {
       if (this == that)
         return true;
 
-      boolean this_present_microbatchId = true && this.isSetMicrobatchId();
-      boolean that_present_microbatchId = true && that.isSetMicrobatchId();
+      boolean this_present_microbatchId = true;
+      boolean that_present_microbatchId = true;
       if (this_present_microbatchId || that_present_microbatchId) {
         if (!(this_present_microbatchId && that_present_microbatchId))
           return false;
-        if (!this.microbatchId.equals(that.microbatchId))
+        if (this.microbatchId != that.microbatchId)
           return false;
       }
 
@@ -28919,9 +29205,7 @@ public class FogService {
     public int hashCode() {
       int hashCode = 1;
 
-      hashCode = hashCode * 8191 + ((isSetMicrobatchId()) ? 131071 : 524287);
-      if (isSetMicrobatchId())
-        hashCode = hashCode * 8191 + microbatchId.hashCode();
+      hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(microbatchId);
 
       hashCode = hashCode * 8191 + ((checkNeighbors) ? 131071 : 524287);
 
@@ -28989,11 +29273,7 @@ public class FogService {
       boolean first = true;
 
       sb.append("microbatchId:");
-      if (this.microbatchId == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.microbatchId);
-      }
+      sb.append(this.microbatchId);
       first = false;
       if (!first) sb.append(", ");
       sb.append("checkNeighbors:");
@@ -29049,8 +29329,8 @@ public class FogService {
           }
           switch (schemeField.id) {
             case 1: // MICROBATCH_ID
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.microbatchId = iprot.readString();
+              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+                struct.microbatchId = iprot.readI64();
                 struct.setMicrobatchIdIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -29087,11 +29367,9 @@ public class FogService {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.microbatchId != null) {
-          oprot.writeFieldBegin(MICROBATCH_ID_FIELD_DESC);
-          oprot.writeString(struct.microbatchId);
-          oprot.writeFieldEnd();
-        }
+        oprot.writeFieldBegin(MICROBATCH_ID_FIELD_DESC);
+        oprot.writeI64(struct.microbatchId);
+        oprot.writeFieldEnd();
         oprot.writeFieldBegin(CHECK_NEIGHBORS_FIELD_DESC);
         oprot.writeBool(struct.checkNeighbors);
         oprot.writeFieldEnd();
@@ -29127,7 +29405,7 @@ public class FogService {
         }
         oprot.writeBitSet(optionals, 3);
         if (struct.isSetMicrobatchId()) {
-          oprot.writeString(struct.microbatchId);
+          oprot.writeI64(struct.microbatchId);
         }
         if (struct.isSetCheckNeighbors()) {
           oprot.writeBool(struct.checkNeighbors);
@@ -29142,7 +29420,7 @@ public class FogService {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet incoming = iprot.readBitSet(3);
         if (incoming.get(0)) {
-          struct.microbatchId = iprot.readString();
+          struct.microbatchId = iprot.readI64();
           struct.setMicrobatchIdIsSet(true);
         }
         if (incoming.get(1)) {
@@ -31794,6 +32072,1712 @@ public class FogService {
         java.util.BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           struct.success = new OpenStreamResponse();
+          struct.success.read(iprot);
+          struct.setSuccessIsSet(true);
+        }
+      }
+    }
+
+    private static <S extends org.apache.thrift.scheme.IScheme> S scheme(org.apache.thrift.protocol.TProtocol proto) {
+      return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
+    }
+  }
+
+  public static class putNext_args implements org.apache.thrift.TBase<putNext_args, putNext_args._Fields>, java.io.Serializable, Cloneable, Comparable<putNext_args>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("putNext_args");
+
+    private static final org.apache.thrift.protocol.TField MB_METADATA_FIELD_DESC = new org.apache.thrift.protocol.TField("mbMetadata", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+    private static final org.apache.thrift.protocol.TField DATA_FIELD_DESC = new org.apache.thrift.protocol.TField("data", org.apache.thrift.protocol.TType.STRING, (short)2);
+    private static final org.apache.thrift.protocol.TField PREFERENCE_FIELD_DESC = new org.apache.thrift.protocol.TField("preference", org.apache.thrift.protocol.TType.I32, (short)3);
+
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new putNext_argsStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new putNext_argsTupleSchemeFactory();
+
+    public Metadata mbMetadata; // required
+    public java.nio.ByteBuffer data; // required
+    /**
+     * 
+     * @see WritePreference
+     */
+    public WritePreference preference; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      MB_METADATA((short)1, "mbMetadata"),
+      DATA((short)2, "data"),
+      /**
+       * 
+       * @see WritePreference
+       */
+      PREFERENCE((short)3, "preference");
+
+      private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
+
+      static {
+        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // MB_METADATA
+            return MB_METADATA;
+          case 2: // DATA
+            return DATA;
+          case 3: // PREFERENCE
+            return PREFERENCE;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(java.lang.String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final java.lang.String _fieldName;
+
+      _Fields(short thriftId, java.lang.String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public java.lang.String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.MB_METADATA, new org.apache.thrift.meta_data.FieldMetaData("mbMetadata", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Metadata.class)));
+      tmpMap.put(_Fields.DATA, new org.apache.thrift.meta_data.FieldMetaData("data", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
+      tmpMap.put(_Fields.PREFERENCE, new org.apache.thrift.meta_data.FieldMetaData("preference", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, WritePreference.class)));
+      metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(putNext_args.class, metaDataMap);
+    }
+
+    public putNext_args() {
+    }
+
+    public putNext_args(
+      Metadata mbMetadata,
+      java.nio.ByteBuffer data,
+      WritePreference preference)
+    {
+      this();
+      this.mbMetadata = mbMetadata;
+      this.data = org.apache.thrift.TBaseHelper.copyBinary(data);
+      this.preference = preference;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public putNext_args(putNext_args other) {
+      if (other.isSetMbMetadata()) {
+        this.mbMetadata = new Metadata(other.mbMetadata);
+      }
+      if (other.isSetData()) {
+        this.data = org.apache.thrift.TBaseHelper.copyBinary(other.data);
+      }
+      if (other.isSetPreference()) {
+        this.preference = other.preference;
+      }
+    }
+
+    public putNext_args deepCopy() {
+      return new putNext_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.mbMetadata = null;
+      this.data = null;
+      this.preference = null;
+    }
+
+    public Metadata getMbMetadata() {
+      return this.mbMetadata;
+    }
+
+    public putNext_args setMbMetadata(Metadata mbMetadata) {
+      this.mbMetadata = mbMetadata;
+      return this;
+    }
+
+    public void unsetMbMetadata() {
+      this.mbMetadata = null;
+    }
+
+    /** Returns true if field mbMetadata is set (has been assigned a value) and false otherwise */
+    public boolean isSetMbMetadata() {
+      return this.mbMetadata != null;
+    }
+
+    public void setMbMetadataIsSet(boolean value) {
+      if (!value) {
+        this.mbMetadata = null;
+      }
+    }
+
+    public byte[] getData() {
+      setData(org.apache.thrift.TBaseHelper.rightSize(data));
+      return data == null ? null : data.array();
+    }
+
+    public java.nio.ByteBuffer bufferForData() {
+      return org.apache.thrift.TBaseHelper.copyBinary(data);
+    }
+
+    public putNext_args setData(byte[] data) {
+      this.data = data == null ? (java.nio.ByteBuffer)null : java.nio.ByteBuffer.wrap(data.clone());
+      return this;
+    }
+
+    public putNext_args setData(java.nio.ByteBuffer data) {
+      this.data = org.apache.thrift.TBaseHelper.copyBinary(data);
+      return this;
+    }
+
+    public void unsetData() {
+      this.data = null;
+    }
+
+    /** Returns true if field data is set (has been assigned a value) and false otherwise */
+    public boolean isSetData() {
+      return this.data != null;
+    }
+
+    public void setDataIsSet(boolean value) {
+      if (!value) {
+        this.data = null;
+      }
+    }
+
+    /**
+     * 
+     * @see WritePreference
+     */
+    public WritePreference getPreference() {
+      return this.preference;
+    }
+
+    /**
+     * 
+     * @see WritePreference
+     */
+    public putNext_args setPreference(WritePreference preference) {
+      this.preference = preference;
+      return this;
+    }
+
+    public void unsetPreference() {
+      this.preference = null;
+    }
+
+    /** Returns true if field preference is set (has been assigned a value) and false otherwise */
+    public boolean isSetPreference() {
+      return this.preference != null;
+    }
+
+    public void setPreferenceIsSet(boolean value) {
+      if (!value) {
+        this.preference = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, java.lang.Object value) {
+      switch (field) {
+      case MB_METADATA:
+        if (value == null) {
+          unsetMbMetadata();
+        } else {
+          setMbMetadata((Metadata)value);
+        }
+        break;
+
+      case DATA:
+        if (value == null) {
+          unsetData();
+        } else {
+          if (value instanceof byte[]) {
+            setData((byte[])value);
+          } else {
+            setData((java.nio.ByteBuffer)value);
+          }
+        }
+        break;
+
+      case PREFERENCE:
+        if (value == null) {
+          unsetPreference();
+        } else {
+          setPreference((WritePreference)value);
+        }
+        break;
+
+      }
+    }
+
+    public java.lang.Object getFieldValue(_Fields field) {
+      switch (field) {
+      case MB_METADATA:
+        return getMbMetadata();
+
+      case DATA:
+        return getData();
+
+      case PREFERENCE:
+        return getPreference();
+
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new java.lang.IllegalArgumentException();
+      }
+
+      switch (field) {
+      case MB_METADATA:
+        return isSetMbMetadata();
+      case DATA:
+        return isSetData();
+      case PREFERENCE:
+        return isSetPreference();
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(java.lang.Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof putNext_args)
+        return this.equals((putNext_args)that);
+      return false;
+    }
+
+    public boolean equals(putNext_args that) {
+      if (that == null)
+        return false;
+      if (this == that)
+        return true;
+
+      boolean this_present_mbMetadata = true && this.isSetMbMetadata();
+      boolean that_present_mbMetadata = true && that.isSetMbMetadata();
+      if (this_present_mbMetadata || that_present_mbMetadata) {
+        if (!(this_present_mbMetadata && that_present_mbMetadata))
+          return false;
+        if (!this.mbMetadata.equals(that.mbMetadata))
+          return false;
+      }
+
+      boolean this_present_data = true && this.isSetData();
+      boolean that_present_data = true && that.isSetData();
+      if (this_present_data || that_present_data) {
+        if (!(this_present_data && that_present_data))
+          return false;
+        if (!this.data.equals(that.data))
+          return false;
+      }
+
+      boolean this_present_preference = true && this.isSetPreference();
+      boolean that_present_preference = true && that.isSetPreference();
+      if (this_present_preference || that_present_preference) {
+        if (!(this_present_preference && that_present_preference))
+          return false;
+        if (!this.preference.equals(that.preference))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hashCode = 1;
+
+      hashCode = hashCode * 8191 + ((isSetMbMetadata()) ? 131071 : 524287);
+      if (isSetMbMetadata())
+        hashCode = hashCode * 8191 + mbMetadata.hashCode();
+
+      hashCode = hashCode * 8191 + ((isSetData()) ? 131071 : 524287);
+      if (isSetData())
+        hashCode = hashCode * 8191 + data.hashCode();
+
+      hashCode = hashCode * 8191 + ((isSetPreference()) ? 131071 : 524287);
+      if (isSetPreference())
+        hashCode = hashCode * 8191 + preference.getValue();
+
+      return hashCode;
+    }
+
+    @Override
+    public int compareTo(putNext_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = java.lang.Boolean.valueOf(isSetMbMetadata()).compareTo(other.isSetMbMetadata());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetMbMetadata()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.mbMetadata, other.mbMetadata);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = java.lang.Boolean.valueOf(isSetData()).compareTo(other.isSetData());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetData()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.data, other.data);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = java.lang.Boolean.valueOf(isSetPreference()).compareTo(other.isSetPreference());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetPreference()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.preference, other.preference);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      scheme(iprot).read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      scheme(oprot).write(oprot, this);
+    }
+
+    @Override
+    public java.lang.String toString() {
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("putNext_args(");
+      boolean first = true;
+
+      sb.append("mbMetadata:");
+      if (this.mbMetadata == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.mbMetadata);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("data:");
+      if (this.data == null) {
+        sb.append("null");
+      } else {
+        org.apache.thrift.TBaseHelper.toString(this.data, sb);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("preference:");
+      if (this.preference == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.preference);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+      if (mbMetadata != null) {
+        mbMetadata.validate();
+      }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class putNext_argsStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public putNext_argsStandardScheme getScheme() {
+        return new putNext_argsStandardScheme();
+      }
+    }
+
+    private static class putNext_argsStandardScheme extends org.apache.thrift.scheme.StandardScheme<putNext_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, putNext_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // MB_METADATA
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.mbMetadata = new Metadata();
+                struct.mbMetadata.read(iprot);
+                struct.setMbMetadataIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // DATA
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.data = iprot.readBinary();
+                struct.setDataIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 3: // PREFERENCE
+              if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+                struct.preference = com.dreamlab.edgefs.thrift.WritePreference.findByValue(iprot.readI32());
+                struct.setPreferenceIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, putNext_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.mbMetadata != null) {
+          oprot.writeFieldBegin(MB_METADATA_FIELD_DESC);
+          struct.mbMetadata.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        if (struct.data != null) {
+          oprot.writeFieldBegin(DATA_FIELD_DESC);
+          oprot.writeBinary(struct.data);
+          oprot.writeFieldEnd();
+        }
+        if (struct.preference != null) {
+          oprot.writeFieldBegin(PREFERENCE_FIELD_DESC);
+          oprot.writeI32(struct.preference.getValue());
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class putNext_argsTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public putNext_argsTupleScheme getScheme() {
+        return new putNext_argsTupleScheme();
+      }
+    }
+
+    private static class putNext_argsTupleScheme extends org.apache.thrift.scheme.TupleScheme<putNext_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, putNext_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet optionals = new java.util.BitSet();
+        if (struct.isSetMbMetadata()) {
+          optionals.set(0);
+        }
+        if (struct.isSetData()) {
+          optionals.set(1);
+        }
+        if (struct.isSetPreference()) {
+          optionals.set(2);
+        }
+        oprot.writeBitSet(optionals, 3);
+        if (struct.isSetMbMetadata()) {
+          struct.mbMetadata.write(oprot);
+        }
+        if (struct.isSetData()) {
+          oprot.writeBinary(struct.data);
+        }
+        if (struct.isSetPreference()) {
+          oprot.writeI32(struct.preference.getValue());
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, putNext_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet incoming = iprot.readBitSet(3);
+        if (incoming.get(0)) {
+          struct.mbMetadata = new Metadata();
+          struct.mbMetadata.read(iprot);
+          struct.setMbMetadataIsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.data = iprot.readBinary();
+          struct.setDataIsSet(true);
+        }
+        if (incoming.get(2)) {
+          struct.preference = com.dreamlab.edgefs.thrift.WritePreference.findByValue(iprot.readI32());
+          struct.setPreferenceIsSet(true);
+        }
+      }
+    }
+
+    private static <S extends org.apache.thrift.scheme.IScheme> S scheme(org.apache.thrift.protocol.TProtocol proto) {
+      return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
+    }
+  }
+
+  public static class putNext_result implements org.apache.thrift.TBase<putNext_result, putNext_result._Fields>, java.io.Serializable, Cloneable, Comparable<putNext_result>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("putNext_result");
+
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
+
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new putNext_resultStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new putNext_resultTupleSchemeFactory();
+
+    public WriteResponse success; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SUCCESS((short)0, "success");
+
+      private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
+
+      static {
+        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(java.lang.String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final java.lang.String _fieldName;
+
+      _Fields(short thriftId, java.lang.String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public java.lang.String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, WriteResponse.class)));
+      metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(putNext_result.class, metaDataMap);
+    }
+
+    public putNext_result() {
+    }
+
+    public putNext_result(
+      WriteResponse success)
+    {
+      this();
+      this.success = success;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public putNext_result(putNext_result other) {
+      if (other.isSetSuccess()) {
+        this.success = new WriteResponse(other.success);
+      }
+    }
+
+    public putNext_result deepCopy() {
+      return new putNext_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+    }
+
+    public WriteResponse getSuccess() {
+      return this.success;
+    }
+
+    public putNext_result setSuccess(WriteResponse success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been assigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, java.lang.Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((WriteResponse)value);
+        }
+        break;
+
+      }
+    }
+
+    public java.lang.Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new java.lang.IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(java.lang.Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof putNext_result)
+        return this.equals((putNext_result)that);
+      return false;
+    }
+
+    public boolean equals(putNext_result that) {
+      if (that == null)
+        return false;
+      if (this == that)
+        return true;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hashCode = 1;
+
+      hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
+      if (isSetSuccess())
+        hashCode = hashCode * 8191 + success.hashCode();
+
+      return hashCode;
+    }
+
+    @Override
+    public int compareTo(putNext_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = java.lang.Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, other.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      scheme(iprot).read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      scheme(oprot).write(oprot, this);
+      }
+
+    @Override
+    public java.lang.String toString() {
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("putNext_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+      if (success != null) {
+        success.validate();
+      }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class putNext_resultStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public putNext_resultStandardScheme getScheme() {
+        return new putNext_resultStandardScheme();
+      }
+    }
+
+    private static class putNext_resultStandardScheme extends org.apache.thrift.scheme.StandardScheme<putNext_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, putNext_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 0: // SUCCESS
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new WriteResponse();
+                struct.success.read(iprot);
+                struct.setSuccessIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, putNext_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.success != null) {
+          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+          struct.success.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class putNext_resultTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public putNext_resultTupleScheme getScheme() {
+        return new putNext_resultTupleScheme();
+      }
+    }
+
+    private static class putNext_resultTupleScheme extends org.apache.thrift.scheme.TupleScheme<putNext_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, putNext_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet optionals = new java.util.BitSet();
+        if (struct.isSetSuccess()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetSuccess()) {
+          struct.success.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, putNext_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.success = new WriteResponse();
+          struct.success.read(iprot);
+          struct.setSuccessIsSet(true);
+        }
+      }
+    }
+
+    private static <S extends org.apache.thrift.scheme.IScheme> S scheme(org.apache.thrift.protocol.TProtocol proto) {
+      return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
+    }
+  }
+
+  public static class incrementBlockCount_args implements org.apache.thrift.TBase<incrementBlockCount_args, incrementBlockCount_args._Fields>, java.io.Serializable, Cloneable, Comparable<incrementBlockCount_args>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("incrementBlockCount_args");
+
+    private static final org.apache.thrift.protocol.TField MB_METADATA_FIELD_DESC = new org.apache.thrift.protocol.TField("mbMetadata", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new incrementBlockCount_argsStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new incrementBlockCount_argsTupleSchemeFactory();
+
+    public Metadata mbMetadata; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      MB_METADATA((short)1, "mbMetadata");
+
+      private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
+
+      static {
+        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // MB_METADATA
+            return MB_METADATA;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(java.lang.String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final java.lang.String _fieldName;
+
+      _Fields(short thriftId, java.lang.String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public java.lang.String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.MB_METADATA, new org.apache.thrift.meta_data.FieldMetaData("mbMetadata", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Metadata.class)));
+      metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(incrementBlockCount_args.class, metaDataMap);
+    }
+
+    public incrementBlockCount_args() {
+    }
+
+    public incrementBlockCount_args(
+      Metadata mbMetadata)
+    {
+      this();
+      this.mbMetadata = mbMetadata;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public incrementBlockCount_args(incrementBlockCount_args other) {
+      if (other.isSetMbMetadata()) {
+        this.mbMetadata = new Metadata(other.mbMetadata);
+      }
+    }
+
+    public incrementBlockCount_args deepCopy() {
+      return new incrementBlockCount_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.mbMetadata = null;
+    }
+
+    public Metadata getMbMetadata() {
+      return this.mbMetadata;
+    }
+
+    public incrementBlockCount_args setMbMetadata(Metadata mbMetadata) {
+      this.mbMetadata = mbMetadata;
+      return this;
+    }
+
+    public void unsetMbMetadata() {
+      this.mbMetadata = null;
+    }
+
+    /** Returns true if field mbMetadata is set (has been assigned a value) and false otherwise */
+    public boolean isSetMbMetadata() {
+      return this.mbMetadata != null;
+    }
+
+    public void setMbMetadataIsSet(boolean value) {
+      if (!value) {
+        this.mbMetadata = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, java.lang.Object value) {
+      switch (field) {
+      case MB_METADATA:
+        if (value == null) {
+          unsetMbMetadata();
+        } else {
+          setMbMetadata((Metadata)value);
+        }
+        break;
+
+      }
+    }
+
+    public java.lang.Object getFieldValue(_Fields field) {
+      switch (field) {
+      case MB_METADATA:
+        return getMbMetadata();
+
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new java.lang.IllegalArgumentException();
+      }
+
+      switch (field) {
+      case MB_METADATA:
+        return isSetMbMetadata();
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(java.lang.Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof incrementBlockCount_args)
+        return this.equals((incrementBlockCount_args)that);
+      return false;
+    }
+
+    public boolean equals(incrementBlockCount_args that) {
+      if (that == null)
+        return false;
+      if (this == that)
+        return true;
+
+      boolean this_present_mbMetadata = true && this.isSetMbMetadata();
+      boolean that_present_mbMetadata = true && that.isSetMbMetadata();
+      if (this_present_mbMetadata || that_present_mbMetadata) {
+        if (!(this_present_mbMetadata && that_present_mbMetadata))
+          return false;
+        if (!this.mbMetadata.equals(that.mbMetadata))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hashCode = 1;
+
+      hashCode = hashCode * 8191 + ((isSetMbMetadata()) ? 131071 : 524287);
+      if (isSetMbMetadata())
+        hashCode = hashCode * 8191 + mbMetadata.hashCode();
+
+      return hashCode;
+    }
+
+    @Override
+    public int compareTo(incrementBlockCount_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = java.lang.Boolean.valueOf(isSetMbMetadata()).compareTo(other.isSetMbMetadata());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetMbMetadata()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.mbMetadata, other.mbMetadata);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      scheme(iprot).read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      scheme(oprot).write(oprot, this);
+    }
+
+    @Override
+    public java.lang.String toString() {
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("incrementBlockCount_args(");
+      boolean first = true;
+
+      sb.append("mbMetadata:");
+      if (this.mbMetadata == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.mbMetadata);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+      if (mbMetadata != null) {
+        mbMetadata.validate();
+      }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class incrementBlockCount_argsStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public incrementBlockCount_argsStandardScheme getScheme() {
+        return new incrementBlockCount_argsStandardScheme();
+      }
+    }
+
+    private static class incrementBlockCount_argsStandardScheme extends org.apache.thrift.scheme.StandardScheme<incrementBlockCount_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, incrementBlockCount_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // MB_METADATA
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.mbMetadata = new Metadata();
+                struct.mbMetadata.read(iprot);
+                struct.setMbMetadataIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, incrementBlockCount_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.mbMetadata != null) {
+          oprot.writeFieldBegin(MB_METADATA_FIELD_DESC);
+          struct.mbMetadata.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class incrementBlockCount_argsTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public incrementBlockCount_argsTupleScheme getScheme() {
+        return new incrementBlockCount_argsTupleScheme();
+      }
+    }
+
+    private static class incrementBlockCount_argsTupleScheme extends org.apache.thrift.scheme.TupleScheme<incrementBlockCount_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, incrementBlockCount_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet optionals = new java.util.BitSet();
+        if (struct.isSetMbMetadata()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetMbMetadata()) {
+          struct.mbMetadata.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, incrementBlockCount_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.mbMetadata = new Metadata();
+          struct.mbMetadata.read(iprot);
+          struct.setMbMetadataIsSet(true);
+        }
+      }
+    }
+
+    private static <S extends org.apache.thrift.scheme.IScheme> S scheme(org.apache.thrift.protocol.TProtocol proto) {
+      return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
+    }
+  }
+
+  public static class incrementBlockCount_result implements org.apache.thrift.TBase<incrementBlockCount_result, incrementBlockCount_result._Fields>, java.io.Serializable, Cloneable, Comparable<incrementBlockCount_result>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("incrementBlockCount_result");
+
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
+
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new incrementBlockCount_resultStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new incrementBlockCount_resultTupleSchemeFactory();
+
+    public BlockMetadataUpdateResponse success; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SUCCESS((short)0, "success");
+
+      private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
+
+      static {
+        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(java.lang.String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final java.lang.String _fieldName;
+
+      _Fields(short thriftId, java.lang.String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public java.lang.String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, BlockMetadataUpdateResponse.class)));
+      metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(incrementBlockCount_result.class, metaDataMap);
+    }
+
+    public incrementBlockCount_result() {
+    }
+
+    public incrementBlockCount_result(
+      BlockMetadataUpdateResponse success)
+    {
+      this();
+      this.success = success;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public incrementBlockCount_result(incrementBlockCount_result other) {
+      if (other.isSetSuccess()) {
+        this.success = new BlockMetadataUpdateResponse(other.success);
+      }
+    }
+
+    public incrementBlockCount_result deepCopy() {
+      return new incrementBlockCount_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+    }
+
+    public BlockMetadataUpdateResponse getSuccess() {
+      return this.success;
+    }
+
+    public incrementBlockCount_result setSuccess(BlockMetadataUpdateResponse success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been assigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, java.lang.Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((BlockMetadataUpdateResponse)value);
+        }
+        break;
+
+      }
+    }
+
+    public java.lang.Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new java.lang.IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(java.lang.Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof incrementBlockCount_result)
+        return this.equals((incrementBlockCount_result)that);
+      return false;
+    }
+
+    public boolean equals(incrementBlockCount_result that) {
+      if (that == null)
+        return false;
+      if (this == that)
+        return true;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hashCode = 1;
+
+      hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
+      if (isSetSuccess())
+        hashCode = hashCode * 8191 + success.hashCode();
+
+      return hashCode;
+    }
+
+    @Override
+    public int compareTo(incrementBlockCount_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = java.lang.Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, other.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      scheme(iprot).read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      scheme(oprot).write(oprot, this);
+      }
+
+    @Override
+    public java.lang.String toString() {
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("incrementBlockCount_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+      if (success != null) {
+        success.validate();
+      }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class incrementBlockCount_resultStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public incrementBlockCount_resultStandardScheme getScheme() {
+        return new incrementBlockCount_resultStandardScheme();
+      }
+    }
+
+    private static class incrementBlockCount_resultStandardScheme extends org.apache.thrift.scheme.StandardScheme<incrementBlockCount_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, incrementBlockCount_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 0: // SUCCESS
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new BlockMetadataUpdateResponse();
+                struct.success.read(iprot);
+                struct.setSuccessIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, incrementBlockCount_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.success != null) {
+          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+          struct.success.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class incrementBlockCount_resultTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public incrementBlockCount_resultTupleScheme getScheme() {
+        return new incrementBlockCount_resultTupleScheme();
+      }
+    }
+
+    private static class incrementBlockCount_resultTupleScheme extends org.apache.thrift.scheme.TupleScheme<incrementBlockCount_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, incrementBlockCount_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet optionals = new java.util.BitSet();
+        if (struct.isSetSuccess()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetSuccess()) {
+          struct.success.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, incrementBlockCount_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.success = new BlockMetadataUpdateResponse();
           struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }

@@ -62,7 +62,8 @@ struct ParentFog {
 	2: required string nodeIp,
 	3: required i32 port,
 }
-	
+
+/*	
 struct Metadata {
 	1: required string mbId,
 	2: required string streamId,
@@ -70,6 +71,22 @@ struct Metadata {
 	4: optional string checksum,
 	//this is similar to key value pairs as received for the stream
 	5: optional string properties,
+}
+*/
+
+struct Metadata {
+	1: required string clientId;
+	2: required string sessionSecret;
+	3: required string streamId;
+	4: required i64 mbId;
+	5: required i64 timestamp;
+	//this is optional since if write is not routed through
+	//the Fog but directly to the Edge, then insertMetadata
+	//will supply the checksum else it will be computed at
+	//the Fog as the data is present for that case
+	6: optional string checksum;
+	//this is similar to key value pairs as received for the stream
+	7: optional string properties;
 }
 
 struct EdgeInfoData {
@@ -118,12 +135,15 @@ service EdgeService {
 
    //byte write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
    
-   WriteResponse write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
+   //WriteResponse write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
+   WriteResponse write(1:i64 mbId, 2:Metadata mbMetadata, 3:binary mbData),
 
-   ReadReplica read(1:string mbId, 2:byte fetchMetadata),
+   //ReadReplica read(1:string mbId, 2:byte fetchMetadata),
+   ReadReplica read(1:i64 mbId, 2:byte fetchMetadata),
    
    //this only returns the metadata
-   ReadReplica getMetadata(1:string mbId),
+   //ReadReplica getMetadata(1:string mbId),
+   ReadReplica getMetadata(1:i64 mbId),
 
    /**
     * This method has a oneway modifier. That means the client only makes

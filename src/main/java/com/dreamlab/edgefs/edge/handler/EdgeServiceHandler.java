@@ -34,10 +34,10 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 
 	@Override
 //	public byte write(String mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
-	public WriteResponse write(String mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
+	public WriteResponse write(long mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
 		WriteResponse wrResponse = new WriteResponse();
 		wrResponse.setStatus(Constants.FAILURE);
-		if (mbId != null && mbMetadata != null && mbData != null) {
+		if (mbMetadata != null && mbData != null) {
 			try {
 				LOGGER.info(
 						"MicrobatchId : " + mbMetadata.getMbId() + ", write, startTime=" + System.currentTimeMillis());
@@ -72,7 +72,7 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 	}
 
 	@Override
-	public ReadReplica read(String mbId, byte fetchMetadata) throws TException {
+	public ReadReplica read(long mbId, byte fetchMetadata) throws TException {
 		ReadReplica replica = new ReadReplica();
 		replica.setStatus(Constants.FAILURE);
 		File mbFile = new File(edge.getDatapath() + "/" + mbId + ".data");
@@ -110,7 +110,7 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 	}
 	
 	@Override
-	public ReadReplica getMetadata(String mbId) throws TException {
+	public ReadReplica getMetadata(long mbId) throws TException {
 		ReadReplica replica = new ReadReplica();
 		replica.setStatus(Constants.FAILURE);
 		File metaFile = new File(edge.getDatapath() + "/" + mbId + ".meta");

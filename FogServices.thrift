@@ -132,9 +132,8 @@ struct NeighborCount {
 
 /** The metadata of a stream at register time is sent as a string with key value pairs **/
 /** The metadata of a micro-batch which is sent before a write to Fog **/
+/*
 struct Metadata {
-	//client is sending this metadata so it will not know the edgeId
-	//1: required i16 edgeId,
 	1: required string mbId,
 	2: required string streamId,
 	3: required i64 timestamp,
@@ -142,6 +141,7 @@ struct Metadata {
 	//this is similar to key value pairs as received for the stream
 	5: optional string properties;
 }
+*/
 
 enum WritePreference {
 	HHL,
@@ -255,6 +255,21 @@ struct StreamMetadataInfo {
 	3: optional i64 cacheTime;
 }
 
+struct Metadata {
+	1: required string clientId;
+	2: required string sessionSecret;
+	3: required string streamId;
+	4: required i64 mbId;
+	5: required i64 timestamp;
+	//this is optional since if write is not routed through
+	//the Fog but directly to the Edge, then insertMetadata
+	//will supply the checksum else it will be computed at
+	//the Fog as the data is present for that case
+	6: optional string checksum;
+	//this is similar to key value pairs as received for the stream
+	7: optional string properties;
+}
+
 
 /*
 struct StreamMetadata {
@@ -290,7 +305,8 @@ struct ReadReplica {
 }
 
 struct QueryReplica {
-	1: required map<string, list<NodeInfoData>> matchingNodes;
+	//1: required map<string, list<NodeInfoData>> matchingNodes;
+	1: required map<i64, list<NodeInfoData>> matchingNodes;
 }
 
 struct WriteResponse {
@@ -313,6 +329,19 @@ struct OpenStreamResponse {
 	3: optional i32 leaseTime;
 	4: optional string sessionSecret;
 	5: optional i64 lastBlockId;
+}
+
+//this kind of pattern of attaching a message as well as code
+//is good to provide client the necessary information to react
+//as per the code returned
+struct BlockMetadataUpdateResponse {
+	1: required byte status;
+	2: required string message;
+	//adding the code field and having some handling at the client
+	//side gives the client information about what's happening at
+	//the server side. If there are any failures, what type of failure
+	//it is, Fog is down or version mismatch
+	3: required byte code;
 }
 
 // the interfaces belonging to Fog Interface
@@ -402,15 +431,20 @@ service FogService {
 	// Find the next micro bactch satisfying the query
 	binary findNext(1: string microbatchId);
 	
-	list<FindReplica> find(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies,
-							4:EdgeInfoData selfInfo);
+	//list<FindReplica> find(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies,
+		//					4:EdgeInfoData selfInfo);
 							
-	ReadReplica read(1: string microbatchId, 2:bool fetchMetadata);
+	list<FindReplica> find(1: i64 microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies,
+							4:EdgeInfoData selfInfo);						
+							
+	//ReadReplica read(1: string microbatchId, 2:bool fetchMetadata);
+	ReadReplica read(1: i64 microbatchId, 2:bool fetchMetadata);
 
 	QueryReplica findUsingQuery(1: string metadataKey, 2:string metadataValue, 3:bool checkNeighbors, 4:bool checkBuddies);
 	
 	//only returning metadata in this operation
-	ReadReplica getMeta(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
+	//ReadReplica getMeta(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
+	ReadReplica getMeta(1: i64 microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
 	
 	byte serializeState();
 	
@@ -419,4 +453,10 @@ service FogService {
 	
 	//open a stream for putting blocks
 	OpenStreamResponse open(1: string streamId, 2: string clientId, 3: i64 expectedLease);
+	
+	//client will start writing by issuing putNext calls
+	WriteResponse putNext(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
+	
+	//once block is written, increment the block count at the owner Fog
+	BlockMetadataUpdateResponse incrementBlockCount(1:Metadata mbMetadata);
 }
