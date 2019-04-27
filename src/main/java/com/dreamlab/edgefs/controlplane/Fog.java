@@ -29,6 +29,7 @@ import com.dreamlab.edgefs.misc.Constants;
 import com.dreamlab.edgefs.misc.GlobalStatsHandler;
 import com.dreamlab.edgefs.misc.LocalStatsHandler;
 import com.dreamlab.edgefs.misc.NeighborDataExchangeFormat;
+import com.dreamlab.edgefs.model.BlockMetadata;
 import com.dreamlab.edgefs.model.EdgeInfo;
 import com.dreamlab.edgefs.model.FogExchangeInfo;
 import com.dreamlab.edgefs.model.FogInfo;
@@ -328,6 +329,8 @@ public class Fog implements Serializable {
 	private transient boolean isReplicaCachingEnabled;
 	
 	private transient int replicaCachingTime;
+	
+	private Map<String, BlockMetadata> perStreamBlockMetadata = new ConcurrentHashMap<>();
 	
 	/****************************************************************************/
 	
@@ -745,6 +748,14 @@ public class Fog implements Serializable {
 
 	public void setReplicaCachingTime(int replicaCachingTime) {
 		this.replicaCachingTime = replicaCachingTime;
+	}
+	
+	public Map<String, BlockMetadata> getPerStreamBlockMetadata() {
+		return perStreamBlockMetadata;
+	}
+
+	public void setPerStreamBlockMetadata(Map<String, BlockMetadata> perStreamBlockMetadata) {
+		this.perStreamBlockMetadata = perStreamBlockMetadata;
 	}
 
 	//called when the thread wakes up after a fixed window to check

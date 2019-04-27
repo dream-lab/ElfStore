@@ -13,7 +13,7 @@ import java.util.Map;
 public enum StreamMetadataUpdateMessage {
 
 	FAIL_NOT_EXISTS("The fog doesn't have the stream", -4),
-	FAIL_NOT_OWNER("Update can happen only at the Fog where the stream was created", -3),
+	FAIL_NOT_OWNER("Update/Open can happen only at the Fog where the stream was created", -3),
 	FAIL_SEMANTIC("Some fields are not updatadable", -2),
 	FAIL_VERSION_MISMATCH("Stream updates work only with the latest version", -1),
 	SUCCESS("Stream metadata updated successfully", 1);

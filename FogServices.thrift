@@ -229,7 +229,9 @@ struct DynamicTypeStreamMetadata {
 
 struct StreamMetadata {
 	1: required string streamId;
+	//this is not an updatable property
 	2: required I64TypeStreamMetadata startTime;
+	//this will be updatable once stream is about to be closed
 	3: optional I64TypeStreamMetadata endTime;
 	4: required DoubleTypeStreamMetadata reliability;
 	5: required ByteTypeStreamMetadata minReplica;
@@ -240,6 +242,7 @@ struct StreamMetadata {
 	//initially the client calling the create method for the stream
 	//need not pass the owner information as the Fog node contacted
 	//will become the owner of the stream
+	//NOTE::this is not an updatable property
 	8: optional NodeInfoPrimaryTypeStreamMetadata owner;
 	9: optional map<string, DynamicTypeStreamMetadata> otherProperties;
 }
@@ -302,6 +305,16 @@ struct StreamMetadataUpdateResponse {
 	2: required string message;
 }
 
+struct OpenStreamResponse {
+	1: required byte status;
+	//in case of failure to open, we can send a message as well
+	//no need to set in case of success case
+	2: optional string message; 
+	3: optional i32 leaseTime;
+	4: optional string sessionSecret;
+	5: optional i64 lastBlockId;
+}
+
 // the interfaces belonging to Fog Interface
 service FogService {
 
@@ -355,7 +368,7 @@ service FogService {
 	//Data management APIs
 	
 	//register stream with a Fog assuming client knows which Fog to contact
-	byte registerStream(1: string streamId, 2: StreamMetadata streamMetadata);
+	byte registerStream(1: string streamId, 2: StreamMetadata streamMetadata, 3:i64 startSequenceNumber);
 	
 	// Returns a sessionID 
 	string intentToWrite(1: byte clientId);
@@ -403,4 +416,7 @@ service FogService {
 	
 	//updating the StreamMetadata
 	StreamMetadataUpdateResponse updateStreamMetadata(1: StreamMetadata metadata);
+	
+	//open a stream for putting blocks
+	OpenStreamResponse open(1: string streamId, 2: string clientId, 3: i64 expectedLease);
 }

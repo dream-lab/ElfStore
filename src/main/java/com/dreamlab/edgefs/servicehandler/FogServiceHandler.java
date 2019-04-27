@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -38,6 +39,7 @@ import com.dreamlab.edgefs.misc.BuddyDataExchangeFormat;
 import com.dreamlab.edgefs.misc.Constants;
 import com.dreamlab.edgefs.misc.GlobalStatsHandler;
 import com.dreamlab.edgefs.misc.NeighborDataExchangeFormat;
+import com.dreamlab.edgefs.model.BlockMetadata;
 import com.dreamlab.edgefs.model.BuddyHeartbeatData;
 import com.dreamlab.edgefs.model.EdgeInfo;
 import com.dreamlab.edgefs.model.FogExchangeInfo;
@@ -67,6 +69,7 @@ import com.dreamlab.edgefs.thrift.NeighborPayload;
 import com.dreamlab.edgefs.thrift.NodeInfoData;
 import com.dreamlab.edgefs.thrift.NodeInfoPrimary;
 import com.dreamlab.edgefs.thrift.NodeInfoPrimaryTypeStreamMetadata;
+import com.dreamlab.edgefs.thrift.OpenStreamResponse;
 import com.dreamlab.edgefs.thrift.QueryReplica;
 import com.dreamlab.edgefs.thrift.ReadReplica;
 import com.dreamlab.edgefs.thrift.StreamMetadata;
@@ -106,6 +109,9 @@ public class FogServiceHandler implements FogService.Iface {
 	
 	//this lock is for serializing stream metadata updates
 	private final Lock streamMetadataUpdateLock = new ReentrantLock();
+	
+	//this prevents multiple client to succeed in opening the stream for writing
+	private final Lock streamOpenLock = new ReentrantLock();
 
 	public FogServiceHandler(Fog fog) {
 		super();
@@ -878,8 +884,14 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	//registerStream is equivalent of the create()
+	//IMPORTANT NOTE:: For now, current search such as find and read works on the basis
+	//of blockId and since on a per stream basis, we may have the same set of blockIds
+	//which will force us to search with streamId also passed from the client. Currently
+	//this is not done and as per discussion, an additional information is passed which
+	//is the starting sequence number provided by the client library
 	@Override
-	public byte registerStream(String streamId, StreamMetadata metadata) throws TException {
+	public byte registerStream(String streamId, StreamMetadata metadata, long startSequenceNum)
+			throws TException {
 		if (metadata != null) {
 			//set the owner of the stream to this Fog
 			NodeInfoPrimaryTypeStreamMetadata ownerFog = new NodeInfoPrimaryTypeStreamMetadata(
@@ -898,9 +910,67 @@ public class FogServiceHandler implements FogService.Iface {
 		
 		// once stream is registered, initialize the set of microbatches for the stream
 		fog.getStreamMbIdMap().put(streamId, new HashSet<>());
+		
+		//after creation, create an instance of BlockMetadata for this stream
+		fog.getPerStreamBlockMetadata().put(streamId, new BlockMetadata(streamId, startSequenceNum));
+		
 		// TODO:create directory in the edge if don't want a flat namespace
 		updateStreamBloomFilter(streamId, metadata);
 		return Constants.SUCCESS;
+	}
+	
+	//currently not using the expectedLease but may use in the future, so watch out
+	@Override
+	public OpenStreamResponse open(String streamId, String clientId, long expectedLease) throws TException {
+		OpenStreamResponse response = new OpenStreamResponse(Constants.FAILURE);
+		if(!fog.getStreamMetadata().containsKey(streamId)) {
+			response.setMessage(StreamMetadataUpdateMessage.FAIL_NOT_EXISTS.getMessage());
+			return response;
+		}
+		//stream is opened only at the owner Fog
+		if(fog.getStreamMetadata().get(streamId).isCached()) {
+			response.setMessage(StreamMetadataUpdateMessage.FAIL_NOT_OWNER.getMessage());
+			return response;
+		}
+		streamOpenLock.lock();
+		BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(streamId);
+		if(blockMetadata.getLock() == null) {
+			setBlockMetadata(clientId, blockMetadata, response);
+		} else {
+			//the lease maybe held by some other client and its soft lease may have expired
+			//lets give the lease to the newer client then
+			if((System.currentTimeMillis() - blockMetadata.getLeaseStartTime()) >= 
+					blockMetadata.getLeaseDuration()) {
+				//at this time, it might happen that the client currently holding the lock
+				//is progressing towards writing the block. The writing of block consists of
+				//two parts. One is writing the data to replicas and second is to increment
+				//the last blockId as well as append the MD5 checksum to the BlockMetadata
+				//instance. At the point of incrementing the last blockId, we should try to
+				//acquire the lock and see if it goes through. If not, this part has succeeded
+				//and the lock belongs to the newer client now. Also since we have written the
+				//blocks to the replicas, we will get some replicas while reading which are not
+				//consistent since their checksum won't match with the actual data for that
+				//blockId. So reading will also require consulting the owner Fog (thoughts ??)
+				setBlockMetadata(clientId, blockMetadata, response);
+			}
+		}
+		streamOpenLock.unlock();
+		return response;
+	}
+	
+	private void setBlockMetadata(String clientId, BlockMetadata blockMetadata, OpenStreamResponse response) {
+		blockMetadata.setLock(clientId);
+		//may use expectedLease in future
+		blockMetadata.setLeaseDuration(fog.getStreamSoftLease());
+		blockMetadata.setLeaseStartTime(System.currentTimeMillis());
+		blockMetadata.setSessionSecret(UUID.randomUUID().toString());
+		if(blockMetadata.getStartBlockId() >= blockMetadata.getLastBlockId()) {
+			blockMetadata.setLastBlockId(blockMetadata.getStartBlockId() - 1);
+		}
+		response.setStatus(Constants.SUCCESS);
+		response.setLeaseTime(blockMetadata.getLeaseDuration());
+		response.setSessionSecret(blockMetadata.getSessionSecret());
+		response.setLastBlockId(blockMetadata.getLastBlockId());
 	}
 	
 	private void updateStreamBloomFilter(String streamId, StreamMetadata streamMetadata) {
