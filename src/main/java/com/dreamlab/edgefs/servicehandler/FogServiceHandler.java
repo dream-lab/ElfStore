@@ -941,7 +941,7 @@ public class FogServiceHandler implements FogService.Iface {
 			response.setMessage(StreamMetadataUpdateMessage.FAIL_NOT_EXISTS.getMessage());
 			return response;
 		}
-		//stream is opened only at the owner Fog
+		//stream can be opened only at the owner Fog
 		if(fog.getStreamMetadata().get(streamId).isCached()) {
 			response.setMessage(StreamMetadataUpdateMessage.FAIL_NOT_OWNER.getMessage());
 			return response;
@@ -964,8 +964,15 @@ public class FogServiceHandler implements FogService.Iface {
 				//and the lock belongs to the newer client now. Also since we have written the
 				//blocks to the replicas, we will get some replicas while reading which are not
 				//consistent since their checksum won't match with the actual data for that
-				//blockId. So reading will also require consulting the owner Fog (thoughts ??)
+				//blockId. So reading may require consulting the owner Fog (thoughts ??)
 				setBlockMetadata(clientId, blockMetadata, response);
+			} else {
+				//someone else has the lock within the soft lease or whatever duration was
+				//agreed as the lease time, so fail at this time
+				response.setStatus(Constants.FAILURE);
+				//TODO::get rid of this hardcoding as well by maybe having another
+				//enum dedicated to only this type of response
+				response.setMessage("Stream in open state, retry opening after some time");
 			}
 		}
 		streamOpenLock.unlock();
@@ -1633,8 +1640,9 @@ public class FogServiceHandler implements FogService.Iface {
 							ownerInfo.getPort());
 					if (metadata != null) {
 						streamMetadataInfo.setStreamMetadata(metadata);
+						//no need to have this line
+						streamMetadataInfo.setCached(true);
 						streamMetadataInfo.setCacheTime(System.currentTimeMillis());
-						fog.getStreamMetadata().put(streamId, streamMetadataInfo);
 						return streamMetadataInfo;
 					}
 				} else {
@@ -1717,6 +1725,8 @@ public class FogServiceHandler implements FogService.Iface {
 			transport.open();
 		} catch (TTransportException e) {
 			transport.close();
+			LOGGER.error("Error while opening connection to IP : {}, port : {}", nodeIP, port);
+			LOGGER.error("Exception is", e);
 			e.printStackTrace();
 			return metadata;
 		}
@@ -1725,6 +1735,7 @@ public class FogServiceHandler implements FogService.Iface {
 		try {
 			metadata = fogClient.getStreamMetadataFromOwner(streamId);
 		} catch (TException e) {
+			LOGGER.error("Exception is", e);
 			e.printStackTrace();
 		} finally {
 			transport.close();
@@ -1734,6 +1745,8 @@ public class FogServiceHandler implements FogService.Iface {
 
 	@Override
 	public StreamMetadata getStreamMetadataFromOwner(String streamId) throws TException {
+		if(!fog.getStreamMetadata().containsKey(streamId))
+			return null;
 		return fog.getStreamMetadata().get(streamId).getStreamMetadata();
 	}
 
@@ -1784,6 +1797,8 @@ public class FogServiceHandler implements FogService.Iface {
 			transport.open();
 		} catch (TTransportException e) {
 			transport.close();
+			LOGGER.error("Error while opening connection to IP : {}, port : {}", nodeIP, port);
+			LOGGER.error("Exception is", e);
 			e.printStackTrace();
 			return metadata;
 		}
@@ -1792,6 +1807,7 @@ public class FogServiceHandler implements FogService.Iface {
 		try {
 			metadata = fogClient.getStreamMetadata(searchValue, checkNeighbors, checkBuddies, fetchLatest);
 		} catch (TException e) {
+			LOGGER.error("Exception is", e);
 			e.printStackTrace();
 		} finally {
 			transport.close();
@@ -2414,7 +2430,7 @@ public class FogServiceHandler implements FogService.Iface {
 		// it may happen that multiple copies of the same microbatch
 		// will be written to the edges within a single Fog, so we need
 		// to make sure that we should not pick the same edge again
-		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", write, startTime=" 
+		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", putNext, startTime=" 
 						+ System.currentTimeMillis());
 		Map<Short, Byte> duplicateHolders = fog.getMbIDLocationMap().get(mbMetadata.getMbId());
 		// we pass the duplicateHolders while identifying local replica because it might
@@ -2455,7 +2471,7 @@ public class FogServiceHandler implements FogService.Iface {
 			transport.close();
 		}
 		updateMicrobatchLocalInfo(mbMetadata, data, localEdge);
-		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", write, endTime=" + System.currentTimeMillis());
+		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", putNext, endTime=" + System.currentTimeMillis());
 		// make sure that edge reliability is set correctly when the various edges
 		// are started as we are returning the WriteResponse returned directly
 		// from the Edge
@@ -2465,8 +2481,8 @@ public class FogServiceHandler implements FogService.Iface {
 	/**
 	 * This is called once the writes are done and the lastBlockId as well as the MD5 of
 	 * the recently written block should be made available at the owner fog of the stream.
-	 * This method uses streamOpenLock which is shared among this and the open() method
-	 * so check carefully for serializing lock acquisition and behaviour
+	 * This method uses streamOpenLock which is shared among this, open() and renewLease()
+	 * methods so check carefully for serializing lock acquisition and behaviour
 	 */
 	@Override
 	public BlockMetadataUpdateResponse incrementBlockCount(Metadata mbMetadata) throws TException {
@@ -2547,6 +2563,9 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 		BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(streamId);
 		streamOpenLock.lock();
+		//to successfully renew the lease, the same client should be the one holding the lock
+		//previously i.e. no other client should have acquired the lock between the hard lease
+		//time expiration and renew call made
 		if(blockMetadata.getLock() == null || !blockMetadata.getLock().equals(clientId)
 				|| !blockMetadata.getSessionSecret().equals(sessionSecret)) {
 			response = new StreamLeaseRenewalResponse(Constants.FAILURE,
