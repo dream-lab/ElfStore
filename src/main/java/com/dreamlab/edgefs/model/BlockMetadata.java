@@ -16,7 +16,10 @@ public class BlockMetadata {
 	//maintenance on a per stream basis
 	private String streamId;
 	//lock will be set to the clientId which is currently doing
-	//block appends else it will be null
+	//block appends else it will be null or some stale clientId
+	//whose lease has expired. Currently not doing eager lock cleanup
+	//, only when a new client comes to get lock is when we check
+	//that the lock can be given to some other client
 	private String lock;
 	//this is the duration for which the lease is valid
 	//after this duration, a renewal is needed
@@ -26,9 +29,11 @@ public class BlockMetadata {
 	//this is the session secret between the Fog and the client
 	private String sessionSecret;
 	//the starting blockId for the stream, must be >= 0
+	//this is set when the stream is registered
 	private long startBlockId;
 	//the lastBlockId written to the stream, must be >= 0
-	private long lastBlockId;
+	//setting to -1 for initialization purpose
+	private long lastBlockId = -1;
 	//this is for verification purposes by matching the MD5
 	//checkSum of the block
 	private List<String> blockMD5List = new ArrayList<>();

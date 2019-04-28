@@ -52,6 +52,7 @@ import com.dreamlab.edgefs.model.NeighborHeartbeatData;
 import com.dreamlab.edgefs.model.NeighborInfo;
 import com.dreamlab.edgefs.model.NodeInfo;
 import com.dreamlab.edgefs.model.StorageReliability;
+import com.dreamlab.edgefs.model.StreamLeaseRenewalCode;
 import com.dreamlab.edgefs.model.StreamMetadataComparator;
 import com.dreamlab.edgefs.model.StreamMetadataUpdateMessage;
 import com.dreamlab.edgefs.thrift.BlockMetadataUpdateResponse;
@@ -74,6 +75,7 @@ import com.dreamlab.edgefs.thrift.NodeInfoPrimaryTypeStreamMetadata;
 import com.dreamlab.edgefs.thrift.OpenStreamResponse;
 import com.dreamlab.edgefs.thrift.QueryReplica;
 import com.dreamlab.edgefs.thrift.ReadReplica;
+import com.dreamlab.edgefs.thrift.StreamLeaseRenewalResponse;
 import com.dreamlab.edgefs.thrift.StreamMetadata;
 import com.dreamlab.edgefs.thrift.StreamMetadataInfo;
 import com.dreamlab.edgefs.thrift.StreamMetadataUpdateResponse;
@@ -908,22 +910,32 @@ public class FogServiceHandler implements FogService.Iface {
 			metadataInfo.setStreamMetadata(metadata);
 			metadataInfo.setCached(false);
 			fog.getStreamMetadata().put(streamId, metadataInfo);
+			
+			// once stream is registered, initialize the set of microbatches for the stream
+			fog.getStreamMbIdMap().put(streamId, new HashSet<>());
+			
+			//after creation, create an instance of BlockMetadata for this stream
+			fog.getPerStreamBlockMetadata().put(streamId, new BlockMetadata(streamId, startSequenceNum));
+			
+			// TODO:create directory in the edge if don't want a flat namespace
+			updateStreamBloomFilter(streamId, metadata);
+			return Constants.SUCCESS;
 		}
-		
-		// once stream is registered, initialize the set of microbatches for the stream
-		fog.getStreamMbIdMap().put(streamId, new HashSet<>());
-		
-		//after creation, create an instance of BlockMetadata for this stream
-		fog.getPerStreamBlockMetadata().put(streamId, new BlockMetadata(streamId, startSequenceNum));
-		
-		// TODO:create directory in the edge if don't want a flat namespace
-		updateStreamBloomFilter(streamId, metadata);
-		return Constants.SUCCESS;
+		return Constants.FAILURE;
 	}
 	
 	//currently not using the expectedLease but may use in the future, so watch out
+	//this method should be called only when you are EITHER
+	//1 - opening the stream for first time i.e. you are writing to this stream for 
+	//the first time OR
+	//2 - you have written in the past. In case you were the previous
+	//lease holder and you held the lease for more than the hard lease time, you cannot
+	//use renew lease way of acquiring the lock and have to call open again.
+	//The Fog will be providing hint to the client so as to call open() or renew() based
+	//on whether some other client has acquired the lock in between this client as well as
+	//whether the hard lease time has expired or not
 	@Override
-	public OpenStreamResponse open(String streamId, String clientId, long expectedLease) throws TException {
+	public OpenStreamResponse open(String streamId, String clientId, int expectedLease) throws TException {
 		OpenStreamResponse response = new OpenStreamResponse(Constants.FAILURE);
 		if(!fog.getStreamMetadata().containsKey(streamId)) {
 			response.setMessage(StreamMetadataUpdateMessage.FAIL_NOT_EXISTS.getMessage());
@@ -962,13 +974,13 @@ public class FogServiceHandler implements FogService.Iface {
 	
 	private void setBlockMetadata(String clientId, BlockMetadata blockMetadata, OpenStreamResponse response) {
 		blockMetadata.setLock(clientId);
+		blockMetadata.setSessionSecret(UUID.randomUUID().toString());
 		//may use expectedLease in future
 		//the soft lease time is read from the configuration and is 
 		//maintained in seconds (unit kept same as the heartbeat times)
 		blockMetadata.setLeaseDuration(fog.getStreamSoftLease() * 1000);
 		blockMetadata.setLeaseStartTime(System.currentTimeMillis());
-		blockMetadata.setSessionSecret(UUID.randomUUID().toString());
-		if(blockMetadata.getStartBlockId() >= blockMetadata.getLastBlockId()) {
+		if(blockMetadata.getStartBlockId() > blockMetadata.getLastBlockId()) {
 			blockMetadata.setLastBlockId(blockMetadata.getStartBlockId() - 1);
 		}
 		response.setStatus(Constants.SUCCESS);
@@ -2446,6 +2458,12 @@ public class FogServiceHandler implements FogService.Iface {
 		return wrResponse;
 	}
 
+	/**
+	 * This is called once the writes are done and the lastBlockId as well as the MD5 of
+	 * the recently written block should be made available at the owner fog of the stream.
+	 * This method uses streamOpenLock which is shared among this and the open() method
+	 * so check carefully for serializing lock acquisition and behaviour
+	 */
 	@Override
 	public BlockMetadataUpdateResponse incrementBlockCount(Metadata mbMetadata) throws TException {
 		BlockMetadataUpdateResponse response = null;
@@ -2461,23 +2479,82 @@ public class FogServiceHandler implements FogService.Iface {
 			BlockMetadataUpdateMessage msg = BlockMetadataUpdateMessage.FAIL_NOT_OWNER;
 			return new BlockMetadataUpdateResponse(Constants.FAILURE, msg.getMessage(), msg.getCode());
 		}
-		if(!checkLeaseAvailability(mbMetadata)) {
-			BlockMetadataUpdateMessage msg = BlockMetadataUpdateMessage.FAIL_NO_LEASE;
-			return new BlockMetadataUpdateResponse(Constants.FAILURE, msg.getMessage(), msg.getCode());
+		streamOpenLock.lock();
+		BlockMetadataUpdateMessage checkLeaseOwnership = checkLeaseOwnership(mbMetadata);
+		if(checkLeaseOwnership == BlockMetadataUpdateMessage.SUCCESS) {
+			BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(mbMetadata.getStreamId());
+			blockMetadata.setLastBlockId(mbMetadata.getMbId());
+			blockMetadata.getBlockMD5List().add(mbMetadata.getChecksum());
+			response = new BlockMetadataUpdateResponse(Constants.SUCCESS, checkLeaseOwnership.getMessage(),
+					checkLeaseOwnership.getCode());
+		} else {
+			response = new BlockMetadataUpdateResponse(Constants.FAILURE, checkLeaseOwnership.getMessage(),
+					checkLeaseOwnership.getCode());
 		}
-		//add the logic to actually increment the block count
-		return null;
+		streamOpenLock.unlock();
+		return response;
 	}
 	
-	private boolean checkLeaseAvailability(Metadata mbMetadata) {
+	//by default, we are setting the lease time equal to the soft lease time (system-wide property)
+	//in case, this client has the lock but the lease is expired but still the difference between
+	//current time and lease start time is less than hard lease time and no other client has acquired
+	//the lock, the lease can be made available to the client. In case lock is still available but
+	//difference between current time and lease start time for the client is more than the hard lease
+	//time, then lock cannot be acquired and client needs to renew the lease
+	private BlockMetadataUpdateMessage checkLeaseOwnership(Metadata mbMetadata) {
 		BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(mbMetadata.getStreamId());
-		if(blockMetadata.getLock() == null || !blockMetadata.getLock().equals(mbMetadata.getClientId()) ||
-				(System.currentTimeMillis() - blockMetadata.getLeaseStartTime()) >= 
-				blockMetadata.getLeaseDuration() || 
-				!blockMetadata.getSessionSecret().equals(mbMetadata.getSessionSecret())) {
-			return false;
+		//if no one holds the lock or some other client holds the lock
+		if(blockMetadata.getLock() == null || 
+				!blockMetadata.getLock().equals(mbMetadata.getClientId()) || 
+				!blockMetadata.getSessionSecret().equals(mbMetadata.getSessionSecret()))
+			return BlockMetadataUpdateMessage.FAIL_NO_LOCK;
+		
+		//this client definitely holds the lock
+		if((System.currentTimeMillis() - blockMetadata.getLeaseStartTime()) 
+				< blockMetadata.getLeaseDuration()) {
+			return BlockMetadataUpdateMessage.SUCCESS;
+		} else {
+			//we have definitely crossed the soft lease time or whatever was the
+			//agreed lease time when the lock was issued. But the hard lease time
+			//may still not be crossed and since no other client has acquired the
+			//lock still, the update can go through
+			if((System.currentTimeMillis() - blockMetadata.getLeaseStartTime()) 
+					< fog.getStreamHardLease()) {
+				return BlockMetadataUpdateMessage.SUCCESS;
+			} else {
+				//this means client can call renew() and get the lock
+				return BlockMetadataUpdateMessage.FAIL_LEASE_EXPIRED;
+			}
 		}
-		return true;
+	}
+
+	//expectedLease is not as of now but maybe used in the future
+	@Override
+	public StreamLeaseRenewalResponse renewLease(String streamId, String clientId,
+				String sessionSecret, int expectedLease) throws TException {
+		StreamLeaseRenewalResponse response = null;
+		if(!fog.getStreamMetadata().containsKey(streamId)) {
+			return new StreamLeaseRenewalResponse(Constants.FAILURE,
+					StreamLeaseRenewalCode.FAIL_NOT_EXISTS.getCode());
+		}
+		if(fog.getStreamMetadata().get(streamId).isCached()) {
+			return new StreamLeaseRenewalResponse(Constants.FAILURE, 
+					StreamLeaseRenewalCode.FAIL_NOT_OWNER.getCode());
+		}
+		BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(streamId);
+		streamOpenLock.lock();
+		if(blockMetadata.getLock() == null || !blockMetadata.getLock().equals(clientId)
+				|| !blockMetadata.getSessionSecret().equals(sessionSecret)) {
+			response = new StreamLeaseRenewalResponse(Constants.FAILURE,
+					StreamLeaseRenewalCode.FAIL_LOCK_ACQUIRED.getCode());
+		} else {
+			blockMetadata.setLeaseStartTime(System.currentTimeMillis());
+			blockMetadata.setLeaseDuration(fog.getStreamSoftLease() * 1000);
+			response = new StreamLeaseRenewalResponse(Constants.SUCCESS,
+					StreamLeaseRenewalCode.SUCCESS.getCode());
+		}
+		
+		return response;
 	}
 
 }

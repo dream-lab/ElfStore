@@ -325,11 +325,19 @@ struct OpenStreamResponse {
 	1: required byte status;
 	//in case of failure to open, we can send a message as well
 	//no need to set in case of success case
-	2: optional string message; 
+	2: optional string message;
+	// in milliseconds
 	3: optional i32 leaseTime;
 	4: optional string sessionSecret;
 	5: optional i64 lastBlockId;
 }
+
+struct StreamLeaseRenewalResponse {
+	1: required byte status;
+	2: required byte code;
+	3: optional i32 leaseTime;
+}
+	
 
 //this kind of pattern of attaching a message as well as code
 //is good to provide client the necessary information to react
@@ -452,11 +460,15 @@ service FogService {
 	StreamMetadataUpdateResponse updateStreamMetadata(1: StreamMetadata metadata);
 	
 	//open a stream for putting blocks
-	OpenStreamResponse open(1: string streamId, 2: string clientId, 3: i64 expectedLease);
+	OpenStreamResponse open(1: string streamId, 2: string clientId, 3: i32 expectedLease);
 	
 	//client will start writing by issuing putNext calls
 	WriteResponse putNext(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
 	
 	//once block is written, increment the block count at the owner Fog
 	BlockMetadataUpdateResponse incrementBlockCount(1:Metadata mbMetadata);
+	
+	StreamLeaseRenewalResponse renewLease(1:string streamId, 2:string clientId, 3:string sessionSecret,
+											 4:i32 expectedLease);
+	
 }
