@@ -318,7 +318,9 @@ struct WriteResponse {
 
 struct StreamMetadataUpdateResponse {
 	1: required byte status;
-	2: required string message;
+	//code will distinguish between the types of failure
+	2: required byte code;
+	3: optional string message;
 }
 
 struct OpenStreamResponse {

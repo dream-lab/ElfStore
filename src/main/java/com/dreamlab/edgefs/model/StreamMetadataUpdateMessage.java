@@ -12,13 +12,14 @@ import java.util.Map;
  */
 public enum StreamMetadataUpdateMessage {
 
-	FAIL_NOT_EXISTS("The fog doesn't have the stream", -4),
-	FAIL_NOT_OWNER("Update/Open can happen only at the Fog where the stream was created", -3),
-	FAIL_SEMANTIC("Some fields are not updatadable", -2),
-	FAIL_VERSION_MISMATCH("Stream updates work only with the latest version", -1),
-	SUCCESS("Stream metadata updated successfully", 1);
+	FAIL_NULL("Null StreamMetadata not allowed", (byte) -5),
+	FAIL_NOT_EXISTS("The fog doesn't have the stream", (byte) -4),
+	FAIL_NOT_OWNER("Update/Open can happen only at the Fog where the stream was created", (byte) -3),
+	FAIL_SEMANTIC("Some fields are not updatadable", (byte) -2),
+	FAIL_VERSION_MISMATCH("Stream updates work only with the latest version", (byte) -1),
+	SUCCESS("Stream metadata updated successfully", (byte) 1);
 	
-	private static final Map<Integer, StreamMetadataUpdateMessage> lookup
+	private static final Map<Byte, StreamMetadataUpdateMessage> lookup
 				= new HashMap<>();
 	
 	static {
@@ -28,9 +29,9 @@ public enum StreamMetadataUpdateMessage {
 	}
 	
 	private String message;
-	private int code;
+	private byte code;
 	
-	private StreamMetadataUpdateMessage(String msg, int c) {
+	private StreamMetadataUpdateMessage(String msg, byte c) {
 		this.message = msg;
 		this.code = c;
 	}
@@ -39,11 +40,11 @@ public enum StreamMetadataUpdateMessage {
 		return message;
 	}
 
-	public int getCode() {
+	public byte getCode() {
 		return code;
 	}
 	
-	public static StreamMetadataUpdateMessage getInstance(int code) {
+	public static StreamMetadataUpdateMessage getInstance(byte code) {
 		if(lookup.containsKey(code)) {
 			return lookup.get(code);
 		}

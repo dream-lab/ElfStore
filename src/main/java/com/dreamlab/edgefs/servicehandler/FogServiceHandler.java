@@ -2349,13 +2349,17 @@ public class FogServiceHandler implements FogService.Iface {
 		//which has the same version as the current version of the metadata 
 		if(metadata == null) {
 			return new StreamMetadataUpdateResponse(Constants.FAILURE, 
-					StreamMetadataUpdateMessage.FAIL_NOT_EXISTS.getMessage());
+					StreamMetadataUpdateMessage.FAIL_NULL.getCode());
+		}
+		if(!fog.getStreamMetadata().containsKey(metadata.getStreamId())) {
+			return new StreamMetadataUpdateResponse(Constants.FAILURE, 
+					StreamMetadataUpdateMessage.FAIL_NOT_EXISTS.getCode());
 		}
 		StreamMetadataInfo metadataInfo = fog.getStreamMetadata().get(metadata.getStreamId());
 		//update can happen only at the owner Fog
 		if(metadataInfo.isCached()) {
 			return new StreamMetadataUpdateResponse(Constants.FAILURE,
-					StreamMetadataUpdateMessage.FAIL_NOT_OWNER.getMessage());
+					StreamMetadataUpdateMessage.FAIL_NOT_OWNER.getCode());
 		}
 		StreamMetadataUpdateMessage updateStatus = checkForUpdateValidity(metadataInfo.getStreamMetadata(),
 				metadata);
@@ -2366,16 +2370,16 @@ public class FogServiceHandler implements FogService.Iface {
 			if (metadataInfo.getStreamMetadata().getVersion().getValue() != metadata.getVersion().getValue()) {
 				LOGGER.error("Update of stream metadata failed due to version mismatch");
 				response = new StreamMetadataUpdateResponse(Constants.FAILURE,
-						StreamMetadataUpdateMessage.FAIL_VERSION_MISMATCH.getMessage());
+						StreamMetadataUpdateMessage.FAIL_VERSION_MISMATCH.getCode());
 			} else {
 				//increment the version here
 				metadata.setVersion(new I32TypeStreamMetadata(metadata.getVersion().getValue() + 1, true));
 				metadataInfo.setStreamMetadata(metadata);
-				response = new StreamMetadataUpdateResponse(Constants.SUCCESS, updateStatus.getMessage());
+				response = new StreamMetadataUpdateResponse(Constants.SUCCESS, updateStatus.getCode());
 			}
 			streamMetadataUpdateLock.unlock();
 		} else {
-			response = new StreamMetadataUpdateResponse(Constants.FAILURE, updateStatus.getMessage());
+			response = new StreamMetadataUpdateResponse(Constants.FAILURE, updateStatus.getCode());
 		}
 		
 		return response;
