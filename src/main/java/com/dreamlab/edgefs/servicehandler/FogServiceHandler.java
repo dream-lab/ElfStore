@@ -894,29 +894,27 @@ public class FogServiceHandler implements FogService.Iface {
 	//this is not done and as per discussion, an additional information is passed which
 	//is the starting sequence number provided by the client library
 	@Override
-	public byte registerStream(String streamId, StreamMetadata metadata, long startSequenceNum)
-			throws TException {
+	public byte registerStream(String streamId, StreamMetadata metadata, long startSequenceNum) throws TException {
 		if (metadata != null) {
-			//set the owner of the stream to this Fog
+			// set the owner of the stream to this Fog
 			NodeInfoPrimaryTypeStreamMetadata ownerFog = new NodeInfoPrimaryTypeStreamMetadata(
-					new NodeInfoPrimary(fog.getMyFogInfo().getNodeIP(), fog.getMyFogInfo().getPort()),
-					false);
+					new NodeInfoPrimary(fog.getMyFogInfo().getNodeIP(), fog.getMyFogInfo().getPort()), false);
 			metadata.setOwner(ownerFog);
-			//the client library should assign a version 0 initially
-			//but placing here for safety which can be removed later
+			// the client library should assign a version 0 initially
+			// but placing here for safety which can be removed later
 			I32TypeStreamMetadata versionMeta = new I32TypeStreamMetadata(0, true);
 			metadata.setVersion(versionMeta);
 			StreamMetadataInfo metadataInfo = new StreamMetadataInfo();
 			metadataInfo.setStreamMetadata(metadata);
 			metadataInfo.setCached(false);
 			fog.getStreamMetadata().put(streamId, metadataInfo);
-			
+
 			// once stream is registered, initialize the set of microbatches for the stream
 			fog.getStreamMbIdMap().put(streamId, new HashSet<>());
-			
-			//after creation, create an instance of BlockMetadata for this stream
+
+			// after creation, create an instance of BlockMetadata for this stream
 			fog.getPerStreamBlockMetadata().put(streamId, new BlockMetadata(streamId, startSequenceNum));
-			
+
 			// TODO:create directory in the edge if don't want a flat namespace
 			updateStreamBloomFilter(streamId, metadata);
 			return Constants.SUCCESS;
@@ -2566,6 +2564,11 @@ public class FogServiceHandler implements FogService.Iface {
 		//to successfully renew the lease, the same client should be the one holding the lock
 		//previously i.e. no other client should have acquired the lock between the hard lease
 		//time expiration and renew call made
+		//NOTE::There is no consideration of time in this case i.e. it might happen that 
+		//the client is the one last holding the lock but makes the renew call after a long
+		//time particularly longer than the hard lease time, in that case the renewal should
+		//still fail and client should first call open() and then do the necessary operations
+		//Lets fix this after the feature set completion
 		if(blockMetadata.getLock() == null || !blockMetadata.getLock().equals(clientId)
 				|| !blockMetadata.getSessionSecret().equals(sessionSecret)) {
 			response = new StreamLeaseRenewalResponse(Constants.FAILURE,
