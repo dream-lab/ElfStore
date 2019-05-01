@@ -46,6 +46,25 @@ STREAM_OWNER_FOG_PORT = 9092
 #this is assigned when the open() api succeeds
 SESSION_SECRET = 'test'
 
+#Before every write & incrementBlockCount operation, we issue a renew lease call
+#which should succeed always in case left lease time is more than the time taken
+#to complete an operation. For this we maintain a conservative estimate of time
+#taken for the completion of operations. Also in case if the left lease time is
+#less than the time taken to complete an operation, the renew lease call may fail
+#i.e. the lease may not be renewed in which case the stream should be reopened
+
+#estimating the putNext() call to succeed in 10 seconds
+ESTIMATE_PUT_NEXT = 10*1000
+
+#estimating the incrementBlockCount() call to succeed in 5 seconds
+ESTIMATE_INCR_BLOCK_COUNT = 5*1000
+
+#local time when lock is acquired either by opening stream or renew lease
+TIME_LOCK_ACQUIRED = 0
+
+#local time when the lease expires
+TIME_LEASE_EXPIRE = 0
+
 ######################################################IGNORE ALL THIS ######################################################
 
 logs_list = []
@@ -288,7 +307,10 @@ class EdgeClient:
 
         #statinfo = os.stat(path)
         #dataLength = statinfo.st_size              
-        encodedSpace,util = self.encodeFreeSpace(len(data)) #this is the length of the file        
+        encodedSpace,util = self.encodeFreeSpace(len(data)) #this is the length of the file   
+
+        #lets see if there is an actual need to renew lease though we will be calling renew method anyways
+            
 
         print "fog ip, fog port , talking to fog for replica locations ",FOG_IP,FOG_PORT
         #write request going to a fog
@@ -522,7 +544,7 @@ class EdgeClient:
             client,transport = self.openSocketConnection(nodeInfo.NodeIP,nodeInfo.port,FOG_SERVICE)
 
             #response is now a WriteResponse and not a byte
-            response = client.write(metaData, data, writable.preference)
+            response = client.putNext(metaData, data, writable.preference)
 	
 	
             print "the response from the fog for write ",response.status
@@ -879,6 +901,10 @@ class EdgeClient:
             #type of response is OpenStreamResponse
             response = client.open(stream_id, client_id, expected_lease)
             if response.status == 1:
+                global TIME_LOCK_ACQUIRED
+                global TIME_LEASE_EXPIRE
+                TIME_LOCK_ACQUIRED = int(time.time() * 1000)
+                TIME_LEASE_EXPIRE = TIME_LOCK_ACQUIRED + response.leaseTime
                 break
             else:
                 time.sleep(1)
@@ -894,8 +920,14 @@ class EdgeClient:
         SESSION_SECRET = response.sessionSecret
         return response
 
-    #renewLease() has an id of 400 and the overall time to get the lease has an id of 450
-    def renew_lease(self, stream_id, client_id, session_secret, expected_lease):
+    #renewLease() has an id of 400 and the overall time to complete the lock acquiring has an id of 450
+    #if the left lease time is more than the time for the operation e.g. putNext or increment block count
+    #then the renewLease() should return with a status of 1 and if that doesn't happen, it should be treated
+    #as an exception. Similarly if the left lease time is less than the time for the operation, renewLease()
+    #might return with a status of 0 and a negative code. In that case, some other client would have acquired
+    #the lock on the stream and we will then use the openStream to acquire the lock. To capture whether an 
+    #exception occurs during this process, we use a code of 475
+    def renew_lease(self, stream_id, client_id, session_secret, expected_lease, expected_completion_time, blockId):
         print "Going to renew lease, this happens when a hint is provided from the Fog itself"
         
         #the behaviour of renewal of lease is as follows: the renewal can only succeed when the client holding
@@ -905,9 +937,31 @@ class EdgeClient:
         global STREAM_OWNER_FOG_IP
         global STREAM_OWNER_FOG_PORT
         client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
+
+        #lets divide the renewal result in two parts based on whether the left lease time is more or less than the
+        #time taken to complete the operation
+        global TIME_LEASE_EXPIRE
+        renewal_success = True
+        current_time = int((time.time() * 1000))
+        if TIME_LEASE_EXPIRE - current_time >= expected_completion_time:
+            #we should be able to successfully renew the lease
+            pass
+        else:
+            #renewal may fail
+            renewal_success = False
+        
+        #this log is to capture the total time for acquiring the lock
+        timestamp_full = str(blockId) + ", 450,"+ STREAM_OWNER_FOG_IP  + ",lock reacquire,starttime = "+str(time.time())+","
         #for lease renewal, after endtime, adding status flag as well indicating whether it was successful or not
-        timestamp_full = "-1, 450,"+ STREAM_OWNER_FOG_IP  + ",lock reacquire,starttime = "+str(time.time())+","
-        timestamp_record = "-1, 400,"+ STREAM_OWNER_FOG_IP  + ",renew stream lease,starttime = "+str(time.time())+","
+        timestamp_record = str(blockId) + ", 400,"+ STREAM_OWNER_FOG_IP  + ",renew stream lease,starttime = "+str(time.time())+","
+        #this log will indicate whether the lease is successfully renewed or not as well as whether there was a chance or not
+        #that the lease will be successfully renewed. The two integers after endtime will indicate this. Thus a value of 00 means
+        #that lease was not renewed and our renewal_success also indicated the same. 10 means we got the lease renewed but we
+        #estimated against it since we maintain a conservative estimate of time taken to complete the operation. 11 is also fine.
+        #01 is equivalent of an exception where we are unable to renew the lease but our estimate was that we will be able to
+        #do so, this is more interesting for our analysis
+        timestamp_renewal_lease = str(blockId) + ", 475,"+ STREAM_OWNER_FOG_IP  + ",renew status check,starttime = "+str(time.time())+","
+
         #the response type is StreamLeaseRenewalResponse
         response = client.renewLease(stream_id, client_id, session_secret, expected_lease)
         fallback = True
@@ -915,10 +969,18 @@ class EdgeClient:
             print "renewLease() successful"
             timestamp_record = timestamp_record +"endtime = " + str(time.time()) + ",1" + '\n'
             timestamp_full = timestamp_full +"endtime = " + str(time.time()) + '\n'
+            if renewal_success == True:
+                timestamp_renewal_lease = timestamp_renewal_lease +"endtime = " + str(time.time()) + ",1, 1" + '\n'
+            else:
+                timestamp_renewal_lease = timestamp_renewal_lease +"endtime = " + str(time.time()) + ",1, 0" + '\n'
             fallback = False
         else:
             print "renewLease() failed, falling back to open() api"
             timestamp_record = timestamp_record +"endtime = " + str(time.time()) + ",0" + '\n'
+            if renewal_success == True:
+                timestamp_renewal_lease = timestamp_renewal_lease +"endtime = " + str(time.time()) + ",0, 1" + '\n'
+            else:
+                timestamp_renewal_lease = timestamp_renewal_lease +"endtime = " + str(time.time()) + ",0, 0" + '\n'
 
         self.closeSocket(transport)
 
@@ -1027,7 +1089,10 @@ if __name__ == '__main__':
     #this is for testing the renewLease() api
     if(choice == 22):
         #fourth argument is expected lease time which is not used currently
-        myEdge.renew_lease(STREAM_ID, CLIENT_ID, SESSION_SECRET, 0)
+        #fifth argument is the expected completion time for an operation
+        #last argument is the blockId for which we are trying to renew
+        #the lease. It can be a putNext() or incrementBlockCount()
+        myEdge.renew_lease(STREAM_ID, CLIENT_ID, SESSION_SECRET, 0, 0, 0)
     if(choice==0):        
         myEdge.readFromEdge(microbatchid)
     elif(choice==1):

@@ -2559,8 +2559,8 @@ public class FogServiceHandler implements FogService.Iface {
 			return new StreamLeaseRenewalResponse(Constants.FAILURE, 
 					StreamLeaseRenewalCode.FAIL_NOT_OWNER.getCode());
 		}
-		BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(streamId);
 		streamOpenLock.lock();
+		BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(streamId);
 		//to successfully renew the lease, the same client should be the one holding the lock
 		//previously i.e. no other client should have acquired the lock between the hard lease
 		//time expiration and renew call made
@@ -2569,6 +2569,9 @@ public class FogServiceHandler implements FogService.Iface {
 		//time particularly longer than the hard lease time, in that case the renewal should
 		//still fail and client should first call open() and then do the necessary operations
 		//Lets fix this after the feature set completion
+		//NOTE:: As per the discussion, the renew call is made by the client when the client
+		//feels that the lease time left is less than the time taken to complete some specific
+		//operation whose time the client maintains.
 		if(blockMetadata.getLock() == null || !blockMetadata.getLock().equals(clientId)
 				|| !blockMetadata.getSessionSecret().equals(sessionSecret)) {
 			response = new StreamLeaseRenewalResponse(Constants.FAILURE,
@@ -2578,8 +2581,9 @@ public class FogServiceHandler implements FogService.Iface {
 			blockMetadata.setLeaseDuration(fog.getStreamSoftLease() * 1000);
 			response = new StreamLeaseRenewalResponse(Constants.SUCCESS,
 					StreamLeaseRenewalCode.SUCCESS.getCode());
+			response.setLeaseTime(blockMetadata.getLeaseDuration());
 		}
-		
+		streamOpenLock.unlock();
 		return response;
 	}
 
