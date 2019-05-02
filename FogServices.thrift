@@ -473,4 +473,8 @@ service FogService {
 	StreamLeaseRenewalResponse renewLease(1:string streamId, 2:string clientId, 3:string sessionSecret,
 											 4:i32 expectedLease);
 	
+	//this is not used generally, only used to get the largest blockId persisted to a particular stream.
+	//This will be used when we are using discontinuous blockIds during different phases of experiment
+	//without doing resetting										 
+	i64 getLargestBlockId(1:string streamId); 
 }

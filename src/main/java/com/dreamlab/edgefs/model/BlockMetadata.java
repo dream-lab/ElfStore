@@ -1,7 +1,9 @@
 package com.dreamlab.edgefs.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class maintains the internal data structures that a Fog maintains
@@ -36,7 +38,13 @@ public class BlockMetadata {
 	private long lastBlockId = -1;
 	//this is for verification purposes by matching the MD5
 	//checkSum of the block
-	private List<String> blockMD5List = new ArrayList<>();
+	//private List<String> blockMD5List = new ArrayList<>();
+	//TYPE_CHANGE::previously used a list of MD5 checksum to verify the 
+	//integrity of a block, however understanding was that blockIds in
+	//a stream will be continuous. Relaxing this constraint for the time
+	//being, so to allow O(1) time for block verification, we use a
+	//map with key as blockId and value as the checksum.
+	private Map<Long, String> blockMD5Map = new HashMap<>();
 	
 	public BlockMetadata() {
 		
@@ -104,12 +112,12 @@ public class BlockMetadata {
 		this.lastBlockId = lastBlockId;
 	}
 
-	public List<String> getBlockMD5List() {
-		return blockMD5List;
+	public Map<Long, String> getBlockMD5Map() {
+		return blockMD5Map;
 	}
 
-	public void setBlockMD5List(List<String> blockMD5List) {
-		this.blockMD5List = blockMD5List;
+	public void setBlockMD5Map(Map<Long, String> blockMD5Map) {
+		this.blockMD5Map = blockMD5Map;
 	}
 	
 }

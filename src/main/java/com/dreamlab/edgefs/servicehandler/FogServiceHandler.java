@@ -9,6 +9,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1601,6 +1603,7 @@ public class FogServiceHandler implements FogService.Iface {
 		fog.getStreamMetadata().put(metadata.getStreamId(), strMetadata);
 		
 		long decodedLength = Constants.interpretByteAsLong(dataLength);
+		LOGGER.info("The size of data to be written is : {}", decodedLength);
 //		double expectedReliability = strMetadata.getReliability();
 		double expectedReliability = strMetadata.getStreamMetadata().getReliability().getValue();
 		int minReplica = strMetadata.getStreamMetadata().getMinReplica().getValue();
@@ -1934,7 +1937,9 @@ public class FogServiceHandler implements FogService.Iface {
 		//from a local edge and makes a separate metadata call. This edge client
 		//should compute the MD5 checksum on its own and send it as a field in the
 		//Metadata object passed
-		if(data != null) {
+		//additional check added since the client can send the checksum added metadata
+		//in both cases, writing directly to edge or writing via routing through a fog
+		if(data != null && !mbMetadata.isSetChecksum()) {
 			computeMD5Checksum(data, mbMetadata);
 		}
 		
@@ -2499,12 +2504,22 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 		streamOpenLock.lock();
 		BlockMetadataUpdateMessage checkLeaseOwnership = checkLeaseOwnership(mbMetadata);
-		if(checkLeaseOwnership == BlockMetadataUpdateMessage.SUCCESS) {
+		if (checkLeaseOwnership == BlockMetadataUpdateMessage.SUCCESS) {
 			BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(mbMetadata.getStreamId());
-			blockMetadata.setLastBlockId(mbMetadata.getMbId());
-			blockMetadata.getBlockMD5List().add(mbMetadata.getChecksum());
-			response = new BlockMetadataUpdateResponse(Constants.SUCCESS, checkLeaseOwnership.getMessage(),
-					checkLeaseOwnership.getCode());
+			// increment block count will be successful in case this blockId is not
+			// already present in the map. Presence of blockId means some other client
+			// has already written a block with this blockId so we have to fail
+			if (!blockMetadata.getBlockMD5Map().containsKey(mbMetadata.getMbId())) {
+				blockMetadata.setLastBlockId(mbMetadata.getMbId());
+				blockMetadata.getBlockMD5Map().put(mbMetadata.getMbId(), mbMetadata.getChecksum());
+				response = new BlockMetadataUpdateResponse(Constants.SUCCESS, checkLeaseOwnership.getMessage(),
+						checkLeaseOwnership.getCode());
+			} else {
+				//another block is already written with this blockId, so failure scenario
+				response = new BlockMetadataUpdateResponse(Constants.FAILURE,
+						BlockMetadataUpdateMessage.FAIL_BLOCK_NUMBER_EXISTS.getMessage(),
+						BlockMetadataUpdateMessage.FAIL_BLOCK_NUMBER_EXISTS.getCode());
+			}
 		} else {
 			response = new BlockMetadataUpdateResponse(Constants.FAILURE, checkLeaseOwnership.getMessage(),
 					checkLeaseOwnership.getCode());
@@ -2537,7 +2552,7 @@ public class FogServiceHandler implements FogService.Iface {
 			//may still not be crossed and since no other client has acquired the
 			//lock still, the update can go through
 			if((System.currentTimeMillis() - blockMetadata.getLeaseStartTime()) 
-					< fog.getStreamHardLease()) {
+					< (fog.getStreamHardLease() * 1000)) {
 				return BlockMetadataUpdateMessage.SUCCESS;
 			} else {
 				//this means client can call renew() and get the lock
@@ -2572,19 +2587,47 @@ public class FogServiceHandler implements FogService.Iface {
 		//NOTE:: As per the discussion, the renew call is made by the client when the client
 		//feels that the lease time left is less than the time taken to complete some specific
 		//operation whose time the client maintains.
-		if(blockMetadata.getLock() == null || !blockMetadata.getLock().equals(clientId)
+		if (blockMetadata.getLock() == null || !blockMetadata.getLock().equals(clientId)
 				|| !blockMetadata.getSessionSecret().equals(sessionSecret)) {
 			response = new StreamLeaseRenewalResponse(Constants.FAILURE,
 					StreamLeaseRenewalCode.FAIL_LOCK_ACQUIRED.getCode());
 		} else {
-			blockMetadata.setLeaseStartTime(System.currentTimeMillis());
-			blockMetadata.setLeaseDuration(fog.getStreamSoftLease() * 1000);
-			response = new StreamLeaseRenewalResponse(Constants.SUCCESS,
-					StreamLeaseRenewalCode.SUCCESS.getCode());
-			response.setLeaseTime(blockMetadata.getLeaseDuration());
+			if ((System.currentTimeMillis() - blockMetadata.getLeaseStartTime())
+					< (fog.getStreamHardLease() * 1000)) {
+				blockMetadata.setLeaseStartTime(System.currentTimeMillis());
+				blockMetadata.setLeaseDuration(fog.getStreamSoftLease() * 1000);
+				response = new StreamLeaseRenewalResponse(Constants.SUCCESS, 
+						StreamLeaseRenewalCode.SUCCESS.getCode());
+				response.setLeaseTime(blockMetadata.getLeaseDuration());
+			} else {
+				response = new StreamLeaseRenewalResponse(Constants.FAILURE,
+						StreamLeaseRenewalCode.FAIL_LEASE_EXPIRED.getCode());
+			}
 		}
 		streamOpenLock.unlock();
 		return response;
+	}
+
+	//a negative value indicates that either the stream is nonexistent or no blocks
+	//are written to the stream in question. 
+	@Override
+	public long getLargestBlockId(String streamId) throws TException {
+		if(!fog.getStreamMetadata().containsKey(streamId))
+			return -1;
+		BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(streamId);
+		if(blockMetadata.getBlockMD5Map().isEmpty())
+			return -1;
+		Set<Long> blockIdSet = blockMetadata.getBlockMD5Map().keySet();
+		List<Long> blockIdList = new ArrayList<>(blockIdSet);
+		Collections.sort(blockIdList, new Comparator<Long>() {
+
+			@Override
+			public int compare(Long l1, Long l2) {
+				return l2.compareTo(l1);
+			}
+		});
+		LOGGER.info("The largest blockId for stream {} is : {}", streamId, blockIdList.get(0));
+		return blockIdList.get(0);
 	}
 
 }

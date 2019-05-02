@@ -189,9 +189,9 @@ public class Edge {
 	private EdgePayload createEdgePayload() {
 		EdgePayload payload = new EdgePayload();
 		payload.setEdgeId(nodeId);
-		long currentTime = System.currentTimeMillis();
+//		long currentTime = System.currentTimeMillis();
 //		if(currentTime - lastStatsSentTime >= (EdgeConstants.STORAGE_SENT_TIME*1000)) {
-			payload.setEncodedStorage(getSystemFreeSpaceEncoded());
+		payload.setEncodedStorage(getSystemFreeSpaceEncoded());
 //			setLastStatsSentTime(currentTime);
 //		}
 		return payload;
@@ -199,12 +199,12 @@ public class Edge {
 
 	private byte getSystemFreeSpaceEncoded()
 	{
-		/*File myFile = new File("/"); *//** Important to specify the right path here **//*
+		File myFile = new File("/");
 		long freeSpace = myFile.getFreeSpace()/(1024 * 1024);
 		LOGGER.info("The total free space available is (in MB) " + freeSpace);
 		byte encoded = Constants.encodeLongAsByte(freeSpace);
-		LOGGER.info("The encoded space is " + encoded);*/
-		byte encoded = Constants.encodeLongAsByte(getStorage());
+		LOGGER.info("The encoded space is " + encoded);
+//		byte encoded = Constants.encodeLongAsByte(getStorage());
 		return encoded;
 	}
 }
