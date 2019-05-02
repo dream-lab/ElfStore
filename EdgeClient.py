@@ -278,7 +278,7 @@ class EdgeClient:
     #Register the fog device to start sending heartbeats
     def registerEdgeDevice(self,nodeId,nodeIp,port,reliability,storage_sent):
 
-        timestamp_record = "register edgeJoin,starttime = "+str(time.time())+","
+        timestamp_record = "register edgeJoin,starttime = "+repr(time.time())+","
         print "Register Edge device method was called.."
         print "NodeId ",nodeId," Node IP ",nodeIp," port ",port, " reliability ",reliability
 
@@ -291,7 +291,7 @@ class EdgeClient:
         client.edgeJoin(edgeDevice)
        
         self.closeSocket(transport)
-        timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
         myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
         myLogs.close()
@@ -369,10 +369,10 @@ class EdgeClient:
         print "encodedSpace ",encodedSpace
 
 
-        timestamp_record_getWrite = str(microbatchID)  +   ","  +   str(-100) +  ", local, "  + "getWriteLocations ,starttime = " + str(time.time())  + ","
+        timestamp_record_getWrite = str(microbatchID)  +   ","  +   str(-100) +  ", local, "  + "getWriteLocations ,starttime = " + repr(time.time())  + ","
         #result = myClient.getWriteLocations(encodedSpace,metaData,blackListedFogs,edgeInfo) #datalength,
         result = myClient.getWriteLocations(encodedSpace,metaData,blackListedFogs,True)
-        timestamp_record_getWrite = timestamp_record_getWrite +"endtime = " + str(time.time()) +" , " + str(sizeChoice) + '\n'
+        timestamp_record_getWrite = timestamp_record_getWrite +"endtime = " + repr(time.time()) +" , " + str(sizeChoice) + '\n'
 	
 	#we are calculating replicas using getWriteLocations()
 	yetAnotherMap[microbatchID] = {}
@@ -416,7 +416,7 @@ class EdgeClient:
 
         print "the write locations are ",result
 
-	timestamp_record = str(microbatchID) +  ",-1, local ,write req,starttime = " +   str(time.time()) +    ","        
+	timestamp_record = str(microbatchID) +  ",-1, local ,write req,starttime = " +   repr(time.time()) +    ","        
 
         #lets renew the lease. The behaviour should adhere with the policy of the lease time
         #left in comparison to the time taken to complete the operation
@@ -438,7 +438,7 @@ class EdgeClient:
 	print "all writes to replicas finished "     
         self.closeSocket(transport)
 
-        timestamp_record = timestamp_record +"endtime = " + str(time.time())+" , " + str(sizeChoice) + '\n'
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time())+" , " + str(sizeChoice) + '\n'
         myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
 	myLogs.write(timestamp_record_getWrite)#write timestamp for getWrite Locations
@@ -475,7 +475,7 @@ class EdgeClient:
 	else:
 		device = str(writable.node.nodeId)
 
-	localTime = str(time.time())
+	localTime = repr(time.time())
         timestamp_record = str(microbatchID)  + ","  +  str(index) +  "," +  device   + "," +    "write req,starttime = "+localTime+","
 	
         print "got the writable ",writable," the microbatchID is ",microbatchID
@@ -510,7 +510,7 @@ class EdgeClient:
 	    timestamp_record_local = str(microbatchID) +","+str(-150)+",local,write req,starttime = "+localTime+","
             #the response is not a byte anymore, its a WriteResponse
             response = client.write(microbatchID,metaData,data)
-	    timestamp_record_local = timestamp_record_local +"endtime = " + str(time.time())+" , " + str(sizeChoice) + '\n'
+	    timestamp_record_local = timestamp_record_local +"endtime = " + repr(time.time())+" , " + str(sizeChoice) + '\n'
 	    
             print "response from the edge ",response.status
 
@@ -538,9 +538,9 @@ class EdgeClient:
             #metaData.checksum = hash_md5.hexdigest()
             
 	    #metadata insert to fog -50
-	    timeMetadata = str(microbatchID) +","+str(-50)+",local ,metadata req,starttime = "+str(time.time())+","
+	    timeMetadata = str(microbatchID) +","+str(-50)+",local ,metadata req,starttime = "+repr(time.time())+","
             response = client.insertMetadata(metaData, edgeInfoData)
-	    timeMetadata = timeMetadata + " endTime = "+str(time.time())+" , " + str(sizeChoice)+'\n'
+	    timeMetadata = timeMetadata + " endTime = "+repr(time.time())+" , " + str(sizeChoice)+'\n'
 
 
 	    myLogs = open(BASE_LOG+ 'logs.txt','a')
@@ -564,7 +564,7 @@ class EdgeClient:
             print "the response from the fog for write ",response.status
             self.closeSocket(transport)
 
-        timestamp_record = timestamp_record +"endtime = " + str(time.time())+" , " + str(sizeChoice) + '\n'
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time())+" , " + str(sizeChoice) + '\n'
         print "the time stamp for write request is ",timestamp_record
         
         myLogs = open(BASE_LOG+ 'logs.txt','a')
@@ -584,9 +584,9 @@ class EdgeClient:
         edgeInfoData.reliability = EDGE_RELIABILITY            
         edgeInfoData.storage = 12
 
-        timestamp_record = microbatchID+",read req,starttime = "+str(time.time())+","
+        timestamp_record = microbatchID+",read req,starttime = "+repr(time.time())+","
         response = client.read(microbatchID,True,True,True,edgeInfoData,True)#last bit is for recovery
-        timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
 
         myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
@@ -686,10 +686,10 @@ class EdgeClient:
         print "The min replica is ",streamMD.minReplica.value , "\n The max replica is ",streamMD.maxReplica.value
 
         client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
-        timestamp_record = "register stream req,starttime = "+str(time.time())+","
+        timestamp_record = "register stream req,starttime = "+repr(time.time())+","
 
         response = client.registerStream(streamId, streamMD, startBlockNum)
-        timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
         myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
         myLogs.close()
@@ -743,11 +743,11 @@ class EdgeClient:
 
         client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
 
-        timestamp_record = microbatchId+ ",23, local ,find req,starttime = "+str(time.time())+","
+        timestamp_record = microbatchId+ ",23, local ,find req,starttime = "+repr(time.time())+","
 
         response = client.find(microbatchId,True,True,edgeInfoData)
 
-        timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
         print "the time stamp for find request is ",timestamp_record
         
         myLogs = open(BASE_LOG+ 'logs.txt','a')
@@ -781,9 +781,9 @@ class EdgeClient:
                  # Connect!
                  transport.open()
                 
-                 timestamp_record = microbatchId+", 25 , "+ str(findReplica.node.nodeId) + " , Read req,starttime = "+str(time.time())+","
+                 timestamp_record = microbatchId+", 25 , "+ str(findReplica.node.nodeId) + " , Read req,starttime = "+repr(time.time())+","
                  response = client.read(microbatchId,0) #this is for recovery
-                 timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+                 timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
                  myLogs = open(BASE_LOG+ "logs.txt",'a')
                  myLogs.write(timestamp_record)
                  myLogs.close()
@@ -805,9 +805,9 @@ class EdgeClient:
 
                  client,transport = self.openSocketConnection(fogNode.NodeIP,fogNode.port,FOG_SERVICE)
 
-                 timestamp_record = microbatchId+", 27 ,"+str(findReplica.node.nodeId)  + ",write req,starttime = "+str(time.time())+","
+                 timestamp_record = microbatchId+", 27 ,"+str(findReplica.node.nodeId)  + ",write req,starttime = "+repr(time.time())+","
                  response = client.read(microbatchId,0)
-                 timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+                 timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
                  myLogs = open(BASE_LOG+ "logs.txt",'a')
                  myLogs.write(timestamp_record)
                  myLogs.close()
@@ -835,13 +835,13 @@ class EdgeClient:
         #lets note the time taken by each process as well
         #this is not for a microbatchId so using -1 for it, -1000 indicates the time for a process completing 100 writes
         # and third is the number of process where this ranges from 0 to 9 during stress testing
-        timestamp_process = "-1, -1000, " + str(process_index) + ",stress test write process req,starttime = "+str(time.time())+","
+        timestamp_process = "-1, -1000, " + str(process_index) + ",stress test write process req,starttime = "+repr(time.time())+","
         while(numWrites<38):# original value is 100
             myEdge.writeRequestToFog(str(start),streamId,newFilePath,byteArray[recycle],fogReplicaMap, yetAnotherMap)
 	    numWrites = numWrites + 1
 	    start = start + 1
 	    recycle = (recycle + 1)%10
-        timestamp_process = timestamp_process +"endtime = " + str(time.time()) + '\n'
+        timestamp_process = timestamp_process +"endtime = " + repr(time.time()) + '\n'
         #writing of logs should happen here
 	myLogs = open(BASE_LOG+ "logs.txt",'a')
         myLogs.write(timestamp_process)
@@ -852,10 +852,10 @@ class EdgeClient:
     #fetching stream metadata has an id of 250
     def getStreamMetadata(self, sid):
         print "Going to fetch stream metadata"
+        timestamp_record = "-1, 250,"+ str(-1)  + ",stream md fetch,starttime = "+repr(time.time())+","
         client,transport = self.openSocketConnection(FOG_IP, FOG_PORT, FOG_SERVICE)
-        timestamp_record = "-1, 250,"+ FOG_IP  + ",stream md fetch,starttime = "+str(time.time())+","
         streamMetadataInfo = client.getStreamMetadata(sid, True, True, True)
-        timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
         self.closeSocket(transport)
 
         myLogs = open(BASE_LOG+ "logs.txt",'a')
@@ -869,6 +869,7 @@ class EdgeClient:
     def updateStreamMD(self):
         print "Going to update stream metadata, first get the latest stream metadata"
 
+        timestamp_record = "-1, 300,"+ str(-1)  + ",stream md update,starttime = "+repr(time.time())+","
         global STREAM_ID
         metadata = self.getStreamMetadata(STREAM_ID)
         #type of ownerFog is NodeInfoPrimary
@@ -884,9 +885,15 @@ class EdgeClient:
         
         client,transport = self.openSocketConnection(ownerFog_ip, ownerFog_port, FOG_SERVICE)
         
-        timestamp_record = "-1, 300,"+ ownerFog_ip  + ",stream md update,starttime = "+str(time.time())+","
+        #result type is StreamMetadataUpdateResponse
         result = client.updateStreamMetadata(metadata)
-        timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+        #lets add the status as well as the last field in the log
+        if result.code > 0:
+            #success case
+            timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",1" + '\n'
+        else:
+            #failure case
+            timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",0" + '\n'
         
         self.closeSocket(transport)
         
@@ -903,6 +910,7 @@ class EdgeClient:
         #we can invoke incrementBlockCount on the owner directly and further writes
         #can also use the cached information till the lease is valid
 
+        timestamp_record = str(blockId) + ", 350,"+ str(-1)  + ",open stream,starttime = "+repr(time.time())+","
         metadata = self.getStreamMetadata(stream_id)
         ownerFog = metadata.owner.value
         global STREAM_OWNER_FOG_IP
@@ -911,7 +919,6 @@ class EdgeClient:
         STREAM_OWNER_FOG_PORT = ownerFog.port
 
         client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
-        timestamp_record = str(blockId) + ", 350,"+ STREAM_OWNER_FOG_IP  + ",open stream,starttime = "+str(time.time())+","
 
         global TIME_LOCK_ACQUIRED
         global TIME_LEASE_EXPIRE
@@ -927,7 +934,7 @@ class EdgeClient:
                 break
             else:
                 time.sleep(1)
-        timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
 
         self.closeSocket(transport)
         
@@ -967,13 +974,13 @@ class EdgeClient:
         global IS_LOCK_HELD
 
         #this log is to capture the total time for acquiring the lock
-        timestamp_full = str(blockId) + ", 450,"+ STREAM_OWNER_FOG_IP  + ",lock reacquire,starttime = "+str(time.time())+","
+        timestamp_full = str(blockId) + ", 450,"+ STREAM_OWNER_FOG_IP  + ",lock reacquire,starttime = "+repr(time.time())+","
         timestamp_record = ''
 
         fallback = True
         if IS_LOCK_HELD == True:
             #for lease renewal, after endtime, adding status flag as well indicating whether it was successful or not
-            timestamp_record = str(blockId) + ", 400,"+ STREAM_OWNER_FOG_IP  + ",renew stream lease,starttime = "+str(time.time())+","
+            timestamp_record = str(blockId) + ", 400,"+ STREAM_OWNER_FOG_IP  + ",renew stream lease,starttime = "+repr(time.time())+","
 
             client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
 
@@ -981,19 +988,19 @@ class EdgeClient:
             response = client.renewLease(stream_id, client_id, session_secret, expected_lease)
             if response.status == 1:
                 print "renewLease() successful"
-                timestamp_record = timestamp_record +"endtime = " + str(time.time()) + ",1" + '\n'
-                timestamp_full = timestamp_full +"endtime = " + str(time.time()) + '\n'
+                timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",1" + '\n'
+                timestamp_full = timestamp_full +"endtime = " + repr(time.time()) + '\n'
                 fallback = False
             else:
                 print "renewLease() failed, falling back to open() api"
-                timestamp_record = timestamp_record +"endtime = " + str(time.time()) + ",0" + '\n'
+                timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",0" + '\n'
                 IS_LOCK_HELD = False
 
             self.closeSocket(transport)
 
         if fallback == True:
             self.openStream(stream_id, client_id, expected_lease, blockId)
-            timestamp_full = timestamp_full +"endtime = " + str(time.time()) + '\n'
+            timestamp_full = timestamp_full +"endtime = " + repr(time.time()) + '\n'
         myLogs = open(BASE_LOG+ "logs.txt",'a')
         myLogs.write(timestamp_record)
         myLogs.write(timestamp_full)
@@ -1003,7 +1010,7 @@ class EdgeClient:
     def increment_block_count(self, metadata):
         print "Going to increment the last blockId for the stream"
         
-        timestamp_record = str(metadata.mbId) + ", 500,"+ STREAM_OWNER_FOG_IP  + ",increment last blockId,starttime = "+str(time.time())+","
+        timestamp_record = str(metadata.mbId) + ", 500,"+ STREAM_OWNER_FOG_IP  + ",increment last blockId,starttime = "+repr(time.time())+","
 
         print "Lets first issue request to renew the lease for incrementBlockCount()"
         self.renew_lease(metadata.streamId, metadata.clientId, metadata.sessionSecret, 0, ESTIMATE_INCR_BLOCK_COUNT, metadata.mbId)
@@ -1013,7 +1020,7 @@ class EdgeClient:
         client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
         #the response type is BlockMetadataUpdateResponse
         response = client.incrementBlockCount(metadata)
-        timestamp_record = timestamp_record +"endtime = " + str(time.time()) + '\n'
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
         self.closeSocket(transport)
 
         myLogs = open(BASE_LOG+ "logs.txt",'a')
@@ -1023,8 +1030,12 @@ class EdgeClient:
         return response
 
     def getLargestBlockId(self, stream_id):
+        metadata = self.getStreamMetadata(stream_id)
+        ownerFog = metadata.owner.value
         global STREAM_OWNER_FOG_IP
+        STREAM_OWNER_FOG_IP = ownerFog.NodeIP
         global STREAM_OWNER_FOG_PORT
+        STREAM_OWNER_FOG_PORT = ownerFog.port
         client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
         largest_id = client.getLargestBlockId(stream_id)
         self.closeSocket(transport)
@@ -1110,7 +1121,7 @@ if __name__ == '__main__':
     if(choice == 20):
         num_updates = 100
         for i in range(num_updates):
-            myEdge.updateStreamMD()    
+            myEdge.updateStreamMD() 
     #this is for testing the open() api
     if(choice == 21):
         #third argument is expected lease time which is not used currently
@@ -1225,7 +1236,7 @@ if __name__ == '__main__':
 
         # -1 for microbatchId as this is not actually for a microbatch, -10000 for total time taken writing 1000 microbatches
         # by a single client and edgeId is used as the nodeId in this case while usually its a fog nodeId 
-        timestamp_stress = "-1, -10000, " +  ",stress test write req,starttime = "+str(time.time())+","        
+        timestamp_stress = "-1, -10000, " +  ",stress test write req,starttime = "+repr(time.time())+","        
         while(process_index < 4):
             w_process = multiprocessing.Process(target=myEdge.writeUsingProcess, args=(START, streamId, byteArray, process_index, return_dict))
             write_processes.append(w_process)
@@ -1235,7 +1246,7 @@ if __name__ == '__main__':
 
         for p in write_processes:
             p.join()
-        timestamp_stress = timestamp_stress +"endtime = " + str(time.time()) + '\n'
+        timestamp_stress = timestamp_stress +"endtime = " + repr(time.time()) + '\n'
 	#write this to the log
 	myLogs = open(BASE_LOG+ "logs.txt",'a')
         myLogs.write(timestamp_stress)
