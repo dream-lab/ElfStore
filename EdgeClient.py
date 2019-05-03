@@ -423,6 +423,14 @@ class EdgeClient:
         print "Lets first issue request to renew the lease for putNext()"
         self.renew_lease(metaData.streamId, metaData.clientId, metaData.sessionSecret, 0, ESTIMATE_PUT_NEXT, metaData.mbId)
 
+        #ISSUE ALERT:: Since the metaData object is prepared above, it might happen that the clientId and sessionSecret
+        #were set to dummy global values since before issuing the first write, we do a renew lease which is last code line
+        #but we set the clientId and secret many lines above. So once renew_lease() returns the proper sessionSecret will
+        #be with the client and it can properly perform the first write operation. The same fields above cannot be commented
+        #since both clientId and sessionSecret are required fields (thrift)
+        metaData.clientId = CLIENT_ID
+        metaData.sessionSecret = SESSION_SECRET
+
         index = 1
         processes = []
         #loop is for different fogs(and edges) returned 
@@ -960,6 +968,7 @@ class EdgeClient:
         #time taken to complete the operation. In case we have more lease time left than the operation, we will
         #not make call to the server and proceed with the operation
         global TIME_LEASE_EXPIRE
+        global TIME_LOCK_ACQUIRED
         current_time = int((time.time() * 1000))
         if TIME_LEASE_EXPIRE - current_time > expected_completion_time:
             #no need to call renewLease now, lets return and perform the operation
@@ -991,6 +1000,9 @@ class EdgeClient:
                 timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",1" + '\n'
                 timestamp_full = timestamp_full +"endtime = " + repr(time.time()) + '\n'
                 fallback = False
+                #set the time of new lease start and lease expire time here
+                TIME_LOCK_ACQUIRED = int(time.time() * 1000)
+                TIME_LEASE_EXPIRE = TIME_LOCK_ACQUIRED + response.leaseTime
             else:
                 print "renewLease() failed, falling back to open() api"
                 timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",0" + '\n'
