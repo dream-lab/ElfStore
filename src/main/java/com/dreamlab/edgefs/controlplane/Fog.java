@@ -1,5 +1,9 @@
 package com.dreamlab.edgefs.controlplane;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -9,8 +13,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -27,6 +29,7 @@ import com.dreamlab.edgefs.misc.Constants;
 import com.dreamlab.edgefs.misc.GlobalStatsHandler;
 import com.dreamlab.edgefs.misc.LocalStatsHandler;
 import com.dreamlab.edgefs.misc.NeighborDataExchangeFormat;
+import com.dreamlab.edgefs.model.BlockMetadata;
 import com.dreamlab.edgefs.model.EdgeInfo;
 import com.dreamlab.edgefs.model.FogExchangeInfo;
 import com.dreamlab.edgefs.model.FogInfo;
@@ -39,22 +42,39 @@ import com.dreamlab.edgefs.thrift.BuddyPayload;
 import com.dreamlab.edgefs.thrift.FogService;
 import com.dreamlab.edgefs.thrift.Metadata;
 import com.dreamlab.edgefs.thrift.NeighborPayload;
-import com.dreamlab.edgefs.thrift.StreamMetadata;
+import com.dreamlab.edgefs.thrift.StreamMetadataInfo;
 
-public class Fog {
+public class Fog implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5150041291949158338L;
+
+	/**
+	 * This and the other classes participating will be implementing the Serializable
+	 * interface, three types of fields are marked transient. First are those which can
+	 * be reconstructed when the FogServer is restarted. Second are those
+	 * which should be calculated from the beginning of the start of the FogServer such as
+	 * the various fields maintaing the last time an update was sent. Third are those which
+	 * are not currently used such as sessionClientMap
+	 */
+	
 	private static final Logger LOGGER = LoggerFactory.getLogger(FogServer.class);
 	
 	/*************************** Fog Class members *****************************/
 	private FogInfo myFogInfo;
-	private float poolReliability;
-	private int kMin,kMax;
-	private int k;
+	//private float poolReliability;
+	private transient int kMin,kMax;
+	private transient int k;
 	
-	private long edgeDiskWatermark;
+	private int edgeDiskWatermark;
 	
 	//this is for the microbatch search
 	private byte[] personalBloomFilter = new byte[Constants.BLOOM_FILTER_BYTES];
+	
+	//An attempt at fixing issue #25
+	private Map<Short, byte[]> edgeBloomFilters = new HashMap<>();
 	
 	//this is for the stream search
 	private byte[] personalStreamBFilter = new byte[Constants.BLOOM_FILTER_BYTES];
@@ -65,12 +85,12 @@ public class Fog {
 	// time of most recent update to my personal bloomfilter
 	// update this whenever a local write happens, also update
 	// mostRecentNeighborBFUpdate as well
-	private long mostRecentSelfBFUpdate = Long.MIN_VALUE;
+	private transient long mostRecentSelfBFUpdate = Long.MIN_VALUE;
 	
 	// this is the last time I sent an update to my subscribers
 	// compare this with my most recent update to personal bloomfilter
 	// and send if needed
-	private long lastpersonalBFSent = Long.MIN_VALUE;
+	private transient long lastpersonalBFSent = Long.MIN_VALUE;
 	
 	
 	//self entry can be placed in this map, this doesn't contain stats
@@ -85,11 +105,11 @@ public class Fog {
 	//update this when a neighbor gives updated information about bloomfilters
 	//include self if there is a change in local bloomfilter as well
 	//(useful for Bbloom)
-	private long mostRecentNeighborBFUpdate = Long.MIN_VALUE;
+	private transient long mostRecentNeighborBFUpdate = Long.MIN_VALUE;
 	
 	//time when last (self + neighbor) bloomfilter was sent
 	//(useful for Bbloom)
-	private long lastNeighborBFSent = Long.MIN_VALUE;
+	private transient long lastNeighborBFSent = Long.MIN_VALUE;
 	
 	
 	/*
@@ -106,13 +126,13 @@ public class Fog {
 	private CoarseGrainedStats coarseGrainedStats = new CoarseGrainedStats();
 	
 	//time of most recent local stats calculation
-	private long lastLocalUpdatedTime = Long.MIN_VALUE;
+	private transient long lastLocalUpdatedTime = Long.MIN_VALUE;
 	
 	//local stats are sent only to subscribers
-	private long lastLocalStatsSent = Long.MIN_VALUE;
+	private transient long lastLocalStatsSent = Long.MIN_VALUE;
 	
 	//update this when an Edge gives updated disk utilization
-	private long mostRecentEdgeUpdate = Long.MIN_VALUE;
+	private transient long mostRecentEdgeUpdate = Long.MIN_VALUE;
 	
 	
 	//information at the level of each Fog
@@ -140,11 +160,11 @@ public class Fog {
 	//include self if there is a change in local stats as well
 	//For self, need to keep the more recent of the neighbor stats and
 	//the lastLocalUpdatedTime (useful for Bstats)
-	private long mostRecentNeighborStatsUpdate = Long.MIN_VALUE;
+	private transient long mostRecentNeighborStatsUpdate = Long.MIN_VALUE;
 
 	//time when last (self + neighbor) stats was sent
 	//(useful for Bstats)
-	private long lastNeighborStatsSent = Long.MIN_VALUE;
+	private transient long lastNeighborStatsSent = Long.MIN_VALUE;
 	
 	
 	//this is our global stats
@@ -156,10 +176,10 @@ public class Fog {
 	//or a buddy. This is to check whether to compute global stats or not
 	//If this time is more recent than the lastGlobalStatsUpdatedTime, we
 	//need to recompute the globalStats
-	private long mostRecentFogStatsUpdate = Long.MIN_VALUE;
+	private transient long mostRecentFogStatsUpdate = Long.MIN_VALUE;
 	
 	// this is set when we last computed the global stats
-	private long lastGlobalStatsUpdatedTime = Long.MIN_VALUE;
+	private transient long lastGlobalStatsUpdatedTime = Long.MIN_VALUE;
 	/****************************************************************************/
 	
 	
@@ -188,12 +208,12 @@ public class Fog {
 	//need to maintain the poolSize so that when this Fog is sending
 	//heartbeats to its neighbors, size of the whole system at any time
 	//can be calculated using similar information from its buddies
-	private short poolSize;
+	private transient short poolSize;
 	//an approximate poolSize can be calculated based on heartbeats from
 	//neighbors and buddies. From neighbors, get their poolsize but all 
 	//pools might not be covered with local neighbors. From the buddies,
 	//get their poolSizeMap to get total picture.
-	private Map<Short, Short> poolSizeMap = new HashMap<>();
+	private transient Map<Short, Short> poolSizeMap = new HashMap<>();
 	
 	/********************************************************************************************/
 	
@@ -210,7 +230,8 @@ public class Fog {
 
 	
 
-
+	//the locks are not used currently, so commenting for now
+/*
 	//this to update most recent Edge update
 	//used to properly update mostRecentEdgeUpdate
 	private final Lock edgeLock = new ReentrantLock();
@@ -225,8 +246,7 @@ public class Fog {
 	//in the next window
 	//used to properly update mostRecentFogStatsUpdate
 	private final Lock globalStatsLock = new ReentrantLock();
-	/**************************************************************************/
-	
+	*/
 	
 	/************************Metadata querying********************************************/
 	/**
@@ -234,20 +254,36 @@ public class Fog {
 	 * remove operation over the map. If yes, replace with the ConcurrentHashMap.
 	 */
 	//This is to maintain a session between Client and a transaction
-	private Map<Short,String> sessionClientMap = new HashMap<Short, String>(); //needs to be cleared out on every timeout
+	private transient Map<Short,String> sessionClientMap = new HashMap<Short, String>(); //needs to be cleared out on every timeout
 	
 	//This is to maintian a previous allocation that I made for a particular write for a session
-	private Map<String, List<NodeInfo>> sessionLocations = new HashMap<String, List<NodeInfo>>();
+	private transient Map<String, List<NodeInfo>> sessionLocations = new HashMap<String, List<NodeInfo>>();
 	
 	//This is used to have a mapping between micro-batchId to the EdgeID
-	private Map<String,Short> mbIDLocationMap = new ConcurrentHashMap<>();
+	//private Map<String,Short> mbIDLocationMap = new ConcurrentHashMap<>();
+	
+	//IMPORTANT::it might happen that same microbatchId maybe present on multiple edges
+	//of a single Fog, then it will create a lot of trouble since we need to
+	//make sure that we are not writing the same microbatch to the same edge
+	//as writes are concurrent and also while recovery, we should not write 
+	//the microbatch to an edge already having a replica of it
+	
+	//IMPL_NOTE::the issue with keeping a set of shorts is it can throw ConcurrentModificationException
+	//as we are updating as well as iterating at the same time. However updates are done
+	//at data writes and iterations during reads and these two are separate in time but 
+	//still for keeping the separation clean, resorting to a map with implementation
+	//a ConcurrentHashMap. Java doesn't have a ConcurrentHashSet and such a feature in
+	//use is anyways backed by a ConcurrentHashMap
+//	private Map<String,Map<Short,Byte>> mbIDLocationMap = new ConcurrentHashMap<>();
+	private Map<Long,Map<Short,Byte>> mbIDLocationMap = new ConcurrentHashMap<>();
 	
 	//the stream level metadata is stored but not used for searching. This is stored
 	//when the stream is first registered
-	private Map<String, StreamMetadata> streamMetadata = new ConcurrentHashMap<>();
+	private Map<String, StreamMetadataInfo> streamMetadata = new ConcurrentHashMap<>();
 	
 	//This is used to have a mapping between StreamID and a set of Microbatches
-	private Map<String, List<String>> streamMbIdMap =  new ConcurrentHashMap<>();
+//	private Map<String, Set<String>> streamMbIdMap =  new ConcurrentHashMap<>();
+	private Map<String, Set<Long>> streamMbIdMap =  new ConcurrentHashMap<>();
 	
 	//This is used to have a mapping between metadata values and micro batches
 	//Sumit:The microbatch metadata containing key value pairs
@@ -256,16 +292,52 @@ public class Fog {
 	//keys in this map and each has a different list instantiated for it, reason being there can
 	//be microbatches which have a common set of key value pairs but not the overall metadata
 	//which requires us to store a different list for each metadata value
-	private Map<String, List<String>> metaToMBIdListMap = new ConcurrentHashMap<>(); 
+//	private Map<String, List<String>> metaToMBIdListMap = new ConcurrentHashMap<>(); 
+	private Map<String, List<Long>> metaToMBIdListMap = new ConcurrentHashMap<>();
 	
 	//this map stores for every edge the list of microbatchIds it stores. This is useful
 	//for recovery when an edge device dies and the Fog on learning this needs to start
 	//the recovery thereby becoming a client in the process to get the lost data from 
 	//other replicas
-	private Map<Short, List<String>> edgeMicrobatchMap = new ConcurrentHashMap<>();
+//	private Map<Short, Set<String>> edgeMicrobatchMap = new ConcurrentHashMap<>();
+	private Map<Short, Set<Long>> edgeMicrobatchMap = new ConcurrentHashMap<>();
 	
-	private Map<String, String> microBatchToStream = new ConcurrentHashMap<>();
+//	private Map<String, String> microBatchToStream = new ConcurrentHashMap<>();
+	private Map<Long, String> microBatchToStream = new ConcurrentHashMap<>();
 	
+//	private Map<String, Metadata> blockMetadata = new ConcurrentHashMap<>();
+	private Map<Long, Metadata> blockMetadata = new ConcurrentHashMap<>();
+	
+	//CONCURRENT WRITES::during replica identification phase, we first fetch a local edge
+	//to the contacted Fog and then move to our algorithm similar to a finite state machine
+	//to pick next devices (Fog) to write to. During FSM phase, we pick a Fog only once but 
+	//there is a possibility of getting a local edge and then the same Fog in the FSM phase
+	//so we need to make sure that during a remote write case, a different edge is picked.
+	//During recovery, this case is less likely to happen since we can then use mbIDLocationMap
+	//to not pick duplicate edges but during writing this can happen as client is making
+	//parallel writes and we need to make sure that a microbatch is strictly replicated on
+	//different edges. So during replica identification, for the local edge case, we insert
+	//the microbatchId in the set and check it during the remote write to make sure the replica
+	//identified by Fog for writing is different from the one picked earlier. Also when the
+	//insertMetadata request comes for the local edge write, we remove this microbatchId from
+	//the set since mbIDLocationMap can do the job now in case of recovery
+//	private transient Map<String, Short> localEdgeWritesInProgress = new ConcurrentHashMap<>();
+	private transient Map<Long, Short> localEdgeWritesInProgress = new ConcurrentHashMap<>();
+	
+	//this is the system-wide cache invalidation time for cached stream metadata
+	//transient as it can read from the system.properties during startup
+	private transient int streamMetaCacheInvalidation;
+	
+	//stream soft and hard lease times
+	private transient int streamSoftLease;
+	
+	private transient int streamHardLease;
+	
+	private transient boolean isReplicaCachingEnabled;
+	
+	private transient int replicaCachingTime;
+	
+	private Map<String, BlockMetadata> perStreamBlockMetadata = new ConcurrentHashMap<>();
 	
 	/****************************************************************************/
 	
@@ -292,30 +364,14 @@ public class Fog {
 	}
 	/*********************************************************************************/
 	
-	public Map<String, String> getMicroBatchToStream() {
+	public Map<Long, String> getMicroBatchToStream() {
 		return microBatchToStream;
 	}
 
-	public void setMicroBatchToStream(Map<String, String> microBatchToStream) {
+	public void setMicroBatchToStream(Map<Long, String> microBatchToStream) {
 		this.microBatchToStream = microBatchToStream;
 	}
 
-	/** Getters and Setters **/
-//	public Map<String, StreamMetadata> getStreamToStreamMetadata() {
-//		return streamToStreamMetadata;
-//	}
-	
-//	public Map<Short, String> getEdgeIDstreamIDMap() {
-//		return edgeIDstreamIDMap;
-//	}
-//	
-//	public Map<String, Short> getStreamIDEdgeIDMap() {
-//		return streamIDEdgeIDMap;
-//	}
-//
-//	public void setStreamIDEdgeIDMap(Map<String, Short> streamIDEdgeIDMap) {
-//		this.streamIDEdgeIDMap = streamIDEdgeIDMap;
-//	}
 	public Map<StorageReliability, Short> getEdgeDistributionMap() {
 		return edgeDistributionMap;
 	}
@@ -328,19 +384,27 @@ public class Fog {
 		this.storageFogMap = storageFogMap;
 	}
 
-	public Map<String, Short> getMbIDLocationMap() {
+	/*public Map<String, Short> getMbIDLocationMap() {
 		return mbIDLocationMap;
 	}
 
 	public void setMbIDLocationMap(Map<String, Short> mbIDLocationMap) {
 		this.mbIDLocationMap = mbIDLocationMap;
+	}*/
+	
+	public Map<Long, Map<Short, Byte>> getMbIDLocationMap() {
+		return mbIDLocationMap;
 	}
 
-	public Map<String, List<String>> getStreamMbIdMap() {
+	public void setMbIDLocationMap(Map<Long, Map<Short, Byte>> mbIDLocationMap) {
+		this.mbIDLocationMap = mbIDLocationMap;
+	}
+
+	public Map<String, Set<Long>> getStreamMbIdMap() {
 		return streamMbIdMap;
 	}
 
-	public void setStreamMbIdMap(HashMap<String, List<String>> streamMbIdMap) {
+	public void setStreamMbIdMap(Map<String, Set<Long>> streamMbIdMap) {
 		this.streamMbIdMap = streamMbIdMap;
 	}
 
@@ -348,11 +412,11 @@ public class Fog {
 	 * 
 	 * @return a map with metadata being the key and List of micro-batch ids being the values
 	 */
-	public Map<String, List<String>> getMetaMbIdMap() {
+	public Map<String, List<Long>> getMetaMbIdMap() {
 		return metaToMBIdListMap;
 	}
 
-	public void setMetaMbIdMap(HashMap<String, List<String>> metaMbIdMap) {
+	public void setMetaMbIdMap(Map<String, List<Long>> metaMbIdMap) {
 		this.metaToMBIdListMap = metaMbIdMap;
 	}
 	
@@ -371,15 +435,7 @@ public class Fog {
 	public void setkMin(int kMin) {
 		this.kMin = kMin;
 	}
-
-	public CoarseGrainedStats getCoarseGrainedStats() {
-		return coarseGrainedStats;
-	}
-
-	public void setCoarseGrainedStats(CoarseGrainedStats coarseGrainedStats) {
-		this.coarseGrainedStats = coarseGrainedStats;
-	}
-
+	
 	public int getkMax() {
 		return kMax;
 	}
@@ -395,7 +451,15 @@ public class Fog {
 	public void setK(int size) {
 		this.k = size;
 	}
-	
+
+	public CoarseGrainedStats getCoarseGrainedStats() {
+		return coarseGrainedStats;
+	}
+
+	public void setCoarseGrainedStats(CoarseGrainedStats coarseGrainedStats) {
+		this.coarseGrainedStats = coarseGrainedStats;
+	}
+
 	public void setBuddyPoolId(short argbuddyPoolID) {
 		buddyPoolId = argbuddyPoolID;
 	}
@@ -461,6 +525,14 @@ public class Fog {
 	}
 
 
+	public Map<Short, byte[]> getEdgeBloomFilters() {
+		return edgeBloomFilters;
+	}
+
+	public void setEdgeBloomFilters(Map<Short, byte[]> edgeBloomFilters) {
+		this.edgeBloomFilters = edgeBloomFilters;
+	}
+
 	public byte[] getPersonalStreamBFilter() {
 		return personalStreamBFilter;
 	}
@@ -469,11 +541,11 @@ public class Fog {
 		this.personalStreamBFilter = personalStreamBFilter;
 	}
 
-	public long getEdgeDiskWatermark() {
+	public int getEdgeDiskWatermark() {
 		return edgeDiskWatermark;
 	}
 
-	public void setEdgeDiskWatermark(long edgeDiskWatermark) {
+	public void setEdgeDiskWatermark(int edgeDiskWatermark) {
 		this.edgeDiskWatermark = edgeDiskWatermark;
 	}
 
@@ -605,46 +677,92 @@ public class Fog {
 		this.mostRecentFogStatsUpdate = mostRecentFogStatsUpdate;
 	}
 
-
-
-	public Map<String, StreamMetadata> getStreamMetadata() {
+	public Map<String, StreamMetadataInfo> getStreamMetadata() {
 		return streamMetadata;
 	}
 
-	public void setStreamMetadata(Map<String, StreamMetadata> streamMetadata) {
+	public void setStreamMetadata(Map<String, StreamMetadataInfo> streamMetadata) {
 		this.streamMetadata = streamMetadata;
 	}
 
-	public Map<Short, List<String>> getEdgeMicrobatchMap() {
+	public Map<Short, Set<Long>> getEdgeMicrobatchMap() {
 		return edgeMicrobatchMap;
 	}
 
-	public void setEdgeMicrobatchMap(Map<Short, List<String>> edgeMicrobatchMap) {
+	public void setEdgeMicrobatchMap(Map<Short, Set<Long>> edgeMicrobatchMap) {
 		this.edgeMicrobatchMap = edgeMicrobatchMap;
 	}
 
-	public Map<String, List<String>> getMetaToMBIdListMap() {
+	public Map<String, List<Long>> getMetaToMBIdListMap() {
 		return metaToMBIdListMap;
 	}
 
-	public void setMetaToMBIdListMap(Map<String, List<String>> metaToMBIdListMap) {
+	public void setMetaToMBIdListMap(Map<String, List<Long>> metaToMBIdListMap) {
 		this.metaToMBIdListMap = metaToMBIdListMap;
 	}
 
-	public Lock getEdgeLock() {
-		return edgeLock;
+	public Map<Long, Metadata> getBlockMetadata() {
+		return blockMetadata;
 	}
 
-	public Lock getNeighborStatsLock() {
-		return neighborStatsLock;
+	public void setBlockMetadata(Map<Long, Metadata> blockMetadata) {
+		this.blockMetadata = blockMetadata;
+	}
+	
+	public Map<Long, Short> getLocalEdgeWritesInProgress() {
+		return localEdgeWritesInProgress;
 	}
 
-	public Lock getNeighborBloomLock() {
-		return neighborBloomLock;
+	public void setLocalEdgeWritesInProgress(Map<Long, Short> localEdgeWritesInProgress) {
+		this.localEdgeWritesInProgress = localEdgeWritesInProgress;
+	}
+	
+	public int getStreamMetaCacheInvalidation() {
+		return streamMetaCacheInvalidation;
 	}
 
-	public Lock getGlobalStatsLock() {
-		return globalStatsLock;
+	public void setStreamMetaCacheInvalidation(int streamMetaCacheInvalidation) {
+		this.streamMetaCacheInvalidation = streamMetaCacheInvalidation;
+	}
+	
+	public int getStreamSoftLease() {
+		return streamSoftLease;
+	}
+
+	public void setStreamSoftLease(int streamSoftLease) {
+		this.streamSoftLease = streamSoftLease;
+	}
+
+	public int getStreamHardLease() {
+		return streamHardLease;
+	}
+
+	public void setStreamHardLease(int streamHardLease) {
+		this.streamHardLease = streamHardLease;
+	}
+	
+	public boolean isReplicaCachingEnabled() {
+		return isReplicaCachingEnabled;
+	}
+
+	public void setReplicaCachingEnabled(boolean isReplicaCachingEnabled) {
+		this.isReplicaCachingEnabled = isReplicaCachingEnabled;
+	}
+
+	public int getReplicaCachingTime() {
+		return replicaCachingTime;
+	}
+
+	public void setReplicaCachingTime(int replicaCachingTime) {
+		this.replicaCachingTime = replicaCachingTime;
+	}
+	
+	public Map<String, BlockMetadata> getPerStreamBlockMetadata() {
+		return perStreamBlockMetadata;
+	}
+
+	public void setPerStreamBlockMetadata(Map<String, BlockMetadata> perStreamBlockMetadata) {
+		this.perStreamBlockMetadata = perStreamBlockMetadata;
 	}
 
 	//called when the thread wakes up after a fixed window to check
@@ -684,6 +802,7 @@ public class Fog {
 		}
 	}
 	
+	//This will go, only here as it is used for some unit testing
 	public LocalEdgeStats computeLocalInformation() {
 		LocalStatsHandler lHandler = new LocalStatsHandler(localEdgesMap, 
 				coarseGrainedStats, localEdgeMapping, noStorageEdges);
@@ -783,10 +902,29 @@ public class Fog {
 		// should involve computing the local stats so that updated 10 bytes
 		// are sent to the subscribers and buddies
 		if (newUpdates) {
+			//some edge device died, so the bloom filter of the fog should
+			//be updated to reflect the change. Also we should update the 
+			//most recent time of self bloom filter update to send the update
+			//when the timer hits for sending heartbeats
+			updatePersonalBloomFilter();
+			setMostRecentSelfBFUpdate(System.currentTimeMillis());
 			setMostRecentEdgeUpdate(System.currentTimeMillis());
 		}
 	}
 	
+	private void updatePersonalBloomFilter() {
+		byte[] fogBFilter = new byte[Constants.BLOOM_FILTER_BYTES];
+		for(Map.Entry<Short, EdgeInfo> entry : localEdgesMap.entrySet()) {
+			if(entry.getValue().getStatus().equals("A")) {
+				byte[] edgeBFilter = getEdgeBloomFilters().get(entry.getKey());
+				for(int i = 0; i < edgeBFilter.length; i++) {
+					fogBFilter[i] = (byte) (fogBFilter[i] | edgeBFilter[i]);
+				}
+			}
+		}
+		setPersonalBloomFilter(fogBFilter);
+	}
+
 	public void sendHeartbeatBuddies(boolean sendBF, boolean forceSendBF, 
 			boolean sendStats, boolean forceSendStats) {
 		Collection<FogInfo> buddies = buddyMap.values();
@@ -914,5 +1052,21 @@ public class Fog {
 		}
 	}
 	
-	
+	public static Fog deserializeInstance() {
+		LOGGER.info("The deserialization started at {}", System.currentTimeMillis());
+		Fog fogInput = null;
+		FileInputStream fis = null;
+		ObjectInputStream ois = null;
+		try {
+			fis = new FileInputStream(Constants.SERIALIZATION_FILE);
+			ois = new ObjectInputStream(fis);
+			fogInput = (Fog) ois.readObject();
+		} catch (IOException | ClassNotFoundException ex) {
+			LOGGER.error("Error while deserializing instance");
+			LOGGER.error("The error is ", ex);
+		}
+		LOGGER.info("The deserialization completed at {}", System.currentTimeMillis());
+		return fogInput;
+	}
+
 }

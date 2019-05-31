@@ -1,5 +1,6 @@
 package com.dreamlab.edgefs.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -9,8 +10,13 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class EdgeInfo {
+public class EdgeInfo implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2761322668253801577L;
+	
 	//nodeId , nodeIp , port and reliability[only for now]
 	//should be populated when the Edge registers with the Fog
 	public short nodeId;
@@ -33,7 +39,7 @@ public class EdgeInfo {
 	//R status is set when the Edge device is dead
 	//and Fog starts recovering microbatches present
 	//on this Edge
-	private String status = "A";
+	private transient String status = "A";
 	
 	public EdgeInfo() {
 		

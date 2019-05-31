@@ -5,6 +5,12 @@ namespace py fogclient
 
 typedef i32 int32
 
+//know this name is shitty but the brain is dead currently
+struct NodeInfoPrimary {
+	1: required string NodeIP;
+	2: required i32 port;
+}
+
 //Node Class
 struct NodeInfoData {
 	//1: required string NodeID;
@@ -95,26 +101,6 @@ struct MessagePayload {
 	
 }
 
-//struct BuddyPayload {
-//	1:required i16 nodeId;
-//	2:optional string ip;
-//	3:optional i32 port;
-//	4:optional i16 poolId;
-//	5: optional double reliability;
-//	6:optional binary bloomFilterUpdates;
-//	7:optional list<binary> stats;
-//}
-
-//struct NeighborPayload {
-//	1:required i16 nodeId;
-//	2:optional string ip;
-//	3:optional i32 port;
-//	4:optional i16 poolId;
-//	5: optional double reliability;
-//	6:optional binary bloomFilterUpdates;
-//	7:optional binary stats;
-//}
-
 struct BuddyPayload {
 	1:required binary payload;
 }
@@ -146,15 +132,16 @@ struct NeighborCount {
 
 /** The metadata of a stream at register time is sent as a string with key value pairs **/
 /** The metadata of a micro-batch which is sent before a write to Fog **/
+/*
 struct Metadata {
-	//client is sending this metadata so it will not know the edgeId
-	//1: required i16 edgeId,
 	1: required string mbId,
 	2: required string streamId,
 	3: required i64 timestamp,
+	4: optional string checksum,
 	//this is similar to key value pairs as received for the stream
-	4: optional string properties;
+	5: optional string properties;
 }
+*/
 
 enum WritePreference {
 	HHL,
@@ -178,15 +165,121 @@ struct WritableFogData {
 	4:optional EdgeInfoData edgeInfo;
 }
 
-//this is converted to StreamMetadata for using inside FogServiceHandler
-//the format of the metadata should adhere to StreamMetadata
+//as per the new design, we want the metadata to consist of two types of
+//properties, one that is static and propagated via bloom filters and other
+//which is updatable where new fields can be added and old dynamic fields can
+//be modified or deleted. For this, each field should have a updatable flag
+//associated with it with true meaning that the field can be updated 
+
+############################################################################
+########################## STREAM METADATA #################################
+############################################################################
+
+//currently the approach is to have a struct for every type that we can have
+//going forward this may change but for now, nothing easier than this is coming
+//to mind so going ahead with this. Even to support this, we may need to add more
+//types if needed
+
+//no need for I8 as byte is provided which is equivalent
+struct I16TypeStreamMetadata {
+	1: required i16 value;
+	2: required bool updatable;
+}
+
+struct I32TypeStreamMetadata {
+	1: required i32 value;
+	2: required bool updatable;
+}
+
+struct I64TypeStreamMetadata {
+	1: required i64 value;
+	2: required bool updatable;
+}
+
+struct DoubleTypeStreamMetadata {
+	1: required double value;
+	2: required bool updatable;
+}
+
+struct ByteTypeStreamMetadata {
+	1: required byte value;
+	2: required bool updatable;
+}
+
+struct StringTypeStreamMetadata {
+	1: required string value;
+	2: required bool updatable;
+}
+
+//this is to support the owner of the stream
+struct NodeInfoPrimaryTypeStreamMetadata {
+	1: required NodeInfoPrimary value;
+	2: required bool updatable;
+}
+
+//this is to allow dynamic properties in the stream metadata.
+//this can support only the primitive types as all primitives
+//can be directly converted to their respective classes (clazz)
+//using the string value
+struct DynamicTypeStreamMetadata {
+	1: required string value;
+	2: required string clazz;
+	3: required bool updatable;
+}
+
+struct StreamMetadata {
+	1: required string streamId;
+	//this is not an updatable property
+	2: required I64TypeStreamMetadata startTime;
+	//this will be updatable once stream is about to be closed
+	3: optional I64TypeStreamMetadata endTime;
+	4: required DoubleTypeStreamMetadata reliability;
+	5: required ByteTypeStreamMetadata minReplica;
+	6: required ByteTypeStreamMetadata maxReplica;
+	//you create a stream with version 0 and everytime you fetch
+	//the stream metadata, you also get the version back
+	7: required I32TypeStreamMetadata version;
+	//initially the client calling the create method for the stream
+	//need not pass the owner information as the Fog node contacted
+	//will become the owner of the stream
+	//NOTE::this is not an updatable property
+	8: optional NodeInfoPrimaryTypeStreamMetadata owner;
+	9: optional map<string, DynamicTypeStreamMetadata> otherProperties;
+}
+
+struct StreamMetadataInfo {
+	1: required StreamMetadata streamMetadata;
+	2: required bool cached;
+	//assuming this time is the local time at the Fog when the metadata
+	//was cached at the Fog
+	3: optional i64 cacheTime;
+}
+
+struct Metadata {
+	1: required string clientId;
+	2: required string sessionSecret;
+	3: required string streamId;
+	4: required i64 mbId;
+	5: required i64 timestamp;
+	//this is optional since if write is not routed through
+	//the Fog but directly to the Edge, then insertMetadata
+	//will supply the checksum else it will be computed at
+	//the Fog as the data is present for that case
+	6: optional string checksum;
+	//this is similar to key value pairs as received for the stream
+	7: optional string properties;
+}
+
+
+/*
 struct StreamMetadata {
 	1:required i64 startTime;
 	2:optional i64 endTime;
 	3:required double reliability;
 	4:required byte minReplica;
 	5:required byte maxReplica;
-} 
+}
+*/ 
 
 struct ReadResponse {
 	1: required byte status;
@@ -212,7 +305,53 @@ struct ReadReplica {
 }
 
 struct QueryReplica {
-	1: required map<string, list<NodeInfoData>> matchingNodes;
+	//1: required map<string, list<NodeInfoData>> matchingNodes;
+	1: required map<i64, list<NodeInfoData>> matchingNodes;
+}
+
+struct WriteResponse {
+	1: required byte status;
+	//in case write to edge is successful, we will be sending
+	//back to client the reliability of the edge, value between 1 to 100
+	2: optional byte reliability;
+}
+
+struct StreamMetadataUpdateResponse {
+	1: required byte status;
+	//code will distinguish between the types of failure
+	2: required byte code;
+	3: optional string message;
+}
+
+struct OpenStreamResponse {
+	1: required byte status;
+	//in case of failure to open, we can send a message as well
+	//no need to set in case of success case
+	2: optional string message;
+	// in milliseconds
+	3: optional i32 leaseTime;
+	4: optional string sessionSecret;
+	5: optional i64 lastBlockId;
+}
+
+struct StreamLeaseRenewalResponse {
+	1: required byte status;
+	2: required byte code;
+	3: optional i32 leaseTime;
+}
+	
+
+//this kind of pattern of attaching a message as well as code
+//is good to provide client the necessary information to react
+//as per the code returned
+struct BlockMetadataUpdateResponse {
+	1: required byte status;
+	2: required string message;
+	//adding the code field and having some handling at the client
+	//side gives the client information about what's happening at
+	//the server side. If there are any failures, what type of failure
+	//it is, Fog is down or version mismatch
+	3: required byte code;
 }
 
 // the interfaces belonging to Fog Interface
@@ -268,21 +407,25 @@ service FogService {
 	//Data management APIs
 	
 	//register stream with a Fog assuming client knows which Fog to contact
-	byte registerStream(1: string streamId, 2: StreamMetadata streamMetadata);
+	byte registerStream(1: string streamId, 2: StreamMetadata streamMetadata, 3:i64 startSequenceNumber);
 	
 	// Returns a sessionID 
 	string intentToWrite(1: byte clientId);
 
-	StreamMetadata getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
+	//StreamMetadata getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
+	StreamMetadataInfo getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies,
+											4:bool forceLatest);
+	
+	StreamMetadata getStreamMetadataFromOwner(1:string streamId);
 	
 	//Returns a list of Fog Locations
+	//list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 
+	//										3: list<i16> blackListedFogs, 4:EdgeInfoData selfInfo);
 	list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 
-											3: list<i16> blackListedFogs, 4:EdgeInfoData selfInfo);
+											3: list<i16> blackListedFogs, 4:bool isEdge);
 	
-	//once the above write call return the prospective fog devices, client
-	//should send the actual metadata and data for the microbatch 
-	//the insertMetadata may not be needed any more
-	byte write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
+	//byte write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
+	WriteResponse write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
 
 	// does a test and set tupe of thing, returns the same set of locations as done previously
 	list<NodeInfoData> writeNext(1: string sessionId, 2: Metadata mbData, 3: byte dataLength);
@@ -295,21 +438,43 @@ service FogService {
 	
 	byte insertMetadata(1: Metadata mbMetadata, 2: EdgeInfoData edgeInfoData);
 
-	// Read a specific microbatch
-	//ReadResponse read(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
-	//ReadResponse read(1: string microbatchId, 2:bool checkLocal, 3:bool checkNeighbors, 4:bool checkBuddies,
-	 //5:EdgeInfoData selfInfo, 6:bool fetchMetadata);
-
-	// Find a microbatch based on query, this is a metadata based search for micro batch
-	//FindResponse findUsingMetadata(1: string metadataKey, 2:string metadataValue, 3:bool checkNeighbors, 4:bool checkBuddies);
-
 	// Find the next micro bactch satisfying the query
 	binary findNext(1: string microbatchId);
 	
-	list<FindReplica> find(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies,
-							4:EdgeInfoData selfInfo);
+	//list<FindReplica> find(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies,
+		//					4:EdgeInfoData selfInfo);
 							
-	ReadReplica read(1: string microbatchId, 2:bool fetchMetadata);
+	list<FindReplica> find(1: i64 microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies,
+							4:EdgeInfoData selfInfo);						
+							
+	//ReadReplica read(1: string microbatchId, 2:bool fetchMetadata);
+	ReadReplica read(1: i64 microbatchId, 2:bool fetchMetadata);
 
 	QueryReplica findUsingQuery(1: string metadataKey, 2:string metadataValue, 3:bool checkNeighbors, 4:bool checkBuddies);
+	
+	//only returning metadata in this operation
+	//ReadReplica getMeta(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
+	ReadReplica getMeta(1: i64 microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
+	
+	byte serializeState();
+	
+	//updating the StreamMetadata
+	StreamMetadataUpdateResponse updateStreamMetadata(1: StreamMetadata metadata);
+	
+	//open a stream for putting blocks
+	OpenStreamResponse open(1: string streamId, 2: string clientId, 3: i32 expectedLease);
+	
+	//client will start writing by issuing putNext calls
+	WriteResponse putNext(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
+	
+	//once block is written, increment the block count at the owner Fog
+	BlockMetadataUpdateResponse incrementBlockCount(1:Metadata mbMetadata);
+	
+	StreamLeaseRenewalResponse renewLease(1:string streamId, 2:string clientId, 3:string sessionSecret,
+											 4:i32 expectedLease);
+	
+	//this is not used generally, only used to get the largest blockId persisted to a particular stream.
+	//This will be used when we are using discontinuous blockIds during different phases of experiment
+	//without doing resetting										 
+	i64 getLargestBlockId(1:string streamId); 
 }

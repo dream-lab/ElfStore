@@ -1,6 +1,13 @@
 package com.dreamlab.edgefs.model;
 
-public class NeighborInfo {
+import java.io.Serializable;
+
+public class NeighborInfo implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3527610689615742599L;
+	
 	private NodeInfo node;
 	//this poolId information is present in the NodeInfo as well
 	//Need to sort out this mess

@@ -160,13 +160,13 @@ class Iface(object):
         """
         pass
 
-    def getWriteLocations(self, dataLength, metadata, blackListedFogs, selfInfo):
+    def getWriteLocations(self, dataLength, metadata, blackListedFogs, isEdge):
         """
         Parameters:
          - dataLength
          - metadata
          - blackListedFogs
-         - selfInfo
+         - isEdge
         """
         pass
 
@@ -229,6 +229,18 @@ class Iface(object):
          - checkNeighbors
          - checkBuddies
         """
+        pass
+
+    def getMeta(self, microbatchId, checkNeighbors, checkBuddies):
+        """
+        Parameters:
+         - microbatchId
+         - checkNeighbors
+         - checkBuddies
+        """
+        pass
+
+    def serializeState(self):
         pass
 
 
@@ -853,24 +865,24 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getStreamMetadata failed: unknown result")
 
-    def getWriteLocations(self, dataLength, metadata, blackListedFogs, selfInfo):
+    def getWriteLocations(self, dataLength, metadata, blackListedFogs, isEdge):
         """
         Parameters:
          - dataLength
          - metadata
          - blackListedFogs
-         - selfInfo
+         - isEdge
         """
-        self.send_getWriteLocations(dataLength, metadata, blackListedFogs, selfInfo)
+        self.send_getWriteLocations(dataLength, metadata, blackListedFogs, isEdge)
         return self.recv_getWriteLocations()
 
-    def send_getWriteLocations(self, dataLength, metadata, blackListedFogs, selfInfo):
+    def send_getWriteLocations(self, dataLength, metadata, blackListedFogs, isEdge):
         self._oprot.writeMessageBegin('getWriteLocations', TMessageType.CALL, self._seqid)
         args = getWriteLocations_args()
         args.dataLength = dataLength
         args.metadata = metadata
         args.blackListedFogs = blackListedFogs
-        args.selfInfo = selfInfo
+        args.isEdge = isEdge
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -1131,6 +1143,67 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "findUsingQuery failed: unknown result")
 
+    def getMeta(self, microbatchId, checkNeighbors, checkBuddies):
+        """
+        Parameters:
+         - microbatchId
+         - checkNeighbors
+         - checkBuddies
+        """
+        self.send_getMeta(microbatchId, checkNeighbors, checkBuddies)
+        return self.recv_getMeta()
+
+    def send_getMeta(self, microbatchId, checkNeighbors, checkBuddies):
+        self._oprot.writeMessageBegin('getMeta', TMessageType.CALL, self._seqid)
+        args = getMeta_args()
+        args.microbatchId = microbatchId
+        args.checkNeighbors = checkNeighbors
+        args.checkBuddies = checkBuddies
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_getMeta(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = getMeta_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "getMeta failed: unknown result")
+
+    def serializeState(self):
+        self.send_serializeState()
+        return self.recv_serializeState()
+
+    def send_serializeState(self):
+        self._oprot.writeMessageBegin('serializeState', TMessageType.CALL, self._seqid)
+        args = serializeState_args()
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_serializeState(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = serializeState_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "serializeState failed: unknown result")
+
 
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
@@ -1165,6 +1238,8 @@ class Processor(Iface, TProcessor):
         self._processMap["find"] = Processor.process_find
         self._processMap["read"] = Processor.process_read
         self._processMap["findUsingQuery"] = Processor.process_findUsingQuery
+        self._processMap["getMeta"] = Processor.process_getMeta
+        self._processMap["serializeState"] = Processor.process_serializeState
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
@@ -1646,7 +1721,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getWriteLocations_result()
         try:
-            result.success = self._handler.getWriteLocations(args.dataLength, args.metadata, args.blackListedFogs, args.selfInfo)
+            result.success = self._handler.getWriteLocations(args.dataLength, args.metadata, args.blackListedFogs, args.isEdge)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1820,6 +1895,52 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("findUsingQuery", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_getMeta(self, seqid, iprot, oprot):
+        args = getMeta_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = getMeta_result()
+        try:
+            result.success = self._handler.getMeta(args.microbatchId, args.checkNeighbors, args.checkBuddies)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("getMeta", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_serializeState(self, seqid, iprot, oprot):
+        args = serializeState_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = serializeState_result()
+        try:
+            result.success = self._handler.serializeState()
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("serializeState", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -4319,15 +4440,15 @@ class getWriteLocations_args(object):
      - dataLength
      - metadata
      - blackListedFogs
-     - selfInfo
+     - isEdge
     """
 
 
-    def __init__(self, dataLength=None, metadata=None, blackListedFogs=None, selfInfo=None,):
+    def __init__(self, dataLength=None, metadata=None, blackListedFogs=None, isEdge=None,):
         self.dataLength = dataLength
         self.metadata = metadata
         self.blackListedFogs = blackListedFogs
-        self.selfInfo = selfInfo
+        self.isEdge = isEdge
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -4360,9 +4481,8 @@ class getWriteLocations_args(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 4:
-                if ftype == TType.STRUCT:
-                    self.selfInfo = EdgeInfoData()
-                    self.selfInfo.read(iprot)
+                if ftype == TType.BOOL:
+                    self.isEdge = iprot.readBool()
                 else:
                     iprot.skip(ftype)
             else:
@@ -4390,9 +4510,9 @@ class getWriteLocations_args(object):
                 oprot.writeI16(iter91)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
-        if self.selfInfo is not None:
-            oprot.writeFieldBegin('selfInfo', TType.STRUCT, 4)
-            self.selfInfo.write(oprot)
+        if self.isEdge is not None:
+            oprot.writeFieldBegin('isEdge', TType.BOOL, 4)
+            oprot.writeBool(self.isEdge)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -4416,7 +4536,7 @@ getWriteLocations_args.thrift_spec = (
     (1, TType.BYTE, 'dataLength', None, None, ),  # 1
     (2, TType.STRUCT, 'metadata', [Metadata, None], None, ),  # 2
     (3, TType.LIST, 'blackListedFogs', (TType.I16, None, False), None, ),  # 3
-    (4, TType.STRUCT, 'selfInfo', [EdgeInfoData, None], None, ),  # 4
+    (4, TType.BOOL, 'isEdge', None, None, ),  # 4
 )
 
 
@@ -4595,8 +4715,9 @@ class write_result(object):
             if ftype == TType.STOP:
                 break
             if fid == 0:
-                if ftype == TType.BYTE:
-                    self.success = iprot.readByte()
+                if ftype == TType.STRUCT:
+                    self.success = WriteResponse()
+                    self.success.read(iprot)
                 else:
                     iprot.skip(ftype)
             else:
@@ -4610,8 +4731,8 @@ class write_result(object):
             return
         oprot.writeStructBegin('write_result')
         if self.success is not None:
-            oprot.writeFieldBegin('success', TType.BYTE, 0)
-            oprot.writeByte(self.success)
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -4631,7 +4752,7 @@ class write_result(object):
         return not (self == other)
 all_structs.append(write_result)
 write_result.thrift_spec = (
-    (0, TType.BYTE, 'success', None, None, ),  # 0
+    (0, TType.STRUCT, 'success', [WriteResponse, None], None, ),  # 0
 )
 
 
@@ -5502,6 +5623,255 @@ class findUsingQuery_result(object):
 all_structs.append(findUsingQuery_result)
 findUsingQuery_result.thrift_spec = (
     (0, TType.STRUCT, 'success', [QueryReplica, None], None, ),  # 0
+)
+
+
+class getMeta_args(object):
+    """
+    Attributes:
+     - microbatchId
+     - checkNeighbors
+     - checkBuddies
+    """
+
+
+    def __init__(self, microbatchId=None, checkNeighbors=None, checkBuddies=None,):
+        self.microbatchId = microbatchId
+        self.checkNeighbors = checkNeighbors
+        self.checkBuddies = checkBuddies
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.microbatchId = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BOOL:
+                    self.checkNeighbors = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.BOOL:
+                    self.checkBuddies = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getMeta_args')
+        if self.microbatchId is not None:
+            oprot.writeFieldBegin('microbatchId', TType.STRING, 1)
+            oprot.writeString(self.microbatchId.encode('utf-8') if sys.version_info[0] == 2 else self.microbatchId)
+            oprot.writeFieldEnd()
+        if self.checkNeighbors is not None:
+            oprot.writeFieldBegin('checkNeighbors', TType.BOOL, 2)
+            oprot.writeBool(self.checkNeighbors)
+            oprot.writeFieldEnd()
+        if self.checkBuddies is not None:
+            oprot.writeFieldBegin('checkBuddies', TType.BOOL, 3)
+            oprot.writeBool(self.checkBuddies)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getMeta_args)
+getMeta_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'microbatchId', 'UTF8', None, ),  # 1
+    (2, TType.BOOL, 'checkNeighbors', None, None, ),  # 2
+    (3, TType.BOOL, 'checkBuddies', None, None, ),  # 3
+)
+
+
+class getMeta_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = ReadReplica()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getMeta_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getMeta_result)
+getMeta_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [ReadReplica, None], None, ),  # 0
+)
+
+
+class serializeState_args(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('serializeState_args')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(serializeState_args)
+serializeState_args.thrift_spec = (
+)
+
+
+class serializeState_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.BYTE:
+                    self.success = iprot.readByte()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('serializeState_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.BYTE, 0)
+            oprot.writeByte(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(serializeState_result)
+serializeState_result.thrift_spec = (
+    (0, TType.BYTE, 'success', None, None, ),  # 0
 )
 fix_spec(all_structs)
 del all_structs

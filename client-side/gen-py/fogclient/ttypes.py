@@ -1186,14 +1186,16 @@ class Metadata(object):
      - mbId
      - streamId
      - timestamp
+     - checksum
      - properties
     """
 
 
-    def __init__(self, mbId=None, streamId=None, timestamp=None, properties=None,):
+    def __init__(self, mbId=None, streamId=None, timestamp=None, checksum=None, properties=None,):
         self.mbId = mbId
         self.streamId = streamId
         self.timestamp = timestamp
+        self.checksum = checksum
         self.properties = properties
 
     def read(self, iprot):
@@ -1222,6 +1224,11 @@ class Metadata(object):
                     iprot.skip(ftype)
             elif fid == 4:
                 if ftype == TType.STRING:
+                    self.checksum = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
                     self.properties = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
@@ -1247,8 +1254,12 @@ class Metadata(object):
             oprot.writeFieldBegin('timestamp', TType.I64, 3)
             oprot.writeI64(self.timestamp)
             oprot.writeFieldEnd()
+        if self.checksum is not None:
+            oprot.writeFieldBegin('checksum', TType.STRING, 4)
+            oprot.writeString(self.checksum.encode('utf-8') if sys.version_info[0] == 2 else self.checksum)
+            oprot.writeFieldEnd()
         if self.properties is not None:
-            oprot.writeFieldBegin('properties', TType.STRING, 4)
+            oprot.writeFieldBegin('properties', TType.STRING, 5)
             oprot.writeString(self.properties.encode('utf-8') if sys.version_info[0] == 2 else self.properties)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1875,6 +1886,75 @@ class QueryReplica(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+class WriteResponse(object):
+    """
+    Attributes:
+     - status
+     - reliability
+    """
+
+
+    def __init__(self, status=None, reliability=None,):
+        self.status = status
+        self.reliability = reliability
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.BYTE:
+                    self.status = iprot.readByte()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BYTE:
+                    self.reliability = iprot.readByte()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('WriteResponse')
+        if self.status is not None:
+            oprot.writeFieldBegin('status', TType.BYTE, 1)
+            oprot.writeByte(self.status)
+            oprot.writeFieldEnd()
+        if self.reliability is not None:
+            oprot.writeFieldBegin('reliability', TType.BYTE, 2)
+            oprot.writeByte(self.reliability)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.status is None:
+            raise TProtocolException(message='Required field status is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 all_structs.append(NodeInfoData)
 NodeInfoData.thrift_spec = (
     None,  # 0
@@ -1973,7 +2053,8 @@ Metadata.thrift_spec = (
     (1, TType.STRING, 'mbId', 'UTF8', None, ),  # 1
     (2, TType.STRING, 'streamId', 'UTF8', None, ),  # 2
     (3, TType.I64, 'timestamp', None, None, ),  # 3
-    (4, TType.STRING, 'properties', 'UTF8', None, ),  # 4
+    (4, TType.STRING, 'checksum', 'UTF8', None, ),  # 4
+    (5, TType.STRING, 'properties', 'UTF8', None, ),  # 5
 )
 all_structs.append(WritableFogData)
 WritableFogData.thrift_spec = (
@@ -2023,6 +2104,12 @@ all_structs.append(QueryReplica)
 QueryReplica.thrift_spec = (
     None,  # 0
     (1, TType.MAP, 'matchingNodes', (TType.STRING, 'UTF8', TType.LIST, (TType.STRUCT, [NodeInfoData, None], False), False), None, ),  # 1
+)
+all_structs.append(WriteResponse)
+WriteResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.BYTE, 'status', None, None, ),  # 1
+    (2, TType.BYTE, 'reliability', None, None, ),  # 2
 )
 fix_spec(all_structs)
 del all_structs

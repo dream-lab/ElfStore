@@ -1,5 +1,7 @@
 package com.dreamlab.edgefs.controlplane;
 
+import java.io.Serializable;
+
 import com.dreamlab.edgefs.misc.Constants;
 
 //this information for the Fog contains s1, s2, s3 followed by
@@ -7,8 +9,13 @@ import com.dreamlab.edgefs.misc.Constants;
 //byte and this information is exchanged by the Fog with other
 //Fogs (not going into detail on if it is sent only to its neighbors
 // + buddies OR every other Fog in the system
-public class CoarseGrainedStats {
+public class CoarseGrainedStats implements Serializable {
 
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4055326585281246401L;
 	
 	//for s1, s2 and s3 , we can keep the last bit as an indicator
 	//for the unit of storage used. For instance 0 for byte, 1 for
