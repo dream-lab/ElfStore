@@ -157,4 +157,42 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 		return 0;
 	}
 
+	@Override
+	public WriteResponse update(long mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
+		WriteResponse wrResponse = new WriteResponse();
+		wrResponse.setStatus(Constants.FAILURE);
+		if (mbMetadata != null && mbData != null) {
+			try {
+				LOGGER.info(
+						"MicrobatchId : " + mbMetadata.getMbId() + ", write, startTime=" + System.currentTimeMillis());
+
+				// data
+				File myFile = new File(edge.getDatapath() + "/" + mbId + ".data");
+				FileUtils.writeByteArrayToFile(myFile, mbData.array());
+				
+				int mbSize = mbData.array().length/(1000 * 1000);
+				edge.setStorage(edge.getStorage() - mbSize);
+
+				// Metadata
+				File metaFile = new File(edge.getDatapath() + "/" + mbId + ".meta");
+				FileOutputStream foStream = new FileOutputStream(metaFile);
+				ObjectOutputStream objStream = new ObjectOutputStream(foStream);
+
+				objStream.writeObject(mbMetadata);
+				objStream.close();
+				foStream.close();
+
+				LOGGER.info(
+						"MicrobatchId : " + mbMetadata.getMbId() + ", write, endTime=" + System.currentTimeMillis());
+
+				wrResponse.setStatus(Constants.SUCCESS);
+				wrResponse.setReliability(edge.getReliability());
+			} catch (IOException e) {
+				LOGGER.error("Error while writing the microbatch " + e);
+				e.printStackTrace();
+			}
+		}
+		return wrResponse;
+	}
+
 }

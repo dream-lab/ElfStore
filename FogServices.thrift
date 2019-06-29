@@ -487,6 +487,9 @@ service FogService {
 	//findstream searches for streams that match a given set of static stream properties provided in the squery
 	SQueryResponse findStream(1: SQueryRequest squery);
 
+	//update api, where the data of the previous block is overwritten
+	WriteResponse updateBlock(1:i64 mbId, 2:Metadata mbMetadata, 3:binary mbData);
+
 	//ISHAN:
 	//flag is a dummy variable
 	//returns the mbids in a local partition

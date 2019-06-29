@@ -138,6 +138,9 @@ service EdgeService {
    //WriteResponse write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
    WriteResponse write(1:i64 mbId, 2:Metadata mbMetadata, 3:binary mbData),
 
+   //this will overwrite the existing metadata
+   WriteResponse update(1:i64 mbId, 2:Metadata mbMetadata, 3:binary mbData),
+
    //ReadReplica read(1:string mbId, 2:byte fetchMetadata),
    ReadReplica read(1:i64 mbId, 2:byte fetchMetadata),
    

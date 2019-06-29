@@ -2776,4 +2776,51 @@ public class FogServiceHandler implements FogService.Iface {
 		return queryResponse;
 	}
 
+	@Override
+	public WriteResponse updateBlock(long mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
+
+		WriteResponse wrResponse = new WriteResponse();
+		wrResponse.setStatus(Constants.FAILURE);
+		
+		boolean writeData = false;
+		Map<Short, Byte> edgeMap = fog.getMbIDLocationMap().get(mbId);
+		if (edgeMap != null) {
+			for (Short edgeId : edgeMap.keySet()) {
+				if (writeData) {
+					break;
+				}
+				if (edgeId != null) {
+					EdgeInfo edgeInfo = fog.getLocalEdgesMap().get(edgeId);
+					if (edgeInfo != null && edgeInfo.getStatus().equals("A")) {
+						TTransport transport = new TFramedTransport(
+								new TSocket(edgeInfo.getNodeIp(), edgeInfo.getPort()));
+						try {
+							transport.open();
+						} catch (TTransportException e) {
+							transport.close();
+							LOGGER.info("Unable to contact edge device : " + edgeInfo);
+							e.printStackTrace();
+							LOGGER.info("MicrobatchId : " + mbId + ", read, endTime="
+									+ System.currentTimeMillis() + ",status=0");
+							continue;
+						}
+						TProtocol protocol = new TBinaryProtocol(transport);
+						EdgeService.Client edgeClient = new EdgeService.Client(protocol);
+						try {
+							wrResponse = edgeClient.update(mbId, mbMetadata, mbData);
+							writeData = true;
+						} catch (TException e) {
+							LOGGER.info("Error while writing microbatch from edge : " + edgeInfo);
+							e.printStackTrace();
+						} finally {
+							transport.close();
+						}
+					}
+				}
+			}
+		}
+		
+		return wrResponse;
+	}
+
 }
