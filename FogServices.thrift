@@ -247,6 +247,23 @@ struct StreamMetadata {
 	9: optional map<string, DynamicTypeStreamMetadata> otherProperties;
 }
 
+struct SQueryRequest {
+
+	// static properties which were registered during stream registration
+	1: optional I64TypeStreamMetadata startTime;
+	2: optional DoubleTypeStreamMetadata reliability;
+	3: optional ByteTypeStreamMetadata minReplica;
+	4: optional ByteTypeStreamMetadata maxReplica;
+	5: optional I32TypeStreamMetadata version;
+	6: optional NodeInfoPrimaryTypeStreamMetadata owner;	
+
+}
+
+struct SQueryResponse {
+	1: required byte status;
+	2: required list<string> streamList;
+}
+
 struct StreamMetadataInfo {
 	1: required StreamMetadata streamMetadata;
 	2: required bool cached;
@@ -269,17 +286,6 @@ struct Metadata {
 	//this is similar to key value pairs as received for the stream
 	7: optional string properties;
 }
-
-
-/*
-struct StreamMetadata {
-	1:required i64 startTime;
-	2:optional i64 endTime;
-	3:required double reliability;
-	4:required byte minReplica;
-	5:required byte maxReplica;
-}
-*/ 
 
 struct ReadResponse {
 	1: required byte status;
@@ -462,19 +468,34 @@ service FogService {
 	StreamMetadataUpdateResponse updateStreamMetadata(1: StreamMetadata metadata);
 	
 	//open a stream for putting blocks
-	OpenStreamResponse open(1: string streamId, 2: string clientId, 3: i32 expectedLease);
+	OpenStreamResponse open(1: string streamId, 2: string clientId, 3: i32 expectedLease, 4: bool setLease);
 	
 	//client will start writing by issuing putNext calls
 	WriteResponse putNext(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
 	
 	//once block is written, increment the block count at the owner Fog
-	BlockMetadataUpdateResponse incrementBlockCount(1:Metadata mbMetadata);
+	BlockMetadataUpdateResponse incrementBlockCount(1:Metadata mbMetadata, 2:bool setLease);
 	
 	StreamLeaseRenewalResponse renewLease(1:string streamId, 2:string clientId, 3:string sessionSecret,
-											 4:i32 expectedLease);
+											 4:i32 expectedLease, 5:bool setLease);
 	
 	//this is not used generally, only used to get the largest blockId persisted to a particular stream.
 	//This will be used when we are using discontinuous blockIds during different phases of experiment
 	//without doing resetting										 
 	i64 getLargestBlockId(1:string streamId); 
+
+	//findstream searches for streams that match a given set of static stream properties provided in the squery
+	SQueryResponse findStream(1: SQueryRequest squery);
+
+	//ISHAN:
+	//flag is a dummy variable
+	//returns the mbids in a local partition
+	//this is mostly for testing purposes, but will be provided as a 'choice' in the EdgeClient.py file
+	set<i64> listLocalPartitionMbId(1:bool flag);
+	
+	// used to get neighbours of a fog
+	list<NeighborInfoData> requestAllNeighbors();
+	
+	//used to return mbIDLocationMap to the client
+	map<i64,map<i16,byte>> requestMbIDLocationMap();	
 }

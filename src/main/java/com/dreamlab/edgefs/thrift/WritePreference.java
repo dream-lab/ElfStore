@@ -7,6 +7,9 @@
 package com.dreamlab.edgefs.thrift;
 
 
+/**
+ * The metadata of a micro-batch which is sent before a write to Fog *
+ */
 public enum WritePreference implements org.apache.thrift.TEnum {
   HHL(0),
   HLH(1),

@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/edgefs/gen-py')
+sys.path.append('./edgefs/gen-py')
 import math
 import random
 import time
@@ -41,7 +41,7 @@ sizeChoice = 1
 STREAM_ID = 'test'
 
 STREAM_OWNER_FOG_IP = "127.0.0.1"
-STREAM_OWNER_FOG_PORT = 9092
+STREAM_OWNER_FOG_PORT = 9090
 
 #this is assigned when the open() api succeeds
 SESSION_SECRET = 'test'
@@ -124,7 +124,7 @@ class EdgeClient:
     # Return the fog client instance to talk to the fog
     def openSocketConnection(self,ip,port, choice):
 
-        print "ip ",ip," port",port," choice ", "open scoket connection"
+        print "ip ",ip," port",port," choice ", "open socket connection"
         # Make socket
         transport = TSocket.TSocket(ip, port)
 
@@ -143,8 +143,6 @@ class EdgeClient:
 
         # Connect!
         transport.open()
-
-        print "came here"
 
         return client,transport
 
@@ -433,7 +431,7 @@ class EdgeClient:
 
         index = 1
         processes = []
-        #loop is for different fogs(and edges) returned 
+        # loop is for different fogs(and edges) returned WRITING STARTS HERE : ISHAN
         for writable in result:
             writeProcess = multiprocessing.Process(target=self.writeToEdge,args=(writable,microbatchID,streamId,data,EDGE_ID,index,sizeChoice, metaData))
 	    processes.append(writeProcess)
@@ -751,7 +749,7 @@ class EdgeClient:
 
         client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
 
-        timestamp_record = microbatchId+ ",23, local ,find req,starttime = "+repr(time.time())+","
+        timestamp_record = str(microbatchId)+ ",23, local ,find req,starttime = "+repr(time.time())+","
 
         response = client.find(microbatchId,True,True,edgeInfoData)
 
@@ -789,7 +787,7 @@ class EdgeClient:
                  # Connect!
                  transport.open()
                 
-                 timestamp_record = microbatchId+", 25 , "+ str(findReplica.node.nodeId) + " , Read req,starttime = "+repr(time.time())+","
+                 timestamp_record = str(microbatchId)+", 25 , "+ str(findReplica.node.nodeId) + " , Read req,starttime = "+repr(time.time())+","
                  response = client.read(microbatchId,0) #this is for recovery
                  timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
                  myLogs = open(BASE_LOG+ "logs.txt",'a')
@@ -813,7 +811,7 @@ class EdgeClient:
 
                  client,transport = self.openSocketConnection(fogNode.NodeIP,fogNode.port,FOG_SERVICE)
 
-                 timestamp_record = microbatchId+", 27 ,"+str(findReplica.node.nodeId)  + ",write req,starttime = "+repr(time.time())+","
+                 timestamp_record = str(microbatchId)+", 27 ,"+str(findReplica.node.nodeId)  + ",write req,starttime = "+repr(time.time())+","
                  response = client.read(microbatchId,0)
                  timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
                  myLogs = open(BASE_LOG+ "logs.txt",'a')
@@ -934,10 +932,13 @@ class EdgeClient:
 
         while True:
             #type of response is OpenStreamResponse
-            response = client.open(stream_id, client_id, expected_lease)
+            response = client.open(stream_id, client_id, expected_lease, False)
+            print "The response of open stream is ",response.status
             if response.status == 1:
+                # if the set lease is false , then only IS_LOCK_HELD is needed
                 TIME_LOCK_ACQUIRED = int(time.time() * 1000)
                 TIME_LEASE_EXPIRE = TIME_LOCK_ACQUIRED + response.leaseTime
+                print "The lease expire is ",TIME_LEASE_EXPIRE
                 IS_LOCK_HELD = True
                 break
             else:
@@ -987,14 +988,17 @@ class EdgeClient:
         timestamp_record = ''
 
         fallback = True
+        print "The lock status is ",IS_LOCK_HELD
         if IS_LOCK_HELD == True:
+
+            print "The lock is held"
             #for lease renewal, after endtime, adding status flag as well indicating whether it was successful or not
             timestamp_record = str(blockId) + ", 400,"+ STREAM_OWNER_FOG_IP  + ",renew stream lease,starttime = "+repr(time.time())+","
 
             client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
 
             #the response type is StreamLeaseRenewalResponse
-            response = client.renewLease(stream_id, client_id, session_secret, expected_lease)
+            response = client.renewLease(stream_id, client_id, session_secret, expected_lease, False)
             if response.status == 1:
                 print "renewLease() successful"
                 timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",1" + '\n'
@@ -1021,7 +1025,7 @@ class EdgeClient:
     #incrementBlockCount() has an id of 500
     def increment_block_count(self, metadata):
         print "Going to increment the last blockId for the stream"
-        
+        800
         timestamp_record = str(metadata.mbId) + ", 500,"+ STREAM_OWNER_FOG_IP  + ",increment last blockId,starttime = "+repr(time.time())+","
 
         print "Lets first issue request to renew the lease for incrementBlockCount()"
@@ -1031,7 +1035,7 @@ class EdgeClient:
         global STREAM_OWNER_FOG_PORT
         client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
         #the response type is BlockMetadataUpdateResponse
-        response = client.incrementBlockCount(metadata)
+        response = client.incrementBlockCount(metadata, False)
         timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
         self.closeSocket(transport)
 
@@ -1078,6 +1082,8 @@ if __name__ == '__main__':
     # streamId = config["streamid"]
     # FOG_IP = config["fogip"] 
     # FOG_PORT = int(config["fogport"])
+
+    # python2 EdgeClient_updated.py 2 127.0.0.1 8001 82 127.0.0.1 9090 test_2 1 5 /home/skmonga/ElfStore/logs_2/ 700 1 1 client_2 100 &
 
     EDGE_ID = int(sys.argv[1])
     EDGE_IP = sys.argv[2]
@@ -1180,7 +1186,7 @@ if __name__ == '__main__':
         print "here"
         print "The stream reliability needed is : ", str(STREAM_RELIABILITY)
 	
-	filePath = "/edgefs/microbatch_data/microbatch"
+	filePath = "./edgefs/microbatch_data/microbatch"
 
 	byteArray = []
 	readFiles = 0
@@ -1200,13 +1206,19 @@ if __name__ == '__main__':
 	newFilePath = ""
 	numWrites = 0
 	recycle = 0
+        print "NUmber of writes needed are ",NUM_WRITES
         while(numWrites < NUM_WRITES):
             response = myEdge.writeRequestToFog(START, streamId, newFilePath, byteArray[recycle], fogReplicaMap, yetAnotherMap, sizeChoice)
+            print "Writing file ",numWrites
             if response > 0:
 	        numWrites = numWrites + 1
 	        START = START + 1
 	        recycle = (recycle + 1)%10
     elif(choice==6):
+
+        print "Reading block ... ",microbatchId
+        myEdge.findAndRead(int(microbatchId))
+        sys.exit(0)
 
 	numReads = 0
 	while(numReads<100):
@@ -1218,7 +1230,7 @@ if __name__ == '__main__':
     elif(choice==7):
         print "Stress Testing"
 	
-	filePath = "/edgefs/microbatch_data/microbatch"
+	filePath = "./edgefs/microbatch_data/microbatch"
 
 	byteArray = []
 	readFiles = 0
@@ -1282,13 +1294,13 @@ if __name__ == '__main__':
         print "Wrong choice 1: register, 2: write 3: read 4: find"
 
     replicaDistr = str(fogReplicaMap)
-    file = open("/edgefs/distribution.txt",'w')
+    file = open("./edgefs/distribution.txt",'w')
     file.write(replicaDistr)
     file.close()
     print "the distribution file is written at /edgefs/distribution.txt",replicaDistr
 
     microbatchDist = str(yetAnotherMap)
-    file = open("/edgefs/MB_dist.txt",'w')
+    file = open("./edgefs/MB_dist.txt",'w')
     file.write(microbatchDist)
     file.close()
 

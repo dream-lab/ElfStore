@@ -339,6 +339,24 @@ public class Fog implements Serializable {
 	
 	private Map<String, BlockMetadata> perStreamBlockMetadata = new ConcurrentHashMap<>();
 	
+	/*****************************************************************************/
+	
+	/** static metadata properties querying **/
+	
+	/** static property : minReplica **/
+	private Map<String, Set<String>> streamMetaStreamIdMap = new ConcurrentHashMap<String, Set<String>>();
+	
+	/** static property : streamReliability**/
+	private Map<Double, Set<String>> streamRelStreamIdMap = new ConcurrentHashMap<Double, Set<String>>();
+	
+	public Map<Double, Set<String>> getStreamRelStreamIdMap() {
+		return streamRelStreamIdMap;
+	}
+
+	public void setStreamRelStreamIdMap(Map<Double, Set<String>> streamRelStreamIdMap) {
+		this.streamRelStreamIdMap = streamRelStreamIdMap;
+	}
+
 	/****************************************************************************/
 	
 	public Fog() {
@@ -764,6 +782,16 @@ public class Fog implements Serializable {
 	public void setPerStreamBlockMetadata(Map<String, BlockMetadata> perStreamBlockMetadata) {
 		this.perStreamBlockMetadata = perStreamBlockMetadata;
 	}
+	
+	public Map<String, Set<String>> getStreamMetaStreamIdMap() {
+		return streamMetaStreamIdMap;
+	}
+	
+	public void setStreamMetaStreamIdMap(ConcurrentHashMap<String, Set<String>> minReplicaStreamMap) {
+		this.streamMetaStreamIdMap = minReplicaStreamMap; 
+	}
+
+	/*********************************************************************************/
 
 	//called when the thread wakes up after a fixed window to check
 	//any recent updates in this window

@@ -77,6 +77,7 @@ public class FogServer {
 		LOGGER.info("Reading properties file....");
 		try {
 			properties.load(FogServer.class.getResourceAsStream("/system.properties"));
+			LOGGER.info(properties.toString()+" **************** ");
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -98,7 +99,6 @@ public class FogServer {
 /*
 		// Assuming when the node wants to join a pool, the argument
 		// for buddyPoolId is not used
-		if (args.length > 5) { *//** This means a Fog is trying to join a Pool **//*
 			referrerFogIp = args[5];
 			referrerPort = Integer.parseInt(args[6]);
 			newFog = true;
@@ -813,6 +813,7 @@ public class FogServer {
 		List<String> lines = Collections.emptyList();
 		try {
 			lines = Files.readAllLines(Paths.get(fileName));
+			LOGGER.info("The lines are "+lines);
 		} catch (IOException ex) {
 			LOGGER.error("IOException : ", ex);
 			ex.printStackTrace();
