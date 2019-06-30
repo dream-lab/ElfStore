@@ -952,28 +952,31 @@ public class FogServiceHandler implements FogService.Iface {
 
 			// after creation, create an instance of BlockMetadata for this stream
 			fog.getPerStreamBlockMetadata().put(streamId, new BlockMetadata(streamId, startSequenceNum));
-			
+
 			/** storing static metadata and streamid **/
-			/** static property min replica **/ 
-			if(fog.getStreamMetaStreamIdMap().containsKey(""+metadata.getMinReplica().getValue() )==false) {
+			/** static property min replica **/
+			if (fog.getStreamMetaStreamIdMap().containsKey("" + metadata.getMinReplica().getValue()) == false) {
 				HashSet<String> myStreamIdSet = new HashSet<String>();
 				myStreamIdSet.add(streamId);
-				fog.getStreamMetaStreamIdMap().put(""+metadata.getMinReplica().getValue(), myStreamIdSet);
-			}
-			else {
-				fog.getStreamMetaStreamIdMap().get(""+metadata.getMinReplica().getValue()).add(streamId);
+				fog.getStreamMetaStreamIdMap().put("" + metadata.getMinReplica().getValue(), myStreamIdSet);
+				LOGGER.info("ADDED MIN REPLICA " + fog.getStreamMetaStreamIdMap().toString());
+			} else {
+				fog.getStreamMetaStreamIdMap().get("" + metadata.getMinReplica().getValue()).add(streamId);
+				LOGGER.info("ADDED MIN REPLICA " + fog.getStreamMetaStreamIdMap().toString());
 			}
 
 			/** static property reliability **/
-			if(fog.getStreamMetaStreamIdMap().containsKey(""+metadata.getReliability().getValue() )==false) {
+			if (fog.getStreamMetaStreamIdMap().containsKey("" + metadata.getReliability().getValue()) == false) {
 				HashSet<String> myStreamIdSet = new HashSet<String>();
 				myStreamIdSet.add(streamId);
-				fog.getStreamMetaStreamIdMap().put(""+metadata.getReliability().getValue(), myStreamIdSet);
+				fog.getStreamMetaStreamIdMap().put("" + metadata.getReliability().getValue(), myStreamIdSet);
+				LOGGER.info("ADDED RELIABILITY " + fog.getStreamMetaStreamIdMap().toString());
+			} else {
+				fog.getStreamMetaStreamIdMap().get("" + metadata.getReliability().getValue()).add(streamId);
+				LOGGER.info("ADDED RELIABILITY " + fog.getStreamMetaStreamIdMap().toString());
 			}
-			else {
-				fog.getStreamMetaStreamIdMap().get(""+metadata.getReliability().getValue()).add(streamId);
-			}
-			
+
+			LOGGER.info("FINAL MAP " + fog.getStreamMetaStreamIdMap().toString());
 			// TODO:create directory in the edge if don't want a flat namespace
 			updateStreamBloomFilter(streamId, metadata);
 			return Constants.SUCCESS;
@@ -2658,26 +2661,26 @@ public class FogServiceHandler implements FogService.Iface {
 			response.setLeaseTime(1);
 			streamOpenLock.unlock();
 			return response;
-			
+
 		} // to successfully renew the lease, the same client should be the one holding
-		// the lock
-		// previously i.e. no other client should have acquired the lock between the
-		// hard lease
-		// time expiration and renew call made
-		// NOTE::There is no consideration of time in this case i.e. it might happen
-		// that
-		// the client is the one last holding the lock but makes the renew call after a
-		// long
-		// time particularly longer than the hard lease time, in that case the renewal
-		// should
-		// still fail and client should first call open() and then do the necessary
-		// operations
-		// Lets fix this after the feature set completion
-		// NOTE:: As per the discussion, the renew call is made by the client when the
-		// client
-		// feels that the lease time left is less than the time taken to complete some
-		// specific
-		// operation whose time the client maintains.
+			// the lock
+			// previously i.e. no other client should have acquired the lock between the
+			// hard lease
+			// time expiration and renew call made
+			// NOTE::There is no consideration of time in this case i.e. it might happen
+			// that
+			// the client is the one last holding the lock but makes the renew call after a
+			// long
+			// time particularly longer than the hard lease time, in that case the renewal
+			// should
+			// still fail and client should first call open() and then do the necessary
+			// operations
+			// Lets fix this after the feature set completion
+			// NOTE:: As per the discussion, the renew call is made by the client when the
+			// client
+			// feels that the lease time left is less than the time taken to complete some
+			// specific
+			// operation whose time the client maintains.
 		if (blockMetadata.getLock() == null || !blockMetadata.getLock().equals(clientId)
 				|| !blockMetadata.getSessionSecret().equals(sessionSecret)) {
 			response = new StreamLeaseRenewalResponse(Constants.FAILURE,
@@ -2685,8 +2688,11 @@ public class FogServiceHandler implements FogService.Iface {
 		} else { /* lock is present */
 			if ((System.currentTimeMillis() - blockMetadata.getLeaseStartTime()) < (fog.getStreamHardLease() * 1000)) {
 				blockMetadata.setLeaseStartTime(System.currentTimeMillis());
-				blockMetadata.setLeaseDuration(expectedLease * 1000); /** expected lease is added here previously => fog.getStreamSoftLease() * 1000 **/
-				LOGGER.info("The lease is set to "+expectedLease);
+				blockMetadata.setLeaseDuration(expectedLease
+						* 1000); /**
+									 * expected lease is added here previously => fog.getStreamSoftLease() * 1000
+									 **/
+				LOGGER.info("The lease is set to " + expectedLease);
 				response = new StreamLeaseRenewalResponse(Constants.SUCCESS, StreamLeaseRenewalCode.SUCCESS.getCode());
 				response.setLeaseTime(blockMetadata.getLeaseDuration());
 			} else {
@@ -2758,21 +2764,21 @@ public class FogServiceHandler implements FogService.Iface {
 		// TODO Auto-generated method stub
 		Set<String> streamIdSet = null;
 		ArrayList<String> streamIdList = new ArrayList<String>();
-		
+
 		SQueryResponse queryResponse = new SQueryResponse();
 		queryResponse.setStatus(Constants.FAILURE);
 		queryResponse.setStreamList(streamIdList);
-		
-		if(squery == null)
+
+		if (squery == null)
 			return queryResponse;
-		
+
 		streamIdSet = StaticStreamMetaComparator.retrieveStreamId(squery, fog);
 		queryResponse.setStatus(Constants.SUCCESS);
-		
+
 		/** Add the stream id set to the list **/
-		streamIdList.addAll(streamIdSet); 
+		streamIdList.addAll(streamIdSet);
 		queryResponse.setStreamList(streamIdList);
-				
+
 		return queryResponse;
 	}
 
@@ -2781,7 +2787,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 		WriteResponse wrResponse = new WriteResponse();
 		wrResponse.setStatus(Constants.FAILURE);
-		
+
 		boolean writeData = false;
 		Map<Short, Byte> edgeMap = fog.getMbIDLocationMap().get(mbId);
 		if (edgeMap != null) {
@@ -2800,8 +2806,8 @@ public class FogServiceHandler implements FogService.Iface {
 							transport.close();
 							LOGGER.info("Unable to contact edge device : " + edgeInfo);
 							e.printStackTrace();
-							LOGGER.info("MicrobatchId : " + mbId + ", read, endTime="
-									+ System.currentTimeMillis() + ",status=0");
+							LOGGER.info("MicrobatchId : " + mbId + ", read, endTime=" + System.currentTimeMillis()
+									+ ",status=0");
 							continue;
 						}
 						TProtocol protocol = new TBinaryProtocol(transport);
@@ -2819,7 +2825,7 @@ public class FogServiceHandler implements FogService.Iface {
 				}
 			}
 		}
-		
+
 		return wrResponse;
 	}
 

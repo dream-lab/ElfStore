@@ -31,7 +31,8 @@ public class StaticStreamMetaComparator {
 	public static Set<String> retrieveStreamId(SQueryRequest squery, Fog fog) {
 
 		/** Set of stream ids **/
-		Set<String> myStreamIdSet = fog.getStreamMbIdMap().keySet();
+		Set<String> myStreamIdSet = new HashSet<String>(fog.getStreamMbIdMap().keySet()) ;
+		LOGGER.info("BEFORE : The total streams registered are "+myStreamIdSet.toString());
 
 		Field[] fields = SQueryRequest.class.getDeclaredFields();
 		for (Field fd : fields) {
@@ -72,7 +73,7 @@ public class StaticStreamMetaComparator {
 
 		}
 
-		LOGGER.info("The mystream id set is " + myStreamIdSet.toString());
+		LOGGER.info("AFTER : The mystream id set is " + myStreamIdSet.toString());
 		return myStreamIdSet;
 	}
 

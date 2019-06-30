@@ -37,10 +37,10 @@ java -cp target/edgefilesystem-0.1-jar-with-dependencies.jar com.dreamlab.edgefs
 To run the client for put() and get()
 
 To register a stream
-python EdgeClient.py 2 127.0.0.1 7000 82 127.0.0.1 9090 stream_id_test 1 1 /home/swamiji/elfstore/logs/ 700 1 1 client_2 1
+python EdgeClient.py 2 127.0.0.1 7000 82 127.0.0.1 9090 stream_id_test 1 1 /home/swamiji/elfstore/logs/ 700 1 1 client_1 1
 
 To write
 python EdgeClient.py 2 127.0.0.1 7000 82 127.0.0.1 9090 stream_id_test 1 5 /home/swamiji/elfstore/logs/ 700 1 1 client_2 1
 
 To read
-python EdgeClient.py 2 127.0.0.1 7000 82 127.0.0.1 9090 stream_id_test 1 6 /home/swamiji/elfstore/logs/ 700 1 1 client_2 1
+python EdgeClient.py 2 127.0.0.1 7000 82 127.0.0.1 9090 stream_id_test 1 6 /home/swamiji/elfstore/logs/ 700 1 1 client_3 1

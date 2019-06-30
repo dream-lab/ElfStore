@@ -681,7 +681,7 @@ class EdgeClient:
         streamMD = StreamMetadata()
         streamMD.streamId = streamId
         streamMD.startTime = I64TypeStreamMetadata(time.time()*1000, False)
-        streamMD.reliability = DoubleTypeStreamMetadata(float(STREAM_RELIABILITY), True)
+        streamMD.reliability = DoubleTypeStreamMetadata(float(0.50), True) # STREAM_RELIABILITY
         streamMD.minReplica = ByteTypeStreamMetadata(2, True)
         streamMD.maxReplica = ByteTypeStreamMetadata(5, True)
         streamMD.version = I32TypeStreamMetadata(0, True)
@@ -1057,6 +1057,121 @@ class EdgeClient:
         self.closeSocket(transport)
         return largest_id
 
+    def findStream(self):
+
+        print "The find stream method is called"
+        myQuery = SQueryRequest()
+        myQuery.reliability = DoubleTypeStreamMetadata(float(0.99), True)
+        #myQuery.minReplica = ByteTypeStreamMetadata(2, True)
+        # myQuery.maxReplica = ByteTypeStreamMetadata(5, True)
+
+        global STREAM_OWNER_FOG_IP
+        global STREAM_OWNER_FOG_PORT
+
+        print "The fog ip, fog port is ",STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT
+
+        client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
+
+        print "The query is ",myQuery
+
+        myQueryResponse = client.findStream(myQuery)
+        print "The findstream response status ",myQueryResponse.status
+        print "The list of streamid matching the findStream ",myQueryResponse.streamList
+
+    def updateBlock(self):
+
+        edgeInfoData = EdgeInfoData()
+        edgeInfoData.nodeId = EDGE_ID
+        edgeInfoData.nodeIp = EDGE_IP
+        edgeInfoData.port = EDGE_PORT
+        edgeInfoData.reliability = EDGE_RELIABILITY            
+        edgeInfoData.storage = 12
+
+        global STREAM_ID
+        global CLIENT_ID
+        global SESSION_SECRET
+        metaData = Metadata()
+        metaData.clientId = CLIENT_ID
+        metaData.sessionSecret = SESSION_SECRET
+        metaData.mbId = 700
+        metaData.streamId = streamId
+        metaData.timestamp = time.time() * 1000
+        additional_prop = {}
+        additional_prop["Name"] = "Sheshadri"
+        metaData.properties = json.dumps(additional_prop)
+
+        client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
+        response = client.find(700,True,True,edgeInfoData)
+        self.closeSocket(transport)
+        print "Sent replicas ",response        
+
+        file = open("/home/swamiji/phd/EdgeFS/ElfStore/Commands.txt",'r')
+        data = file.read()
+        print "appended ",len(data),"number of bytes"
+        file.close()
+
+        hash_md5 = hashlib.md5()
+        hash_md5.update(data)
+        metaData.checksum = hash_md5.hexdigest()
+
+        print "METADATA IS ", metaData
+
+
+        for findReplica in response :
+
+             edgeInfoData = findReplica.edgeInfo
+
+             if(edgeInfoData!=None):
+
+                 print "edgeInfoRecv from fog ",edgeInfoData
+                 #have to read data from edge
+
+                 transport = TSocket.TSocket(edgeInfoData.nodeIp,edgeInfoData.port)
+
+                 # Buffering is critical. Raw sockets are very slow
+                 transport = TTransport.TFramedTransport(transport)
+
+                 # Wrap in a protocol
+                 protocol = TBinaryProtocol.TBinaryProtocol(transport)
+
+                 # Create a client to use the protocol encoder        
+                 client = EdgeService.Client(protocol)
+
+                 # Connect!
+                 transport.open()                
+                 
+                 response = client.update(700,metaData, data) #this is for recovery
+                                
+                 # print "Read status is ",response.status
+
+                 # if response.status==0 :
+                 #     print "File not found : cannot read file"
+
+                 # else:
+                 #     print "Local Read ",len(response.data)," number of bytes"
+                 #     print "Metadata also read ",response.metadata
+                 #     return 1 #successful read
+
+                 transport.close()
+             elif(findReplica.node!=None) :                
+
+                 fogNode = findReplica.node
+
+                 client,transport = self.openSocketConnection(fogNode.NodeIP,fogNode.port,FOG_SERVICE)
+
+                 response = client.updateBlock(700,metaData, data)
+                 # if(response.status == 1):
+                 #     print "Fog Amount of bytes read ",len(response.data)
+                 #     return 1 #successful read
+                 # else:
+                 #     print "The queried fog does not have data"
+
+                 self.closeSocket(transport)
+             else:
+                 print "The queried fog does not have data"
+
+        exit(0)
+
 
 #MAIN MEthod
 if __name__ == '__main__':
@@ -1136,6 +1251,13 @@ if __name__ == '__main__':
 
     print "Starting to client/write ...",choice
     #this is for stream metadata updates
+    if (choice == 24):
+        myEdge.findStream()
+        exit(0)
+
+    if (choice == 25):
+        myEdge.updateBlock()
+
     if(choice == 20):
         num_updates = 100
         for i in range(num_updates):
