@@ -442,7 +442,7 @@ service FogService {
 	//the attributes. If client writes via the fog, on completion of the write it 
 	//will store the metadata as well, edgeInfo will set only the edgeID
 	
-	byte insertMetadata(1: Metadata mbMetadata, 2: EdgeInfoData edgeInfoData);
+	byte insertMetadata(1: Metadata mbMetadata, 2: EdgeInfoData edgeInfoData,3: map<string,string> metaKeyValueMap);
 
 	// Find the next micro bactch satisfying the query
 	binary findNext(1: string microbatchId);
@@ -471,7 +471,7 @@ service FogService {
 	OpenStreamResponse open(1: string streamId, 2: string clientId, 3: i32 expectedLease, 4: bool setLease);
 	
 	//client will start writing by issuing putNext calls
-	WriteResponse putNext(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
+	WriteResponse putNext(1:Metadata mbMetadata, 2:binary data, 3: WritePreference preference,4: map<string,string> metaKeyValueMap);
 	
 	//once block is written, increment the block count at the owner Fog
 	BlockMetadataUpdateResponse incrementBlockCount(1:Metadata mbMetadata, 2:bool setLease);

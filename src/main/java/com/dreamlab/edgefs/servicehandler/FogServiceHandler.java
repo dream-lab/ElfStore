@@ -1609,7 +1609,10 @@ public class FogServiceHandler implements FogService.Iface {
 	 * calculate the MD5 checksum and pass that checksum in the metadata
 	 */
 	@Override
-	public byte insertMetadata(Metadata mbMetadata, EdgeInfoData edgeInfoData) throws TException {
+	public byte insertMetadata(Metadata mbMetadata, EdgeInfoData edgeInfoData, Map<String, String> metaKeyValueMap)
+			throws TException {
+		// Update the metaToMBIdListMap
+		updateMetaMbIdMbIdMap(mbMetadata, metaKeyValueMap);
 		LOGGER.info(
 				"MicrobatchId : " + mbMetadata.getMbId() + ", insertMetadata, startTime=" + System.currentTimeMillis());
 		EdgeInfo edgeInfo = new EdgeInfo();
@@ -2492,7 +2495,8 @@ public class FogServiceHandler implements FogService.Iface {
 	// THIS IS A DUPLICATE OF WRITE(), NEED TO CHECK IF ANYTHING SHOULD BE UPDATED
 	// THE WRITE() WILL GO AWAY VERY SOON
 	@Override
-	public WriteResponse putNext(Metadata mbMetadata, ByteBuffer data, WritePreference preference) throws TException {
+	public WriteResponse putNext(Metadata mbMetadata, ByteBuffer data, WritePreference preference,
+			Map<String, String> metaKeyValueMap) throws TException {
 		// select a local edge based on the preference given
 		// become a client with that edge server and send the write request
 		// if successful, the persist the metadata and update the various maps
@@ -2511,6 +2515,8 @@ public class FogServiceHandler implements FogService.Iface {
 		// present so we should pick a different edge to make sure there is proper
 		// replication
 		EdgeInfo localEdge = identifyLocalReplica(data.capacity(), preference, duplicateHolders, mbMetadata.getMbId());
+		// Update the metaToMBIdListMap
+		updateMetaMbIdMbIdMap(mbMetadata, metaKeyValueMap);
 		if (localEdge == null) {
 			LOGGER.info("No suitable edge present");
 			return wrResponse;
@@ -2547,6 +2553,43 @@ public class FogServiceHandler implements FogService.Iface {
 		// are started as we are returning the WriteResponse returned directly
 		// from the Edge
 		return wrResponse;
+	}
+
+	// This method is used to update the metaToMBIdListMap variable present in the
+	// fog class.
+	// This updation process is required in order to facilitate finding of blocks
+	// using their
+	// static metadata.
+	// This function will be called in putNext() and insertMetadata() functions.
+	private void updateMetaMbIdMbIdMap(Metadata mbMetadata, Map<String, String> metaKeyValueMap) {
+		// ISHAN:
+		// Updating the metaToMBIdListMap via setMetaMbIdMap()
+		// Testing for only one key value pair
+		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
+		while (itr.hasNext()) {
+			Map.Entry<String, String> entry = itr.next();
+
+			// formulate the searchKey for setMetaMbIdMap
+			String searchKey = entry.getKey() + ":" + entry.getValue();
+
+			// Check if the searchKey is already present in the map or not
+			if (fog.getMetaToMBIdListMap().get(searchKey) == null) {
+				Map<String, List<Long>> metaToMbIdMap = new ConcurrentHashMap<>();
+				List<Long> mbidList = new ArrayList<>();
+				mbidList.add(mbMetadata.getMbId());
+				metaToMbIdMap.put(searchKey, mbidList);
+				fog.setMetaToMBIdListMap(metaToMbIdMap);
+			}
+
+			// entries already exist in the map, we have to append the
+			// new mbid to the entry with matching searchKey.
+			else {
+				Map<String, List<Long>> metaToMbIdMap = fog.getMetaToMBIdListMap();
+				metaToMbIdMap.get(searchKey).add(mbMetadata.getMbId());
+				fog.setMetaToMBIdListMap(metaToMbIdMap);
+			}
+
+		}
 	}
 
 	/**

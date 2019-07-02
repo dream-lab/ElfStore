@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class-diagram version="1.2.3" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
+  associations="true" dependencies="false" nesting-relationships="true" router="FAN">  
+  <class id="1" language="java" name="com.dreamlab.edgefs.controlplane.FogServer" project="ElfStore" 
+    file="/ElfStore/src/main/java/com/dreamlab/edgefs/controlplane/FogServer.java" binary="false" corner="TOP_LEFT">    
+    <position height="290" width="271" x="727" y="445"/>    
+    <display autosize="false" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="2" language="java" name="com.dreamlab.edgefs.controlplane.Fog" project="ElfStore" 
+    file="/ElfStore/src/main/java/com/dreamlab/edgefs/controlplane/Fog.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="51" width="153" x="687" y="354"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </class>  
+  <class id="3" language="java" name="com.dreamlab.edgefs.servicehandler.FogServiceHandler" project="ElfStore" 
+    file="/ElfStore/src/main/java/com/dreamlab/edgefs/servicehandler/FogServiceHandler.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="505" width="245" x="1019" y="775"/>    
+    <display autosize="false" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </class>  
+  <class id="4" language="java" name="com.dreamlab.edgefs.controlplane.GlobalReplicaAllocation" project="ElfStore" 
+    file="/ElfStore/src/main/java/com/dreamlab/edgefs/controlplane/GlobalReplicaAllocation.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="115" width="385" x="1303" y="1320"/>    
+    <display autosize="false" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="5" language="java" name="com.dreamlab.edgefs.controlplane.RecoveryRejectedHandler" project="ElfStore" 
+    file="/ElfStore/src/main/java/com/dreamlab/edgefs/controlplane/RecoveryRejectedHandler.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="115" width="287" x="379" y="775"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <interface id="6" language="java" name="com.dreamlab.edgefs.thrift.FogService.Iface" project="ElfStore" 
+    file="/ElfStore/src/main/java/com/dreamlab/edgefs/thrift/FogService.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="347" width="204" x="1059" y="1320"/>    
+    <display autosize="false" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </interface>  
+  <class id="7" language="java" name="com.dreamlab.edgefs.misc.GlobalFogContributions" project="ElfStore" 
+    file="/ElfStore/src/main/java/com/dreamlab/edgefs/misc/GlobalFogContributions.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="146" width="466" x="1019" y="1707"/>    
+    <display autosize="false" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="8" language="java" name="com.dreamlab.edgefs.misc.GlobalStatsHandler" project="ElfStore" 
+    file="/ElfStore/src/main/java/com/dreamlab/edgefs/misc/GlobalStatsHandler.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="317" width="312" x="686" y="1320"/>    
+    <display autosize="false" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="9" language="java" name="com.dreamlab.edgefs.controlplane.CoarseGrainedStats" project="ElfStore" 
+    file="/ElfStore/src/main/java/com/dreamlab/edgefs/controlplane/CoarseGrainedStats.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="187" width="157" x="339" y="1707"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="10" language="java" name="com.dreamlab.edgefs.misc.LocalStatsHandler" project="ElfStore" 
+    file="/ElfStore/src/main/java/com/dreamlab/edgefs/misc/LocalStatsHandler.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="180" width="317" x="41" y="445"/>    
+    <display autosize="false" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="11" language="java" name="com.dreamlab.edgefs.model.RecoverTask" project="ElfStore" 
+    file="/ElfStore/src/main/java/com/dreamlab/edgefs/model/RecoverTask.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="277" width="280" x="687" y="37"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <association id="12">    
+    <bendpoint x="409" y="445"/>    
+    <bendpoint x="348" y="775"/>    
+    <bendpoint x="348" y="1320"/>    
+    <end type="SOURCE" refId="2" navigable="false">      
+      <attribute id="13" name="coarseGrainedStats"/>      
+      <multiplicity id="14" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="9" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <dependency id="15">    
+    <end type="SOURCE" refId="8"/>    
+    <end type="TARGET" refId="7"/>  
+  </dependency>  
+  <association id="16">    
+    <bendpoint x="1049" y="354"/>    
+    <bendpoint x="1049" y="445"/>    
+    <end type="SOURCE" refId="11" navigable="false">      
+      <attribute id="17" name="handler"/>      
+      <multiplicity id="18" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="3" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <dependency id="19">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="10"/>  
+  </dependency>  
+  <association id="20">    
+    <end type="SOURCE" refId="8" navigable="false">      
+      <attribute id="21" name="localInfo"/>      
+      <multiplicity id="22" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="9" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <dependency id="23">    
+    <end type="SOURCE" refId="11"/>    
+    <end type="TARGET" refId="2"/>  
+  </dependency>  
+  <dependency id="24">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="5"/>  
+  </dependency>  
+  <dependency id="25">    
+    <bendpoint x="696" y="445"/>    
+    <bendpoint x="696" y="775"/>    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="8"/>  
+  </dependency>  
+  <dependency id="26">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="8"/>  
+  </dependency>  
+  <dependency id="27">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="4"/>  
+  </dependency>  
+  <dependency id="28">    
+    <bendpoint x="1028" y="1320"/>    
+    <end type="SOURCE" refId="7"/>    
+    <end type="TARGET" refId="3"/>  
+  </dependency>  
+  <realization id="29">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="6"/>  
+  </realization>  
+  <dependency id="30">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="1"/>  
+  </dependency>  
+  <dependency id="31">    
+    <bendpoint x="388" y="445"/>    
+    <bendpoint x="388" y="354"/>    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="11"/>  
+  </dependency>  
+  <association id="32">    
+    <bendpoint x="1028" y="445"/>    
+    <end type="SOURCE" refId="3" navigable="false">      
+      <attribute id="33" name="fog"/>      
+      <multiplicity id="34" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="2" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="35">    
+    <end type="SOURCE" refId="1" navigable="false">      
+      <attribute id="36" name="fogHandler"/>      
+      <multiplicity id="37" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="3" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="38">    
+    <bendpoint x="199" y="775"/>    
+    <bendpoint x="199" y="1320"/>    
+    <end type="SOURCE" refId="10" navigable="false">      
+      <attribute id="39" name="coarseGrainedStats">        
+        <position height="17" width="102" x="217" y="1702"/>      
+      </attribute>      
+      <multiplicity id="40" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="9" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <classifier-display autosize="false" stereotype="true" package="true" initial-value="false" signature="true" 
+    sort-features="false" accessors="true" visibility="true">    
+    <attributes public="true" package="true" protected="true" private="true" static="true"/>    
+    <operations public="true" package="true" protected="true" private="true" static="true"/>  
+  </classifier-display>  
+  <association-display labels="true" multiplicity="true"/>
+</class-diagram>

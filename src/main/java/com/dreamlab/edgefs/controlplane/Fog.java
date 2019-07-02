@@ -813,7 +813,7 @@ public class Fog implements Serializable {
 		}
 	}
 
-	/** retun model clas with maps **/
+	/** return model class with maps **/
 	public void globalStatsCalculate() {
 		if(getMostRecentFogStatsUpdate() >= getLastGlobalStatsUpdatedTime() ||
 				getLastLocalUpdatedTime() >= getLastGlobalStatsUpdatedTime()) {

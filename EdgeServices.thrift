@@ -80,6 +80,7 @@ struct Metadata {
 	3: required string streamId;
 	4: required i64 mbId;
 	5: required i64 timestamp;
+	6: required string videocliplocation;
 	//this is optional since if write is not routed through
 	//the Fog but directly to the Edge, then insertMetadata
 	//will supply the checksum else it will be computed at

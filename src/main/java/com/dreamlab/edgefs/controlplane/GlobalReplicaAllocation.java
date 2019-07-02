@@ -207,7 +207,7 @@ public class GlobalReplicaAllocation {
 	 * @param expectedReliability : the reliability demanded by the stream
 	 * @param fogUpdateMap        : the local stats of the Fog
 	 */
-	public void chooseRemainingEdges(double expectedReliability, Map<Short, FogStats> fogUpdateMap, int minReplica,
+	private void chooseRemainingEdges(double expectedReliability, Map<Short, FogStats> fogUpdateMap, int minReplica,
 			int maxReplica) {
 
 		LOGGER.info("We came to the remaining edges place ");
@@ -875,7 +875,7 @@ public class GlobalReplicaAllocation {
 	 * @param achievedReliability : reliability achieved so far
 	 * @return
 	 */
-	public List<NodeInfo> allocateFromLHandLLReplicas(Map<StorageReliability, Short> globalStorageMap,
+	private List<NodeInfo> allocateFromLHandLLReplicas(Map<StorageReliability, Short> globalStorageMap,
 			Map<StorageReliability, List<Short>> storageFogMap, Map<Short, FogStats> fogUpdateMap,
 			double expectedReliability, int subchoice, int minReplica, int maxReplica) {
 
