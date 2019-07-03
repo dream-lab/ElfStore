@@ -77,7 +77,7 @@ public class FogServer {
 		LOGGER.info("Reading properties file....");
 		try {
 			properties.load(FogServer.class.getResourceAsStream("/system.properties"));
-			LOGGER.info(properties.toString()+" **************** ");
+			LOGGER.info(properties.toString() + " **************** ");
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -87,36 +87,32 @@ public class FogServer {
 		short buddyPoolId = Short.parseShort(args[2]);
 		short fogId = Short.parseShort(args[3]);
 		float reliability = Float.parseFloat(args[4]);
-		//this is a new argument added. This can be zero or nonzero
-		//A zero indicates that we are starting fresh and no deserialization is needed
-		//A nonzero means we need to deserialize the Fog state
+		// this is a new argument added. This can be zero or nonzero
+		// A zero indicates that we are starting fresh and no deserialization is needed
+		// A nonzero means we need to deserialize the Fog state
 		int restoreState = Integer.parseInt(args[5]);
 
 		boolean newFog = false;
-		
-		//commenting the part when a Fog want to join a pool
-		//currently serving through a static configuration only
-/*
-		// Assuming when the node wants to join a pool, the argument
-		// for buddyPoolId is not used
-			referrerFogIp = args[5];
-			referrerPort = Integer.parseInt(args[6]);
-			newFog = true;
-		}
-*/
+
+		// commenting the part when a Fog want to join a pool
+		// currently serving through a static configuration only
+		/*
+		 * // Assuming when the node wants to join a pool, the argument // for
+		 * buddyPoolId is not used referrerFogIp = args[5]; referrerPort =
+		 * Integer.parseInt(args[6]); newFog = true; }
+		 */
 		/** set the kmax to 5 in the constants file **/
 		FogHolder self = new FogHolder(new Fog(fogIp, fogId, serverPort, buddyPoolId, reliability));
 		self.getFog().setkMax(Constants.KMAX);
-		//set kMin as well if you want to as these fields will be transient
-		//so in case we restart a Fog instance, we won't be able to recover them
-		
-		
+		// set kMin as well if you want to as these fields will be transient
+		// so in case we restart a Fog instance, we won't be able to recover them
+
 		/**
-		 * Will be cleaning this mess by having a method that checks for property and 
-		 * in its absence sets a default value, for now bear with me
+		 * Will be cleaning this mess by having a method that checks for property and in
+		 * its absence sets a default value, for now bear with me
 		 */
 		initializeFogProperty(self);
-		
+
 		try {
 			fogHandler = new FogServiceHandler(self.getFog());
 			eventProcessor = new FogService.Processor(fogHandler);
@@ -128,16 +124,16 @@ public class FogServer {
 					bootstrapFog(eventProcessor, serverPort);
 				}
 			};
-			
+
 			Thread t1 = new Thread(fogRunnable);
 			t1.start();
-			
-			if(restoreState == 0) {
+
+			if (restoreState == 0) {
 				populateBuddiesAndNeighborsFromClusterConf(Constants.CONF_PATH, self.getFog());
 			} else {
 				self.setFog(Fog.deserializeInstance());
-				//may need to do something for the transient fields
-				
+				// may need to do something for the transient fields
+
 			}
 
 			Runnable buddyHeartBeat = new Runnable() {
@@ -203,14 +199,15 @@ public class FogServer {
 			// a port is done, wait for few seconds and then start sending
 			// subscribe requests
 
-			//again a portion which is related to joining an existing pool, commenting it
-			/*if (((referrerFogIp == null) || (referrerFogIp.isEmpty()))) {
-				populateBuddiesAndNeighborsFromClusterConf(Constants.CONF_PATH, self);
-			} else {
-				*//** NodeX is trying to join **//*
-				LOGGER.info("New Node joining ");
-			}*/
-			
+			// again a portion which is related to joining an existing pool, commenting it
+			/*
+			 * if (((referrerFogIp == null) || (referrerFogIp.isEmpty()))) {
+			 * populateBuddiesAndNeighborsFromClusterConf(Constants.CONF_PATH, self); } else
+			 * {
+			 *//** NodeX is trying to join **//*
+												 * LOGGER.info("New Node joining "); }
+												 */
+
 			if (newFog) {
 				/** Attempt to join a pool **/
 				String result = requestToJoinBuddyPool(self.getFog(), referrerFogIp, referrerPort);
@@ -268,8 +265,7 @@ public class FogServer {
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
-						self.getFog().sendHeartbeatSubscribers(bloomFilterSend, forceBFSend, 
-								statsSend, forceStatsSend);
+						self.getFog().sendHeartbeatSubscribers(bloomFilterSend, forceBFSend, statsSend, forceStatsSend);
 						bloomFilterSend = false;
 						statsSend = false;
 						forceBFSend = false;
@@ -339,21 +335,21 @@ public class FogServer {
 
 			// place the to be recovered microbatches in this queue
 			BlockingQueue<Runnable> queue = new PriorityBlockingQueue<Runnable>(Constants.RECOVERY_QUEUE_SIZE);
-			ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 20, 60000, TimeUnit.MILLISECONDS, 
-					queue, new RecoveryRejectedHandler());
+			ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 20, 60000, TimeUnit.MILLISECONDS, queue,
+					new RecoveryRejectedHandler());
 			// CheckerTask checker = new CheckerTask(self, queue, fogHandler);
 			CheckerTask checker = new CheckerTask(self.getFog(), executor, fogHandler, queue);
 
 			Thread t6 = new Thread(checker);
 			t6.start();
-			
+
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
 		}
 
 	}
-	
+
 	private static void initializeFogProperty(FogHolder self) {
 		// set the disk watermark for Edge
 		if (properties.containsKey(Constants.EDGE_DISK_WATERMARK)) {
@@ -413,8 +409,7 @@ public class FogServer {
 
 	/**
 	 * 
-	 * @param nodeX
-	 *            The joining Node
+	 * @param nodeX The joining Node
 	 * @return YES if successfully joined, NO otherwise
 	 */
 	private static String requestToJoinBuddyPool(Fog fog, String referrerIP, int referrerPort) {
@@ -805,15 +800,14 @@ public class FogServer {
 
 	/**
 	 * 
-	 * @param fileName
-	 *            clusterConf File
+	 * @param fileName clusterConf File
 	 * @param self
 	 */
 	private static void populateBuddiesAndNeighborsFromClusterConf(String fileName, Fog self) {
 		List<String> lines = Collections.emptyList();
 		try {
 			lines = Files.readAllLines(Paths.get(fileName));
-			LOGGER.info("The lines are "+lines);
+			LOGGER.info("The lines are " + lines);
 		} catch (IOException ex) {
 			LOGGER.error("IOException : ", ex);
 			ex.printStackTrace();
@@ -926,10 +920,12 @@ public class FogServer {
 	public static void bootstrapFog(FogService.Processor eventProcessor, int serverPort) {
 		try {
 			TNonblockingServerTransport serverTransport = new TNonblockingServerSocket(serverPort);
-			/*TServer server = new TNonblockingServer(
-					new TNonblockingServer.Args(serverTransport).processor(eventProcessor));*/
+			/*
+			 * TServer server = new TNonblockingServer( new
+			 * TNonblockingServer.Args(serverTransport).processor(eventProcessor));
+			 */
 			TThreadedSelectorServer.Args serverArgs = new TThreadedSelectorServer.Args(serverTransport);
-			//20 threads for processing requests
+			// 20 threads for processing requests
 			serverArgs.executorService(Executors.newFixedThreadPool(20));
 			serverArgs.processor(eventProcessor);
 			TThreadedSelectorServer server = new TThreadedSelectorServer(serverArgs);

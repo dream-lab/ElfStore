@@ -52,33 +52,33 @@ public class Fog implements Serializable {
 	private static final long serialVersionUID = 5150041291949158338L;
 
 	/**
-	 * This and the other classes participating will be implementing the Serializable
-	 * interface, three types of fields are marked transient. First are those which can
-	 * be reconstructed when the FogServer is restarted. Second are those
-	 * which should be calculated from the beginning of the start of the FogServer such as
-	 * the various fields maintaing the last time an update was sent. Third are those which
-	 * are not currently used such as sessionClientMap
+	 * This and the other classes participating will be implementing the
+	 * Serializable interface, three types of fields are marked transient. First are
+	 * those which can be reconstructed when the FogServer is restarted. Second are
+	 * those which should be calculated from the beginning of the start of the
+	 * FogServer such as the various fields maintaing the last time an update was
+	 * sent. Third are those which are not currently used such as sessionClientMap
 	 */
-	
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(FogServer.class);
-	
+
 	/*************************** Fog Class members *****************************/
 	private FogInfo myFogInfo;
-	//private float poolReliability;
-	private transient int kMin,kMax;
+	// private float poolReliability;
+	private transient int kMin, kMax;
 	private transient int k;
-	
+
 	private int edgeDiskWatermark;
-	
-	//this is for the microbatch search
+
+	// this is for the microbatch search
 	private byte[] personalBloomFilter = new byte[Constants.BLOOM_FILTER_BYTES];
-	
-	//An attempt at fixing issue #25
+
+	// An attempt at fixing issue #25
 	private Map<Short, byte[]> edgeBloomFilters = new HashMap<>();
-	
-	//this is for the stream search
+
+	// this is for the stream search
 	private byte[] personalStreamBFilter = new byte[Constants.BLOOM_FILTER_BYTES];
-	
+
 	// For now, I am keeping a single variable to check if bloomfilters are to be
 	// sent or not. There is no stream level or microbatch level most recent update
 	// demarcation here. A change in any will trigger a send of both
@@ -86,269 +86,294 @@ public class Fog implements Serializable {
 	// update this whenever a local write happens, also update
 	// mostRecentNeighborBFUpdate as well
 	private transient long mostRecentSelfBFUpdate = Long.MIN_VALUE;
-	
+
 	// this is the last time I sent an update to my subscribers
 	// compare this with my most recent update to personal bloomfilter
 	// and send if needed
 	private transient long lastpersonalBFSent = Long.MIN_VALUE;
-	
-	
-	//self entry can be placed in this map, this doesn't contain stats
+
+	// self entry can be placed in this map, this doesn't contain stats
 	private Map<Short, FogExchangeInfo> neighborExchangeInfo = new ConcurrentHashMap<>();
-	
-	//buddylevel bloomfilters contain the consolidated bloomfilter
-	//of the buddy and all its neighbors and the rest values are for
-	//the buddy such as lastheartbeat and etc
+
+	// buddylevel bloomfilters contain the consolidated bloomfilter
+	// of the buddy and all its neighbors and the rest values are for
+	// the buddy such as lastheartbeat and etc
 	private Map<Short, FogExchangeInfo> buddyExchangeInfo = new ConcurrentHashMap<>();
-	
-	
-	//update this when a neighbor gives updated information about bloomfilters
-	//include self if there is a change in local bloomfilter as well
-	//(useful for Bbloom)
+
+	// update this when a neighbor gives updated information about bloomfilters
+	// include self if there is a change in local bloomfilter as well
+	// (useful for Bbloom)
 	private transient long mostRecentNeighborBFUpdate = Long.MIN_VALUE;
-	
-	//time when last (self + neighbor) bloomfilter was sent
-	//(useful for Bbloom)
+
+	// time when last (self + neighbor) bloomfilter was sent
+	// (useful for Bbloom)
 	private transient long lastNeighborBFSent = Long.MIN_VALUE;
-	
-	
+
 	/*
 	 * TODO::Add indexing logic here for metadata based search
 	 */
-	
-	
+
 	private Map<Short, EdgeInfo> localEdgesMap = new ConcurrentHashMap<>();
-	//for every Edge managed by a Fog, maintain a,b,c,d values
-	//where a is the edgecount for LL, b for HL, c for LH, d for HH
-	//where first is storage and second is reliability parameter
-	
-	
+	// for every Edge managed by a Fog, maintain a,b,c,d values
+	// where a is the edgecount for LL, b for HL, c for LH, d for HH
+	// where first is storage and second is reliability parameter
+
 	private CoarseGrainedStats coarseGrainedStats = new CoarseGrainedStats();
-	
-	//time of most recent local stats calculation
+
+	// time of most recent local stats calculation
 	private transient long lastLocalUpdatedTime = Long.MIN_VALUE;
-	
-	//local stats are sent only to subscribers
+
+	// local stats are sent only to subscribers
 	private transient long lastLocalStatsSent = Long.MIN_VALUE;
-	
-	//update this when an Edge gives updated disk utilization
+
+	// update this when an Edge gives updated disk utilization
 	private transient long mostRecentEdgeUpdate = Long.MIN_VALUE;
-	
-	
-	//information at the level of each Fog
-	//value is the set of ids of the edge this Fog controls falling
-	//under a particular category namely HL,LH, etc.
-	//read and write can be concurrent as client requests to get a local edge
-	//and local stats computation is also in progress
+
+	// information at the level of each Fog
+	// value is the set of ids of the edge this Fog controls falling
+	// under a particular category namely HL,LH, etc.
+	// read and write can be concurrent as client requests to get a local edge
+	// and local stats computation is also in progress
 	private Map<StorageReliability, List<Short>> localEdgeMapping = new ConcurrentHashMap<>();
-	
-	//a set can also be maintained here for Edges who have crossed
-	//their WATERMARK REQUIREMENT
-	//We might be putting, getting or removing from it, make sure 
-	//the iterator is not used as it is fail-fast with ConcurrentModificationException
+
+	// a set can also be maintained here for Edges who have crossed
+	// their WATERMARK REQUIREMENT
+	// We might be putting, getting or removing from it, make sure
+	// the iterator is not used as it is fail-fast with
+	// ConcurrentModificationException
 	private Set<Short> noStorageEdges = new HashSet<>();
-	
-	
-	//Optimization : When sending stats info to your buddies, only send
-	//those that have changed. Before sending, check the neighborExchangeInfo
-	//to see if the neighbor's including self lastUpdatedStatsTime is more 
-	//recent than the lastNeighborStatsSent and only send the entries which
-	//satisfy the constraint
-	
-	/*****************************UPDATE VALUE TIME INTERVALS**********************************/
-	//update this when a neighbor gives updated information about stats
-	//include self if there is a change in local stats as well
-	//For self, need to keep the more recent of the neighbor stats and
-	//the lastLocalUpdatedTime (useful for Bstats)
+
+	// Optimization : When sending stats info to your buddies, only send
+	// those that have changed. Before sending, check the neighborExchangeInfo
+	// to see if the neighbor's including self lastUpdatedStatsTime is more
+	// recent than the lastNeighborStatsSent and only send the entries which
+	// satisfy the constraint
+
+	/*****************************
+	 * UPDATE VALUE TIME INTERVALS
+	 **********************************/
+	// update this when a neighbor gives updated information about stats
+	// include self if there is a change in local stats as well
+	// For self, need to keep the more recent of the neighbor stats and
+	// the lastLocalUpdatedTime (useful for Bstats)
 	private transient long mostRecentNeighborStatsUpdate = Long.MIN_VALUE;
 
-	//time when last (self + neighbor) stats was sent
-	//(useful for Bstats)
+	// time when last (self + neighbor) stats was sent
+	// (useful for Bstats)
 	private transient long lastNeighborStatsSent = Long.MIN_VALUE;
-	
-	
-	//this is our global stats
-	//this will contain self + neighbors entry as well as 
-	//for every buddy, the buddy and its neighbors stats
+
+	// this is our global stats
+	// this will contain self + neighbors entry as well as
+	// for every buddy, the buddy and its neighbors stats
 	private Map<Short, FogStats> fogUpdateMap = new ConcurrentHashMap<>();
-	
-	//update this when a Fog sends updated stats, this can be a neighbor
-	//or a buddy. This is to check whether to compute global stats or not
-	//If this time is more recent than the lastGlobalStatsUpdatedTime, we
-	//need to recompute the globalStats
+
+	// update this when a Fog sends updated stats, this can be a neighbor
+	// or a buddy. This is to check whether to compute global stats or not
+	// If this time is more recent than the lastGlobalStatsUpdatedTime, we
+	// need to recompute the globalStats
 	private transient long mostRecentFogStatsUpdate = Long.MIN_VALUE;
-	
+
 	// this is set when we last computed the global stats
 	private transient long lastGlobalStatsUpdatedTime = Long.MIN_VALUE;
 	/****************************************************************************/
-	
-	
-	//maintain global information in terms of storage and reliability
-	//for all Fogs
-	//key is essentially the quadrant and value map contains fogId as the 
-	//key and the Fog's contribution towards the quadrant as the value
-	//private Map<StorageReliability, Map<Short, Short>> globalStats = new HashMap<>();
-	
-	
-	/************************ Maps related to buddies and neighbors ***************************/
-	//this Fog will be sending its consolidated (local + neighbor)
-	//bloomfilters to its buddies and personal to its neighbors
-	//commented the set part to go with the map so that an id based
-	//lookup can be supported on most of the entities, similar thing
-	//done with neighbors and buddies
+
+	// maintain global information in terms of storage and reliability
+	// for all Fogs
+	// key is essentially the quadrant and value map contains fogId as the
+	// key and the Fog's contribution towards the quadrant as the value
+	// private Map<StorageReliability, Map<Short, Short>> globalStats = new
+	// HashMap<>();
+
+	/************************
+	 * Maps related to buddies and neighbors
+	 ***************************/
+	// this Fog will be sending its consolidated (local + neighbor)
+	// bloomfilters to its buddies and personal to its neighbors
+	// commented the set part to go with the map so that an id based
+	// lookup can be supported on most of the entities, similar thing
+	// done with neighbors and buddies
 	private Map<Short, NodeInfo> subscribedMap = new ConcurrentHashMap<>();
-	
+
 	private Map<Short, NeighborInfo> neighborsMap = new ConcurrentHashMap<>();
-	
+
 	private Map<Short, FogInfo> buddyMap = new ConcurrentHashMap<>();
-	
-	
-	//is this needed, this is present as part of myFogInfo
+
+	// is this needed, this is present as part of myFogInfo
 	private short buddyPoolId;
-	//need to maintain the poolSize so that when this Fog is sending
-	//heartbeats to its neighbors, size of the whole system at any time
-	//can be calculated using similar information from its buddies
+	// need to maintain the poolSize so that when this Fog is sending
+	// heartbeats to its neighbors, size of the whole system at any time
+	// can be calculated using similar information from its buddies
 	private transient short poolSize;
-	//an approximate poolSize can be calculated based on heartbeats from
-	//neighbors and buddies. From neighbors, get their poolsize but all 
-	//pools might not be covered with local neighbors. From the buddies,
-	//get their poolSizeMap to get total picture.
+	// an approximate poolSize can be calculated based on heartbeats from
+	// neighbors and buddies. From neighbors, get their poolsize but all
+	// pools might not be covered with local neighbors. From the buddies,
+	// get their poolSizeMap to get total picture.
 	private transient Map<Short, Short> poolSizeMap = new HashMap<>();
-	
+
 	/********************************************************************************************/
-	
-	//SWAMIJI to address:please use interface on the declaration side
+
+	// SWAMIJI to address:please use interface on the declaration side
 	// May not be useful right now
-	private Map<Short,HashMap<StorageReliability,Short>> globalAllocationMap = new ConcurrentHashMap<Short, HashMap<StorageReliability,Short>>();
-	
-	//SWAMIJI to address:please use interface on the declaration side
-	//map to make final allocations 
-	//A Map of Storage Reliability to Fog Devices
+	private Map<Short, HashMap<StorageReliability, Short>> globalAllocationMap = new ConcurrentHashMap<Short, HashMap<StorageReliability, Short>>();
+
+	// SWAMIJI to address:please use interface on the declaration side
+	// map to make final allocations
+	// A Map of Storage Reliability to Fog Devices
 	private Map<StorageReliability, List<Short>> storageFogMap = new ConcurrentHashMap<StorageReliability, List<Short>>();
-	
+
 	private Map<StorageReliability, Short> edgeDistributionMap = new ConcurrentHashMap<StorageReliability, Short>();
 
-	
-
-	//the locks are not used currently, so commenting for now
-/*
-	//this to update most recent Edge update
-	//used to properly update mostRecentEdgeUpdate
-	private final Lock edgeLock = new ReentrantLock();
-	
-	//used to properly update mostRecentNeighborStatsUpdate
-	private final Lock neighborStatsLock = new ReentrantLock();
-	
-	//used to properly update mostRecentNeighborBFUpdate
-	private final Lock neighborBloomLock = new ReentrantLock();
-	
-	//if any Fog updates their stats, global stats will be recalculated
-	//in the next window
-	//used to properly update mostRecentFogStatsUpdate
-	private final Lock globalStatsLock = new ReentrantLock();
-	*/
-	
-	/************************Metadata querying********************************************/
-	/**
-	 * For all these maps, check if any map is iterated while other threads can do a put or
-	 * remove operation over the map. If yes, replace with the ConcurrentHashMap.
+	// the locks are not used currently, so commenting for now
+	/*
+	 * //this to update most recent Edge update //used to properly update
+	 * mostRecentEdgeUpdate private final Lock edgeLock = new ReentrantLock();
+	 * 
+	 * //used to properly update mostRecentNeighborStatsUpdate private final Lock
+	 * neighborStatsLock = new ReentrantLock();
+	 * 
+	 * //used to properly update mostRecentNeighborBFUpdate private final Lock
+	 * neighborBloomLock = new ReentrantLock();
+	 * 
+	 * //if any Fog updates their stats, global stats will be recalculated //in the
+	 * next window //used to properly update mostRecentFogStatsUpdate private final
+	 * Lock globalStatsLock = new ReentrantLock();
 	 */
-	//This is to maintain a session between Client and a transaction
-	private transient Map<Short,String> sessionClientMap = new HashMap<Short, String>(); //needs to be cleared out on every timeout
-	
-	//This is to maintian a previous allocation that I made for a particular write for a session
+
+	/************************
+	 * Metadata querying
+	 ********************************************/
+	/**
+	 * For all these maps, check if any map is iterated while other threads can do a
+	 * put or remove operation over the map. If yes, replace with the
+	 * ConcurrentHashMap.
+	 */
+	// This is to maintain a session between Client and a transaction
+	private transient Map<Short, String> sessionClientMap = new HashMap<Short, String>(); // needs to be cleared out on
+																							// every timeout
+
+	// This is to maintian a previous allocation that I made for a particular write
+	// for a session
 	private transient Map<String, List<NodeInfo>> sessionLocations = new HashMap<String, List<NodeInfo>>();
-	
-	//This is used to have a mapping between micro-batchId to the EdgeID
-	//private Map<String,Short> mbIDLocationMap = new ConcurrentHashMap<>();
-	
-	//IMPORTANT::it might happen that same microbatchId maybe present on multiple edges
-	//of a single Fog, then it will create a lot of trouble since we need to
-	//make sure that we are not writing the same microbatch to the same edge
-	//as writes are concurrent and also while recovery, we should not write 
-	//the microbatch to an edge already having a replica of it
-	
-	//IMPL_NOTE::the issue with keeping a set of shorts is it can throw ConcurrentModificationException
-	//as we are updating as well as iterating at the same time. However updates are done
-	//at data writes and iterations during reads and these two are separate in time but 
-	//still for keeping the separation clean, resorting to a map with implementation
-	//a ConcurrentHashMap. Java doesn't have a ConcurrentHashSet and such a feature in
-	//use is anyways backed by a ConcurrentHashMap
+
+	// This is used to have a mapping between micro-batchId to the EdgeID
+	// private Map<String,Short> mbIDLocationMap = new ConcurrentHashMap<>();
+
+	// IMPORTANT::it might happen that same microbatchId maybe present on multiple
+	// edges
+	// of a single Fog, then it will create a lot of trouble since we need to
+	// make sure that we are not writing the same microbatch to the same edge
+	// as writes are concurrent and also while recovery, we should not write
+	// the microbatch to an edge already having a replica of it
+
+	// IMPL_NOTE::the issue with keeping a set of shorts is it can throw
+	// ConcurrentModificationException
+	// as we are updating as well as iterating at the same time. However updates are
+	// done
+	// at data writes and iterations during reads and these two are separate in time
+	// but
+	// still for keeping the separation clean, resorting to a map with
+	// implementation
+	// a ConcurrentHashMap. Java doesn't have a ConcurrentHashSet and such a feature
+	// in
+	// use is anyways backed by a ConcurrentHashMap
 //	private Map<String,Map<Short,Byte>> mbIDLocationMap = new ConcurrentHashMap<>();
-	private Map<Long,Map<Short,Byte>> mbIDLocationMap = new ConcurrentHashMap<>();
-	
-	//the stream level metadata is stored but not used for searching. This is stored
-	//when the stream is first registered
+	private Map<Long, Map<Short, Byte>> mbIDLocationMap = new ConcurrentHashMap<>();
+
+	// the stream level metadata is stored but not used for searching. This is
+	// stored
+	// when the stream is first registered
 	private Map<String, StreamMetadataInfo> streamMetadata = new ConcurrentHashMap<>();
-	
-	//This is used to have a mapping between StreamID and a set of Microbatches
+
+	// This is used to have a mapping between StreamID and a set of Microbatches
 //	private Map<String, Set<String>> streamMbIdMap =  new ConcurrentHashMap<>();
-	private Map<String, Set<Long>> streamMbIdMap =  new ConcurrentHashMap<>();
-	
-	//This is used to have a mapping between metadata values and micro batches
-	//Sumit:The microbatch metadata containing key value pairs
-	//is stored in this map using key:value as the map key. The value is a list of microbatches
-	//which are managed by this Fog. Multiple metadata key value pairs are placed as different
-	//keys in this map and each has a different list instantiated for it, reason being there can
-	//be microbatches which have a common set of key value pairs but not the overall metadata
-	//which requires us to store a different list for each metadata value
+	private Map<String, Set<Long>> streamMbIdMap = new ConcurrentHashMap<>();
+
+	// This is used to have a mapping between metadata values and micro batches
+	// Sumit:The microbatch metadata containing key value pairs
+	// is stored in this map using key:value as the map key. The value is a list of
+	// microbatches
+	// which are managed by this Fog. Multiple metadata key value pairs are placed
+	// as different
+	// keys in this map and each has a different list instantiated for it, reason
+	// being there can
+	// be microbatches which have a common set of key value pairs but not the
+	// overall metadata
+	// which requires us to store a different list for each metadata value
 //	private Map<String, List<String>> metaToMBIdListMap = new ConcurrentHashMap<>(); 
 	private Map<String, List<Long>> metaToMBIdListMap = new ConcurrentHashMap<>();
-	
-	//this map stores for every edge the list of microbatchIds it stores. This is useful
-	//for recovery when an edge device dies and the Fog on learning this needs to start
-	//the recovery thereby becoming a client in the process to get the lost data from 
-	//other replicas
+
+	// this map stores for every edge the list of microbatchIds it stores. This is
+	// useful
+	// for recovery when an edge device dies and the Fog on learning this needs to
+	// start
+	// the recovery thereby becoming a client in the process to get the lost data
+	// from
+	// other replicas
 //	private Map<Short, Set<String>> edgeMicrobatchMap = new ConcurrentHashMap<>();
 	private Map<Short, Set<Long>> edgeMicrobatchMap = new ConcurrentHashMap<>();
-	
+
 //	private Map<String, String> microBatchToStream = new ConcurrentHashMap<>();
 	private Map<Long, String> microBatchToStream = new ConcurrentHashMap<>();
-	
+
 //	private Map<String, Metadata> blockMetadata = new ConcurrentHashMap<>();
 	private Map<Long, Metadata> blockMetadata = new ConcurrentHashMap<>();
-	
-	//CONCURRENT WRITES::during replica identification phase, we first fetch a local edge
-	//to the contacted Fog and then move to our algorithm similar to a finite state machine
-	//to pick next devices (Fog) to write to. During FSM phase, we pick a Fog only once but 
-	//there is a possibility of getting a local edge and then the same Fog in the FSM phase
-	//so we need to make sure that during a remote write case, a different edge is picked.
-	//During recovery, this case is less likely to happen since we can then use mbIDLocationMap
-	//to not pick duplicate edges but during writing this can happen as client is making
-	//parallel writes and we need to make sure that a microbatch is strictly replicated on
-	//different edges. So during replica identification, for the local edge case, we insert
-	//the microbatchId in the set and check it during the remote write to make sure the replica
-	//identified by Fog for writing is different from the one picked earlier. Also when the
-	//insertMetadata request comes for the local edge write, we remove this microbatchId from
-	//the set since mbIDLocationMap can do the job now in case of recovery
+
+	// CONCURRENT WRITES::during replica identification phase, we first fetch a
+	// local edge
+	// to the contacted Fog and then move to our algorithm similar to a finite state
+	// machine
+	// to pick next devices (Fog) to write to. During FSM phase, we pick a Fog only
+	// once but
+	// there is a possibility of getting a local edge and then the same Fog in the
+	// FSM phase
+	// so we need to make sure that during a remote write case, a different edge is
+	// picked.
+	// During recovery, this case is less likely to happen since we can then use
+	// mbIDLocationMap
+	// to not pick duplicate edges but during writing this can happen as client is
+	// making
+	// parallel writes and we need to make sure that a microbatch is strictly
+	// replicated on
+	// different edges. So during replica identification, for the local edge case,
+	// we insert
+	// the microbatchId in the set and check it during the remote write to make sure
+	// the replica
+	// identified by Fog for writing is different from the one picked earlier. Also
+	// when the
+	// insertMetadata request comes for the local edge write, we remove this
+	// microbatchId from
+	// the set since mbIDLocationMap can do the job now in case of recovery
 //	private transient Map<String, Short> localEdgeWritesInProgress = new ConcurrentHashMap<>();
 	private transient Map<Long, Short> localEdgeWritesInProgress = new ConcurrentHashMap<>();
-	
-	//this is the system-wide cache invalidation time for cached stream metadata
-	//transient as it can read from the system.properties during startup
+
+	// this is the system-wide cache invalidation time for cached stream metadata
+	// transient as it can read from the system.properties during startup
 	private transient int streamMetaCacheInvalidation;
-	
-	//stream soft and hard lease times
+
+	// stream soft and hard lease times
 	private transient int streamSoftLease;
-	
+
 	private transient int streamHardLease;
-	
+
 	private transient boolean isReplicaCachingEnabled;
-	
+
 	private transient int replicaCachingTime;
-	
+
 	private Map<String, BlockMetadata> perStreamBlockMetadata = new ConcurrentHashMap<>();
-	
+
 	/*****************************************************************************/
-	
+
 	/** static metadata properties querying **/
-	
+
 	/** static property : minReplica **/
 	private Map<String, Set<String>> streamMetaStreamIdMap = new ConcurrentHashMap<String, Set<String>>();
-	
-	/** static property : streamReliability**/
+
+	/** static property : streamReliability **/
 	private Map<Double, Set<String>> streamRelStreamIdMap = new ConcurrentHashMap<Double, Set<String>>();
 	
+	/** mbid to streamid map**/
+	private Map<String, String> mbIdToStreamIdMap = new ConcurrentHashMap<String, String>();
+
 	public Map<Double, Set<String>> getStreamRelStreamIdMap() {
 		return streamRelStreamIdMap;
 	}
@@ -358,13 +383,14 @@ public class Fog implements Serializable {
 	}
 
 	/****************************************************************************/
-	
+
 	public Fog() {
-		
+
 	}
-	
+
 	/**
 	 * Constructor
+	 * 
 	 * @param IP
 	 * @param ID
 	 * @param reliability
@@ -373,15 +399,18 @@ public class Fog implements Serializable {
 		this.myFogInfo = new FogInfo(IP, ID, port, poolId, reliability);
 		this.buddyPoolId = poolId;
 	}
-	
-	/*****************************UTILITIES******************************************/
+
+	/*****************************
+	 * UTILITIES
+	 ******************************************/
 	@Override
 	public String toString() {
-		return "Fog [myFogInfo=" + myFogInfo.toString() +" Reliability is " + myFogInfo
-				+ ", neighbors=" + neighborsMap + "]";
+		return "Fog [myFogInfo=" + myFogInfo.toString() + " Reliability is " + myFogInfo + ", neighbors=" + neighborsMap
+				+ "]";
 	}
+
 	/*********************************************************************************/
-	
+
 	public Map<Long, String> getMicroBatchToStream() {
 		return microBatchToStream;
 	}
@@ -393,7 +422,7 @@ public class Fog implements Serializable {
 	public Map<StorageReliability, Short> getEdgeDistributionMap() {
 		return edgeDistributionMap;
 	}
-	
+
 	public Map<StorageReliability, List<Short>> getStorageFogMap() {
 		return storageFogMap;
 	}
@@ -402,14 +431,13 @@ public class Fog implements Serializable {
 		this.storageFogMap = storageFogMap;
 	}
 
-	/*public Map<String, Short> getMbIDLocationMap() {
-		return mbIDLocationMap;
-	}
+	/*
+	 * public Map<String, Short> getMbIDLocationMap() { return mbIDLocationMap; }
+	 * 
+	 * public void setMbIDLocationMap(Map<String, Short> mbIDLocationMap) {
+	 * this.mbIDLocationMap = mbIDLocationMap; }
+	 */
 
-	public void setMbIDLocationMap(Map<String, Short> mbIDLocationMap) {
-		this.mbIDLocationMap = mbIDLocationMap;
-	}*/
-	
 	public Map<Long, Map<Short, Byte>> getMbIDLocationMap() {
 		return mbIDLocationMap;
 	}
@@ -428,7 +456,8 @@ public class Fog implements Serializable {
 
 	/**
 	 * 
-	 * @return a map with metadata being the key and List of micro-batch ids being the values
+	 * @return a map with metadata being the key and List of micro-batch ids being
+	 *         the values
 	 */
 	public Map<String, List<Long>> getMetaMbIdMap() {
 		return metaToMBIdListMap;
@@ -437,7 +466,7 @@ public class Fog implements Serializable {
 	public void setMetaMbIdMap(Map<String, List<Long>> metaMbIdMap) {
 		this.metaToMBIdListMap = metaMbIdMap;
 	}
-	
+
 	public FogInfo getMyFogInfo() {
 		return myFogInfo;
 	}
@@ -445,7 +474,7 @@ public class Fog implements Serializable {
 	public void setMyFogInfo(FogInfo myFogInfo) {
 		this.myFogInfo = myFogInfo;
 	}
-	
+
 	public int getkMin() {
 		return kMin;
 	}
@@ -453,7 +482,7 @@ public class Fog implements Serializable {
 	public void setkMin(int kMin) {
 		this.kMin = kMin;
 	}
-	
+
 	public int getkMax() {
 		return kMax;
 	}
@@ -461,7 +490,7 @@ public class Fog implements Serializable {
 	public void setkMax(int kMax) {
 		this.kMax = kMax;
 	}
-	
+
 	public int getK() {
 		return k;
 	}
@@ -481,7 +510,7 @@ public class Fog implements Serializable {
 	public void setBuddyPoolId(short argbuddyPoolID) {
 		buddyPoolId = argbuddyPoolID;
 	}
-	
+
 	public Map<Short, Short> getPoolSizeMap() {
 		return poolSizeMap;
 	}
@@ -501,7 +530,7 @@ public class Fog implements Serializable {
 	public void setPoolSize(short poolSize) {
 		this.poolSize = poolSize;
 	}
-	
+
 	public Map<Short, EdgeInfo> getLocalEdgesMap() {
 		return localEdgesMap;
 	}
@@ -509,7 +538,7 @@ public class Fog implements Serializable {
 	public void setLocalEdgesMap(Map<Short, EdgeInfo> localEdgesMap) {
 		this.localEdgesMap = localEdgesMap;
 	}
-	
+
 	public long getLastLocalUpdatedTime() {
 		return lastLocalUpdatedTime;
 	}
@@ -541,7 +570,6 @@ public class Fog implements Serializable {
 	public void setPersonalBloomFilter(byte[] personalBloomFilter) {
 		this.personalBloomFilter = personalBloomFilter;
 	}
-
 
 	public Map<Short, byte[]> getEdgeBloomFilters() {
 		return edgeBloomFilters;
@@ -614,7 +642,7 @@ public class Fog implements Serializable {
 	public void setLocalEdgeMapping(Map<StorageReliability, List<Short>> localEdgeMapping) {
 		this.localEdgeMapping = localEdgeMapping;
 	}
-	
+
 	public long getMostRecentEdgeUpdate() {
 		return mostRecentEdgeUpdate;
 	}
@@ -622,7 +650,7 @@ public class Fog implements Serializable {
 	public void setMostRecentEdgeUpdate(long mostRecentEdgeUpdate) {
 		this.mostRecentEdgeUpdate = mostRecentEdgeUpdate;
 	}
-	
+
 	public Map<Short, FogExchangeInfo> getBuddyExchangeInfo() {
 		return buddyExchangeInfo;
 	}
@@ -686,7 +714,7 @@ public class Fog implements Serializable {
 	public void setLastNeighborStatsSent(long lastNeighborStatsSent) {
 		this.lastNeighborStatsSent = lastNeighborStatsSent;
 	}
-	
+
 	public long getMostRecentFogStatsUpdate() {
 		return mostRecentFogStatsUpdate;
 	}
@@ -726,7 +754,7 @@ public class Fog implements Serializable {
 	public void setBlockMetadata(Map<Long, Metadata> blockMetadata) {
 		this.blockMetadata = blockMetadata;
 	}
-	
+
 	public Map<Long, Short> getLocalEdgeWritesInProgress() {
 		return localEdgeWritesInProgress;
 	}
@@ -734,7 +762,7 @@ public class Fog implements Serializable {
 	public void setLocalEdgeWritesInProgress(Map<Long, Short> localEdgeWritesInProgress) {
 		this.localEdgeWritesInProgress = localEdgeWritesInProgress;
 	}
-	
+
 	public int getStreamMetaCacheInvalidation() {
 		return streamMetaCacheInvalidation;
 	}
@@ -742,7 +770,7 @@ public class Fog implements Serializable {
 	public void setStreamMetaCacheInvalidation(int streamMetaCacheInvalidation) {
 		this.streamMetaCacheInvalidation = streamMetaCacheInvalidation;
 	}
-	
+
 	public int getStreamSoftLease() {
 		return streamSoftLease;
 	}
@@ -758,7 +786,7 @@ public class Fog implements Serializable {
 	public void setStreamHardLease(int streamHardLease) {
 		this.streamHardLease = streamHardLease;
 	}
-	
+
 	public boolean isReplicaCachingEnabled() {
 		return isReplicaCachingEnabled;
 	}
@@ -774,7 +802,7 @@ public class Fog implements Serializable {
 	public void setReplicaCachingTime(int replicaCachingTime) {
 		this.replicaCachingTime = replicaCachingTime;
 	}
-	
+
 	public Map<String, BlockMetadata> getPerStreamBlockMetadata() {
 		return perStreamBlockMetadata;
 	}
@@ -782,32 +810,40 @@ public class Fog implements Serializable {
 	public void setPerStreamBlockMetadata(Map<String, BlockMetadata> perStreamBlockMetadata) {
 		this.perStreamBlockMetadata = perStreamBlockMetadata;
 	}
-	
+
 	public Map<String, Set<String>> getStreamMetaStreamIdMap() {
 		return streamMetaStreamIdMap;
 	}
-	
+
 	public void setStreamMetaStreamIdMap(ConcurrentHashMap<String, Set<String>> minReplicaStreamMap) {
-		this.streamMetaStreamIdMap = minReplicaStreamMap; 
+		this.streamMetaStreamIdMap = minReplicaStreamMap;
+	}
+	
+	public Map<String, String> getMbIdToStreamIdMap() {
+		return mbIdToStreamIdMap;
+	}
+
+	public void setMbIdToStreamIdMap(Map<String, String> mbIdToStreamIdMap) {
+		this.mbIdToStreamIdMap = mbIdToStreamIdMap;
 	}
 
 	/*********************************************************************************/
 
-	//called when the thread wakes up after a fixed window to check
-	//any recent updates in this window
+	// called when the thread wakes up after a fixed window to check
+	// any recent updates in this window
 	public void localStatsCalculate() {
 		LOGGER.info("Inside localStatsCalculate()");
 		if (localEdgesMap == null || localEdgesMap.isEmpty()) {
 			return;
 		}
 		if (getMostRecentEdgeUpdate() >= getLastLocalUpdatedTime()) {
-			LocalStatsHandler lHandler = new LocalStatsHandler(localEdgesMap, coarseGrainedStats,
-					localEdgeMapping, noStorageEdges);
+			LocalStatsHandler lHandler = new LocalStatsHandler(localEdgesMap, coarseGrainedStats, localEdgeMapping,
+					noStorageEdges);
 			lHandler.computeLocalEdgeStats();
 			setLastLocalUpdatedTime(System.currentTimeMillis());
 			setMostRecentFogStatsUpdate(System.currentTimeMillis());
-			
-			LOGGER.info("coarse grained stats "+coarseGrainedStats.toString());
+
+			LOGGER.info("coarse grained stats " + coarseGrainedStats.toString());
 		} else {
 			LOGGER.info("No changes since the last local stats update, going to sleep now");
 		}
@@ -815,96 +851,66 @@ public class Fog implements Serializable {
 
 	/** return model class with maps **/
 	public void globalStatsCalculate() {
-		if(getMostRecentFogStatsUpdate() >= getLastGlobalStatsUpdatedTime() ||
-				getLastLocalUpdatedTime() >= getLastGlobalStatsUpdatedTime()) {
-			GlobalStatsHandler handler = new GlobalStatsHandler(fogUpdateMap, coarseGrainedStats, 
+		if (getMostRecentFogStatsUpdate() >= getLastGlobalStatsUpdatedTime()
+				|| getLastLocalUpdatedTime() >= getLastGlobalStatsUpdatedTime()) {
+			GlobalStatsHandler handler = new GlobalStatsHandler(fogUpdateMap, coarseGrainedStats,
 					myFogInfo.getNodeID());
-			FogStats medianStats = handler.computeTotalInfomation(globalAllocationMap, storageFogMap);			
+			FogStats medianStats = handler.computeTotalInfomation(globalAllocationMap, storageFogMap);
 			setLastGlobalStatsUpdatedTime(System.currentTimeMillis());
-			
+
 			/** The value returned by the Global Stats handler is set here **/
 			storageFogMap = handler.getGlobalFogDistribution();
-			LOGGER.info("storage fog map is"+storageFogMap.toString());
+			LOGGER.info("storage fog map is" + storageFogMap.toString());
 			edgeDistributionMap = handler.getGlobalEdgeDistribution();
-			LOGGER.info("edge distribution map is"+edgeDistributionMap.toString());
+			LOGGER.info("edge distribution map is" + edgeDistributionMap.toString());
 		}
 	}
-	
-	//This will go, only here as it is used for some unit testing
+
+	// This will go, only here as it is used for some unit testing
 	public LocalEdgeStats computeLocalInformation() {
-		LocalStatsHandler lHandler = new LocalStatsHandler(localEdgesMap, 
-				coarseGrainedStats, localEdgeMapping, noStorageEdges);
+		LocalStatsHandler lHandler = new LocalStatsHandler(localEdgesMap, coarseGrainedStats, localEdgeMapping,
+				noStorageEdges);
 		LocalEdgeStats lStats = lHandler.computeLocalEdgeStats();
 		setLastLocalUpdatedTime(System.currentTimeMillis());
-		//change in local Fog state in terms of 10 bytes has an effect
-		//on the global state as well, so check for varying the global
-		//updated time as well
+		// change in local Fog state in terms of 10 bytes has an effect
+		// on the global state as well, so check for varying the global
+		// updated time as well
 		return lStats;
 	}
 
-	
 	public void computeGlobalStats() {
-		//Assumption is the fogUpdateMap doesn't contain its own entry
-		//so while calculating global medians, we are adding -1 as key
-		//to indicate self and removing once work is done
+		// Assumption is the fogUpdateMap doesn't contain its own entry
+		// so while calculating global medians, we are adding -1 as key
+		// to indicate self and removing once work is done
 		GlobalStatsHandler handler = new GlobalStatsHandler(fogUpdateMap, coarseGrainedStats, myFogInfo.getNodeID());
 		FogStats medianStats = handler.computeTotalInfomation(globalAllocationMap, storageFogMap);
-		//SWAMIJI to come into picture now 
+		// SWAMIJI to come into picture now
 	}
-	
-	/*public void updateMissingHeartBeats(long edgeHeartbeatInterval, int maxMissingHeartbeats) {
-		long currentTime = System.currentTimeMillis();
-		List<Short> removeList = new ArrayList<>();
-		for (Short edgeId : localEdgesMap.keySet()) {
-			EdgeInfo edgeInfo = localEdgesMap.get(edgeId);
-			int missHeatbeats = (int) ((currentTime - edgeInfo.getLastHeartBeatTime()) / edgeHeartbeatInterval);
-			if (missHeatbeats >= maxMissingHeartbeats) {
-				removeList.add(edgeId);
-			} else {
-				boolean acquired = false;
-				try {
-					acquired = edgeInfo.acquireLock();
-					if (!acquired) {
-						// this means another thread acquired the lock
-						// means the Edge would have sent the heartbeat
-						// so we can skip updating the missing heartbeats
-						LOGGER.info("Another thread acquired lock, no need to update missing heartbeats");
-						continue;
-					}
-					edgeInfo.setMissedHeartbeats(missHeatbeats);
-				} finally {
-					if (acquired) {
-						edgeInfo.releaseLock();
-					}
-				}
-			}
-		}
-		//remove the edges now
-		for (Short edgeId : removeList) {
-			EdgeInfo edgeInfo = localEdgesMap.get(edgeId);
-			//try to acquire lock on the object, if failed means
-			//heartbeat received so don't remove the object else
-			//check the condition for missingheartbeats and decide
-			boolean acquired = false;
-			try {
-				acquired = edgeInfo.acquireLock();
-				if(!acquired) {
-					//update happening currently, no need to remove
-					continue;
-				} else {
-					if(edgeInfo.getMissedHeartbeats() >= maxMissingHeartbeats) {
-						//reverse condition is this edge was updated after addition
-						// to the removalList so don't remove it
-						localEdgesMap.remove(edgeId);
-					}
-				}
-			} finally {
-				if(acquired) {
-					edgeInfo.releaseLock();
-				}
-			}
-		}
-	}*/
+
+	/*
+	 * public void updateMissingHeartBeats(long edgeHeartbeatInterval, int
+	 * maxMissingHeartbeats) { long currentTime = System.currentTimeMillis();
+	 * List<Short> removeList = new ArrayList<>(); for (Short edgeId :
+	 * localEdgesMap.keySet()) { EdgeInfo edgeInfo = localEdgesMap.get(edgeId); int
+	 * missHeatbeats = (int) ((currentTime - edgeInfo.getLastHeartBeatTime()) /
+	 * edgeHeartbeatInterval); if (missHeatbeats >= maxMissingHeartbeats) {
+	 * removeList.add(edgeId); } else { boolean acquired = false; try { acquired =
+	 * edgeInfo.acquireLock(); if (!acquired) { // this means another thread
+	 * acquired the lock // means the Edge would have sent the heartbeat // so we
+	 * can skip updating the missing heartbeats LOGGER.
+	 * info("Another thread acquired lock, no need to update missing heartbeats");
+	 * continue; } edgeInfo.setMissedHeartbeats(missHeatbeats); } finally { if
+	 * (acquired) { edgeInfo.releaseLock(); } } } } //remove the edges now for
+	 * (Short edgeId : removeList) { EdgeInfo edgeInfo = localEdgesMap.get(edgeId);
+	 * //try to acquire lock on the object, if failed means //heartbeat received so
+	 * don't remove the object else //check the condition for missingheartbeats and
+	 * decide boolean acquired = false; try { acquired = edgeInfo.acquireLock();
+	 * if(!acquired) { //update happening currently, no need to remove continue; }
+	 * else { if(edgeInfo.getMissedHeartbeats() >= maxMissingHeartbeats) { //reverse
+	 * condition is this edge was updated after addition // to the removalList so
+	 * don't remove it localEdgesMap.remove(edgeId); } } } finally { if(acquired) {
+	 * edgeInfo.releaseLock(); } } } }
+	 */
 
 	public void updateMissingHeartBeats(long edgeHeartbeatInterval, int maxMissingHeartbeats) {
 		long currentTime = System.currentTimeMillis();
@@ -914,11 +920,11 @@ public class Fog implements Serializable {
 			// only add to updateList if the edge device was active previously
 			if (edgeInfo.getStatus().equals("A")) {
 				int missHeatbeats = (int) ((currentTime - edgeInfo.getLastHeartBeatTime()) / edgeHeartbeatInterval);
-				LOGGER.info("The current time is "+currentTime);
-				LOGGER.info("The last update was "+edgeInfo.getLastHeartBeatTime());
-				
+				LOGGER.info("The current time is " + currentTime);
+				LOGGER.info("The last update was " + edgeInfo.getLastHeartBeatTime());
+
 				if (missHeatbeats >= maxMissingHeartbeats) {
-					LOGGER.info("The missed heart beats are "+missHeatbeats);
+					LOGGER.info("The missed heart beats are " + missHeatbeats);
 					LOGGER.info("EdgeId : {} now not usable for puts or reads anymore", edgeInfo.getNodeId());
 					edgeInfo.setStatus("D");
 					newUpdates = true;
@@ -930,22 +936,22 @@ public class Fog implements Serializable {
 		// should involve computing the local stats so that updated 10 bytes
 		// are sent to the subscribers and buddies
 		if (newUpdates) {
-			//some edge device died, so the bloom filter of the fog should
-			//be updated to reflect the change. Also we should update the 
-			//most recent time of self bloom filter update to send the update
-			//when the timer hits for sending heartbeats
+			// some edge device died, so the bloom filter of the fog should
+			// be updated to reflect the change. Also we should update the
+			// most recent time of self bloom filter update to send the update
+			// when the timer hits for sending heartbeats
 			updatePersonalBloomFilter();
 			setMostRecentSelfBFUpdate(System.currentTimeMillis());
 			setMostRecentEdgeUpdate(System.currentTimeMillis());
 		}
 	}
-	
+
 	private void updatePersonalBloomFilter() {
 		byte[] fogBFilter = new byte[Constants.BLOOM_FILTER_BYTES];
-		for(Map.Entry<Short, EdgeInfo> entry : localEdgesMap.entrySet()) {
-			if(entry.getValue().getStatus().equals("A")) {
+		for (Map.Entry<Short, EdgeInfo> entry : localEdgesMap.entrySet()) {
+			if (entry.getValue().getStatus().equals("A")) {
 				byte[] edgeBFilter = getEdgeBloomFilters().get(entry.getKey());
-				for(int i = 0; i < edgeBFilter.length; i++) {
+				for (int i = 0; i < edgeBFilter.length; i++) {
 					fogBFilter[i] = (byte) (fogBFilter[i] | edgeBFilter[i]);
 				}
 			}
@@ -953,13 +959,12 @@ public class Fog implements Serializable {
 		setPersonalBloomFilter(fogBFilter);
 	}
 
-	public void sendHeartbeatBuddies(boolean sendBF, boolean forceSendBF, 
-			boolean sendStats, boolean forceSendStats) {
+	public void sendHeartbeatBuddies(boolean sendBF, boolean forceSendBF, boolean sendStats, boolean forceSendStats) {
 		Collection<FogInfo> buddies = buddyMap.values();
 		byte[] selfStats = null, consolidatedBFilter = null, consolidatedStreamBF = null;
 		List<FogStats> updatedStats = new ArrayList<>();
-		//if forced to send the items, then send it else check if you have to send
-		//and there is a more recent change than the last time you sent the items
+		// if forced to send the items, then send it else check if you have to send
+		// and there is a more recent change than the last time you sent the items
 		if (forceSendBF || (sendBF && (getMostRecentNeighborBFUpdate() >= getLastNeighborBFSent()
 				|| getMostRecentSelfBFUpdate() >= getLastNeighborBFSent()))) {
 			// create consolidated bloomfilter of neighbors and self
@@ -982,11 +987,14 @@ public class Fog implements Serializable {
 			}
 			setLastNeighborStatsSent(System.currentTimeMillis());
 		}
-		
+
 		BuddyPayload payload = new BuddyPayload();
-		payload.setPayload(BuddyDataExchangeFormat.encodeData(getMyFogInfo(), consolidatedBFilter,
-				consolidatedStreamBF, selfStats, updatedStats));
+		payload.setPayload(BuddyDataExchangeFormat.encodeData(getMyFogInfo(), consolidatedBFilter, consolidatedStreamBF,
+				selfStats, updatedStats));
 		
+		/** newly added by Sheshadri **/
+		payload.setMbIdToStreamIdMap(this.getMbIdToStreamIdMap());
+
 		for (FogInfo fInfo : buddies) {
 			LOGGER.info("Sending heartbeat to buddy : " + fInfo);
 			TTransport transport = new TFramedTransport(new TSocket(fInfo.getNodeIP(), fInfo.getPort()));
@@ -1008,7 +1016,7 @@ public class Fog implements Serializable {
 			}
 		}
 	}
-	
+
 	private List<byte[]> createConsolidatedBloomFilter() {
 		List<byte[]> consolidatedList = new ArrayList<>();
 		byte[] bfArray = new byte[Constants.BLOOM_FILTER_BYTES];
@@ -1027,40 +1035,41 @@ public class Fog implements Serializable {
 		// add self info in it as well
 		for (int i = 0; i < personalBloomFilter.length; i++) {
 			bfArray[i] = (byte) (bfArray[i] | personalBloomFilter[i]);
-			streamBFArray[i] = (byte) (streamBFArray[i] | personalStreamBFilter[i]); 
+			streamBFArray[i] = (byte) (streamBFArray[i] | personalStreamBFilter[i]);
 		}
 		consolidatedList.add(bfArray);
 		consolidatedList.add(streamBFArray);
 		return consolidatedList;
 	}
-	
-	
-	public void sendHeartbeatSubscribers(boolean sendBF, boolean forceSendBF,
-			boolean sendStats, boolean forceSendStats) {
+
+	public void sendHeartbeatSubscribers(boolean sendBF, boolean forceSendBF, boolean sendStats,
+			boolean forceSendStats) {
 		Collection<NodeInfo> values = subscribedMap.values();
 		byte[] bloomFilter = null, streamBFilter = null;
 		CoarseGrainedStats localStats = null;
-		if(forceSendBF || (sendBF && getMostRecentSelfBFUpdate() >= getLastpersonalBFSent())) {
+		if (forceSendBF || (sendBF && getMostRecentSelfBFUpdate() >= getLastpersonalBFSent())) {
 			LOGGER.info("Sending bloomfilter updates to my subscribers");
 			bloomFilter = personalBloomFilter;
 			streamBFilter = personalStreamBFilter;
 			setLastpersonalBFSent(System.currentTimeMillis());
 		}
-		if(forceSendStats || (sendStats && getLastLocalUpdatedTime() >= getLastLocalStatsSent())) {
+		if (forceSendStats || (sendStats && getLastLocalUpdatedTime() >= getLastLocalStatsSent())) {
 			LOGGER.info("Sending local stats updates to my subscribers");
 			localStats = coarseGrainedStats;
 			setLastLocalStatsSent(System.currentTimeMillis());
 		}
-		
-		//prepare the payload
+
+		// prepare the payload
 		NeighborPayload payload = new NeighborPayload();
-		payload.setPayload(NeighborDataExchangeFormat.encodeData(getMyFogInfo(), bloomFilter,
-				streamBFilter, localStats));
+		payload.setPayload(
+				NeighborDataExchangeFormat.encodeData(getMyFogInfo(), bloomFilter, streamBFilter, localStats));
 		
+		/** newly added by Sheshadri **/
+		payload.setMbIdToStreamIdMap(this.getMbIdToStreamIdMap());
+
 		for (NodeInfo nInfo : values) {
 			LOGGER.info("Sending heartbeat to subscriber : " + nInfo);
-			TTransport transport = new TFramedTransport(new TSocket(nInfo.getNodeIP(),
-					nInfo.getPort()));
+			TTransport transport = new TFramedTransport(new TSocket(nInfo.getNodeIP(), nInfo.getPort()));
 			try {
 				transport.open();
 			} catch (TTransportException e) {
@@ -1079,7 +1088,7 @@ public class Fog implements Serializable {
 			}
 		}
 	}
-	
+
 	public static Fog deserializeInstance() {
 		LOGGER.info("The deserialization started at {}", System.currentTimeMillis());
 		Fog fogInput = null;

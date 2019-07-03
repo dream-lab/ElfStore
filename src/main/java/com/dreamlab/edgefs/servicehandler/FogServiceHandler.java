@@ -2026,6 +2026,9 @@ public class FogServiceHandler implements FogService.Iface {
 
 		// update which stream the microbatch belongs to
 		fog.getMicroBatchToStream().put(mbMetadata.getMbId(), mbMetadata.getStreamId());
+		
+		// update the mbid to stream id map
+		fog.getMbIdToStreamIdMap().put(mbMetadata.getMbId()+"", mbMetadata.getStreamId()+"");
 
 		fog.setMostRecentSelfBFUpdate(System.currentTimeMillis());
 		fog.setMostRecentNeighborBFUpdate(System.currentTimeMillis());
@@ -2330,7 +2333,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 	@Override
 	public void neighborHeartBeat(NeighborPayload payload) throws TException {
-		NeighborHeartbeatData data = NeighborDataExchangeFormat.decodeData(payload);
+		NeighborHeartbeatData data = NeighborDataExchangeFormat.decodeData(payload);		
 		long currentTime = System.currentTimeMillis();
 		short nodeId = data.getNeighborInfo().getNode().getNodeID();
 		LOGGER.info("Received heartbeat from neighbor : " + nodeId);
@@ -2407,6 +2410,13 @@ public class FogServiceHandler implements FogService.Iface {
 				fog.getFogUpdateMap().put(stats.getNodeInfo().getNodeID(), stats);
 			}
 			anyStatsUpdate = true;
+		}
+		
+		if (payload.isSetMbIdToStreamIdMap()) {
+			Map<String, String> myMap = payload.getMbIdToStreamIdMap();
+			
+//			for(Map.Entry<K, V>  )
+			
 		}
 
 		if (anyStatsUpdate) {

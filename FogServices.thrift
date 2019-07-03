@@ -103,10 +103,12 @@ struct MessagePayload {
 
 struct BuddyPayload {
 	1:required binary payload;
+	2:optional map<string, string> mbIdToStreamIdMap;
 }
 
 struct NeighborPayload {
 	1:required binary payload;
+	2:optional map<string, string> mbIdToStreamIdMap;
 }
 
 
