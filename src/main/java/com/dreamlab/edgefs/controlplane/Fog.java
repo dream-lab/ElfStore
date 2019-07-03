@@ -287,6 +287,9 @@ public class Fog implements Serializable {
 	// This is used to have a mapping between StreamID and a set of Microbatches
 //	private Map<String, Set<String>> streamMbIdMap =  new ConcurrentHashMap<>();
 	private Map<String, Set<Long>> streamMbIdMap = new ConcurrentHashMap<>();
+	
+	//ISHAN
+	private Map<Long, String> mbIdStreamIdMap = new ConcurrentHashMap<Long, String>();
 
 	// This is used to have a mapping between metadata values and micro batches
 	// Sumit:The microbatch metadata containing key value pairs
@@ -825,6 +828,15 @@ public class Fog implements Serializable {
 
 	public void setMbIdToStreamIdMap(Map<String, String> mbIdToStreamIdMap) {
 		this.mbIdToStreamIdMap = mbIdToStreamIdMap;
+	}
+	
+	//ADDED by ishan
+	public Map<Long, String> getMbIdStreamIdMap() {
+		return mbIdStreamIdMap;
+	}
+
+	public void setMbIdStreamIdMap(Map<Long, String> mbIdStreamIdMap) {
+		this.mbIdStreamIdMap = mbIdStreamIdMap;
 	}
 
 	/*********************************************************************************/

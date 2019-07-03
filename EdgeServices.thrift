@@ -85,7 +85,6 @@ struct Metadata {
 	//the Fog but directly to the Edge, then insertMetadata
 	//will supply the checksum else it will be computed at
 	//the Fog as the data is present for that case
-	6: optional string checksum;
 	//this is similar to key value pairs as received for the stream
 	7: optional string properties;
 }
