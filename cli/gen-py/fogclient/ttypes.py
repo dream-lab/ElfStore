@@ -2105,6 +2105,202 @@ class StreamMetadata(object):
         return not (self == other)
 
 
+class SQueryRequest(object):
+    """
+    Attributes:
+     - startTime
+     - reliability
+     - minReplica
+     - maxReplica
+     - version
+     - owner
+    """
+
+
+    def __init__(self, startTime=None, reliability=None, minReplica=None, maxReplica=None, version=None, owner=None,):
+        self.startTime = startTime
+        self.reliability = reliability
+        self.minReplica = minReplica
+        self.maxReplica = maxReplica
+        self.version = version
+        self.owner = owner
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.startTime = I64TypeStreamMetadata()
+                    self.startTime.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.reliability = DoubleTypeStreamMetadata()
+                    self.reliability.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRUCT:
+                    self.minReplica = ByteTypeStreamMetadata()
+                    self.minReplica.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRUCT:
+                    self.maxReplica = ByteTypeStreamMetadata()
+                    self.maxReplica.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRUCT:
+                    self.version = I32TypeStreamMetadata()
+                    self.version.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.STRUCT:
+                    self.owner = NodeInfoPrimaryTypeStreamMetadata()
+                    self.owner.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('SQueryRequest')
+        if self.startTime is not None:
+            oprot.writeFieldBegin('startTime', TType.STRUCT, 1)
+            self.startTime.write(oprot)
+            oprot.writeFieldEnd()
+        if self.reliability is not None:
+            oprot.writeFieldBegin('reliability', TType.STRUCT, 2)
+            self.reliability.write(oprot)
+            oprot.writeFieldEnd()
+        if self.minReplica is not None:
+            oprot.writeFieldBegin('minReplica', TType.STRUCT, 3)
+            self.minReplica.write(oprot)
+            oprot.writeFieldEnd()
+        if self.maxReplica is not None:
+            oprot.writeFieldBegin('maxReplica', TType.STRUCT, 4)
+            self.maxReplica.write(oprot)
+            oprot.writeFieldEnd()
+        if self.version is not None:
+            oprot.writeFieldBegin('version', TType.STRUCT, 5)
+            self.version.write(oprot)
+            oprot.writeFieldEnd()
+        if self.owner is not None:
+            oprot.writeFieldBegin('owner', TType.STRUCT, 6)
+            self.owner.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class SQueryResponse(object):
+    """
+    Attributes:
+     - status
+     - streamList
+    """
+
+
+    def __init__(self, status=None, streamList=None,):
+        self.status = status
+        self.streamList = streamList
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.BYTE:
+                    self.status = iprot.readByte()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.streamList = []
+                    (_etype37, _size34) = iprot.readListBegin()
+                    for _i38 in range(_size34):
+                        _elem39 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.streamList.append(_elem39)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('SQueryResponse')
+        if self.status is not None:
+            oprot.writeFieldBegin('status', TType.BYTE, 1)
+            oprot.writeByte(self.status)
+            oprot.writeFieldEnd()
+        if self.streamList is not None:
+            oprot.writeFieldBegin('streamList', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRING, len(self.streamList))
+            for iter40 in self.streamList:
+                oprot.writeString(iter40.encode('utf-8') if sys.version_info[0] == 2 else iter40)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.status is None:
+            raise TProtocolException(message='Required field status is unset!')
+        if self.streamList is None:
+            raise TProtocolException(message='Required field streamList is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
 class StreamMetadataInfo(object):
     """
     Attributes:
@@ -2442,10 +2638,10 @@ class FindResponse(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.data = []
-                    (_etype37, _size34) = iprot.readListBegin()
-                    for _i38 in range(_size34):
-                        _elem39 = iprot.readBinary()
-                        self.data.append(_elem39)
+                    (_etype44, _size41) = iprot.readListBegin()
+                    for _i45 in range(_size41):
+                        _elem46 = iprot.readBinary()
+                        self.data.append(_elem46)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2466,8 +2662,8 @@ class FindResponse(object):
         if self.data is not None:
             oprot.writeFieldBegin('data', TType.LIST, 2)
             oprot.writeListBegin(TType.STRING, len(self.data))
-            for iter40 in self.data:
-                oprot.writeBinary(iter40)
+            for iter47 in self.data:
+                oprot.writeBinary(iter47)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2662,17 +2858,17 @@ class QueryReplica(object):
             if fid == 1:
                 if ftype == TType.MAP:
                     self.matchingNodes = {}
-                    (_ktype42, _vtype43, _size41) = iprot.readMapBegin()
-                    for _i45 in range(_size41):
-                        _key46 = iprot.readI64()
-                        _val47 = []
-                        (_etype51, _size48) = iprot.readListBegin()
-                        for _i52 in range(_size48):
-                            _elem53 = NodeInfoData()
-                            _elem53.read(iprot)
-                            _val47.append(_elem53)
+                    (_ktype49, _vtype50, _size48) = iprot.readMapBegin()
+                    for _i52 in range(_size48):
+                        _key53 = iprot.readI64()
+                        _val54 = []
+                        (_etype58, _size55) = iprot.readListBegin()
+                        for _i59 in range(_size55):
+                            _elem60 = NodeInfoData()
+                            _elem60.read(iprot)
+                            _val54.append(_elem60)
                         iprot.readListEnd()
-                        self.matchingNodes[_key46] = _val47
+                        self.matchingNodes[_key53] = _val54
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -2689,11 +2885,11 @@ class QueryReplica(object):
         if self.matchingNodes is not None:
             oprot.writeFieldBegin('matchingNodes', TType.MAP, 1)
             oprot.writeMapBegin(TType.I64, TType.LIST, len(self.matchingNodes))
-            for kiter54, viter55 in self.matchingNodes.items():
-                oprot.writeI64(kiter54)
-                oprot.writeListBegin(TType.STRUCT, len(viter55))
-                for iter56 in viter55:
-                    iter56.write(oprot)
+            for kiter61, viter62 in self.matchingNodes.items():
+                oprot.writeI64(kiter61)
+                oprot.writeListBegin(TType.STRUCT, len(viter62))
+                for iter63 in viter62:
+                    iter63.write(oprot)
                 oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
@@ -3301,6 +3497,22 @@ StreamMetadata.thrift_spec = (
     (7, TType.STRUCT, 'version', [I32TypeStreamMetadata, None], None, ),  # 7
     (8, TType.STRUCT, 'owner', [NodeInfoPrimaryTypeStreamMetadata, None], None, ),  # 8
     (9, TType.MAP, 'otherProperties', (TType.STRING, 'UTF8', TType.STRUCT, [DynamicTypeStreamMetadata, None], False), None, ),  # 9
+)
+all_structs.append(SQueryRequest)
+SQueryRequest.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'startTime', [I64TypeStreamMetadata, None], None, ),  # 1
+    (2, TType.STRUCT, 'reliability', [DoubleTypeStreamMetadata, None], None, ),  # 2
+    (3, TType.STRUCT, 'minReplica', [ByteTypeStreamMetadata, None], None, ),  # 3
+    (4, TType.STRUCT, 'maxReplica', [ByteTypeStreamMetadata, None], None, ),  # 4
+    (5, TType.STRUCT, 'version', [I32TypeStreamMetadata, None], None, ),  # 5
+    (6, TType.STRUCT, 'owner', [NodeInfoPrimaryTypeStreamMetadata, None], None, ),  # 6
+)
+all_structs.append(SQueryResponse)
+SQueryResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.BYTE, 'status', None, None, ),  # 1
+    (2, TType.LIST, 'streamList', (TType.STRING, 'UTF8', False), None, ),  # 2
 )
 all_structs.append(StreamMetadataInfo)
 StreamMetadataInfo.thrift_spec = (
