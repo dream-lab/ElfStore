@@ -94,7 +94,7 @@ import com.dreamlab.edgefs.thrift.WriteResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * 
+ *
  * @author master Request: Multiple Node Request state maintenance (persist in a
  *         file? or a HashMap?) Persisting in Hashmap so far
  */
@@ -167,7 +167,7 @@ public class FogServiceHandler implements FogService.Iface {
 	/** Getters and setters end **/
 
 	/**
-	 * 
+	 *
 	 * @param NodeX
 	 * @return
 	 * @throws TException
@@ -200,7 +200,7 @@ public class FogServiceHandler implements FogService.Iface {
 	/**
 	 * The joining node requests the Fog Referrer to send it candidates of buddy
 	 * pool between pmin and pmax
-	 * 
+	 *
 	 * @param NodeX the joining node
 	 * @param pmin  the lower bound of buddy pool candidates
 	 * @param pmax  the upper bound of buddy pool candidates
@@ -280,7 +280,7 @@ public class FogServiceHandler implements FogService.Iface {
 	 * This call is made by a referrer fog to its buddy, because the candidate pools
 	 * size were less than pmin So the called on buddy will send the candidates in
 	 * its buddy pool back to the referrer's fog
-	 * 
+	 *
 	 * @param reliability Reliability of the joining fog
 	 * @param pmin        the minimum number of pools needed
 	 * @return List<Neighbor> back to the referrer fog
@@ -323,7 +323,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param NodeX The joining Node
 	 * @return YES OR NO, NO means failed to join, YES means NODEX joined the pool
 	 * @throws TException missing feature : Unable to communicate to buddy, timeout
@@ -410,7 +410,7 @@ public class FogServiceHandler implements FogService.Iface {
 	/**
 	 * Pre-Commit phase in 2PC, checks if node size is breached before admitting any
 	 * fog node
-	 * 
+	 *
 	 * @param preCommitRequest
 	 * @return TwoPhasePreCommitResponse
 	 * @throws TException
@@ -446,7 +446,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 	/**
 	 * 2 Phase commit : Phase 2,
-	 * 
+	 *
 	 * @param commitRequest
 	 * @return STATUS_YES if already in PRE_COMMIT for the joining NODE, else return
 	 *         STATUS_NO
@@ -577,7 +577,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 	/**
 	 * This will perform the selection of replicas for a given metadata
-	 * 
+	 *
 	 * @param dataLength It is called from {@link #getWriteLocations} wherein we
 	 *                   receive the encoded value of storage space as a byte and
 	 *                   send to this method the datalength in MB
@@ -590,7 +590,7 @@ public class FogServiceHandler implements FogService.Iface {
 	// during normal writes (via localWritesInProgress) nor during recovery (via
 	// mbIDLocationMap)
 	/***
-	 * 
+	 *
 	 * @param mbId                microbatch id
 	 * @param dataLength          the length of the microbatch in bytes
 	 * @param isEdge              if the call came from an edge or a generic client
@@ -623,7 +623,7 @@ public class FogServiceHandler implements FogService.Iface {
 		 * if (edge != null && fog.getLocalEdgesMap().containsKey(edge.getNodeId())) {
 		 * Short edgeId = edge.getNodeId(); LOGGER.info("The storage for this " +
 		 * fog.getLocalEdgesMap().get(edgeId).getStats().getStorage());
-		 * 
+		 *
 		 * if (fog.getLocalEdgesMap().get(edgeId).getNodeIp().equals(edge.getNodeIp())
 		 * && fog.getLocalEdgesMap().get(edgeId).getStatus().equals("A") &&
 		 * fog.getLocalEdgesMap().get(edgeId).getStats().getStorage() >=
@@ -645,7 +645,7 @@ public class FogServiceHandler implements FogService.Iface {
 		 * chosenEdge.getStats().getReliability() / 100.0);
 		 * LOGGER.info("The reliability is set to " + replicaAlloc.getReliability());
 		 * reliability = replicaAlloc.getReliability(); replicasToWrite.add(edgeData); }
-		 * 
+		 *
 		 * } }
 		 */
 
@@ -716,7 +716,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 		}
 
-//		StreamMetadata streamMD = fog.getStreamToStreamMetadata().get(streamId); 
+//		StreamMetadata streamMD = fog.getStreamToStreamMetadata().get(streamId);
 		LOGGER.info("The edge distribution map " + fog.getEdgeDistributionMap().toString());
 		LOGGER.info("The fog distribution map " + fog.getStorageFogMap().toString());
 
@@ -800,7 +800,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	@Override
 	public boolean subscribe(NodeInfoData nodeInfoData) throws TException {
@@ -815,7 +815,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 	/** Bloom filter searches from the consolidated neighbor buddy bloom filter **/
 	/**
-	 * 
+	 *
 	 * @param microbatchID the microbatch id to search for
 	 * @return location of Fog if present
 	 */
@@ -910,7 +910,7 @@ public class FogServiceHandler implements FogService.Iface {
 	/**
 	 * unregister the stream ID, this is the call from the edge client which is
 	 * producing the stream
-	 * 
+	 *
 	 * On the other end, it will delete the local directory mount.
 	 */
 	@Override
@@ -1109,20 +1109,20 @@ public class FogServiceHandler implements FogService.Iface {
 
 	/**
 	 * This method is called by the client to write the data
-	 * 
+	 *
 	 * returns the List of IP addresses of Fog for the client
 	 */
 	/*
 	 * @Override public List<NodeInfoData> write(byte dataLength,byte nodeId) throws
 	 * TException {
-	 * 
+	 *
 	 * LOGGER.info("Got a write request "+nodeId);
-	 * 
+	 *
 	 * List<NodeInfoData> fogLocations = identifyReplicas(dataLength,(short)
 	 * nodeId);
-	 * 
+	 *
 	 * LOGGER.info("Here print "+fogLocations.toString());
-	 * 
+	 *
 	 * return fogLocations; }
 	 */
 
@@ -1132,18 +1132,18 @@ public class FogServiceHandler implements FogService.Iface {
 	 **/
 	/*
 	 * public byte insertMetadata(Metadata mbMetadata) throws TException {
-	 * 
+	 *
 	 *//** For each incoming metadata, map the microbatch ID to the edge **/
 	/*
 	 * fog.getMbIDLocationMap().put(mbMetadata.getMbId(), mbMetadata.getEdgeId());
 	 * //Updated an entry for micro batch
-	 * 
+	 *
 	 * //to ease recovery, all microbatches stored by an edge are also
-	 * 
+	 *
 	 * String metaData = mbMetadata.getTimestamp(); //time stamp is the only
 	 * metadata Map<String, List<String>> metadataMicrobacthIDList =
 	 * fog.getMetaMbIdMap();
-	 * 
+	 *
 	 *//** For each incoming metadata, map the metadata to micro batch ID **//*
 																				 * if(fog.getMetaMbIdMap().containsKey(
 																				 * metaData)) {
@@ -1153,7 +1153,7 @@ public class FogServiceHandler implements FogService.Iface {
 																				 * }else {
 																				 * fog.getMetaMbIdMap().get(metaData).
 																				 * add(metaData); }
-																				 * 
+																				 *
 																				 * return Constants.SUCCESS; }
 																				 */
 
@@ -2555,40 +2555,21 @@ public class FogServiceHandler implements FogService.Iface {
 		return wrResponse;
 	}
 
-	// This method is used to update the metaToMBIdListMap variable present in the
-	// fog class.
-	// This updation process is required in order to facilitate finding of blocks
-	// using their
+	// This method is used to update the metaToMBIdListMap variable present in the fog class.
+	// This updation process is required in order to facilitate finding of blocks using their
 	// static metadata.
 	// This function will be called in putNext() and insertMetadata() functions.
-	private void updateMetaMbIdMbIdMap(Metadata mbMetadata, Map<String, String> metaKeyValueMap) {
-		// ISHAN:
+	private void updateMetaMbIdMbIdMap(Metadata mbMetadata, Map<String,String> metaKeyValueMap) {
+		//ISHAN:
 		// Updating the metaToMBIdListMap via setMetaMbIdMap()
 		// Testing for only one key value pair
-		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
-		while (itr.hasNext()) {
+		Iterator<Map.Entry<String,String>> itr = metaKeyValueMap.entrySet().iterator();
+		while(itr.hasNext()) {
 			Map.Entry<String, String> entry = itr.next();
 
-			// formulate the searchKey for setMetaMbIdMap
+			//formulate the searchKey for setMetaMbIdMap
 			String searchKey = entry.getKey() + ":" + entry.getValue();
-
-			// Check if the searchKey is already present in the map or not
-			if (fog.getMetaToMBIdListMap().get(searchKey) == null) {
-				Map<String, List<Long>> metaToMbIdMap = new ConcurrentHashMap<>();
-				List<Long> mbidList = new ArrayList<>();
-				mbidList.add(mbMetadata.getMbId());
-				metaToMbIdMap.put(searchKey, mbidList);
-				fog.setMetaToMBIdListMap(metaToMbIdMap);
-			}
-
-			// entries already exist in the map, we have to append the
-			// new mbid to the entry with matching searchKey.
-			else {
-				Map<String, List<Long>> metaToMbIdMap = fog.getMetaToMBIdListMap();
-				metaToMbIdMap.get(searchKey).add(mbMetadata.getMbId());
-				fog.setMetaToMBIdListMap(metaToMbIdMap);
-			}
-
+			checkAndInsertEntry(searchKey, mbMetadata.getMbId());
 		}
 	}
 
@@ -2801,6 +2782,34 @@ public class FogServiceHandler implements FogService.Iface {
 		mbidMap = fog.getMbIDLocationMap();
 		return mbidMap;
 	}
+
+	@Override
+	public Map<Long,String> findBlockUsingQuery(Map<String,String> metaKeyValueMap){
+		Set<Long> validMbTdList = new HashSet<>();
+		Map<Long,String> mbIdStreamIdMapResponse  = new HashMap<>();
+		boolean firstPass = true;
+		Iterator<Map.Entry<String,String>> itr = metaKeyValueMap.entrySet().iterator();
+		while(itr.hasNext()) {
+			Map.Entry<String, String> entry = itr.next();
+
+			//formulate the searchKey for setMetaMbIdMap
+			String searchKey = entry.getKey() + ":" + entry.getValue();
+			List<Long> matchingMbIds = fog.getMetaToMBIdListMap().get(searchKey);
+			if(firstPass) {
+				validMbTdList.addAll(matchingMbIds);
+				firstPass = false;
+			}
+			else
+				validMbTdList.retainAll(matchingMbIds);
+
+		}
+		//formulate the final mbIdStreamIdMap by fetching the streamid as well.
+		for(Long mbid : validMbTdList)
+			mbIdStreamIdMapResponse.put(mbid,fog.getMbIdStreamIdMap().get(mbid));
+
+		return mbIdStreamIdMapResponse;
+	}
+
 
 	@Override
 	public SQueryResponse findStream(SQueryRequest squery) throws TException {

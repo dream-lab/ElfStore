@@ -76,7 +76,7 @@ enum MessageType {
 }
 
 //message payload
-//this can vary based on the messagetype 
+//this can vary based on the messagetype
 //due to this, keeping most fields optional is a safe bet
 //and handling based on messagetype looks a safe approach with
 //some care to be taken
@@ -88,17 +88,17 @@ struct MessagePayload {
 	4:optional i16 poolId;
 	//this is not necessary for now
 	5: optional double reliability;
-	
+
 	//add the bloom filter and related fields here
 	6:optional binary bloomFilterUpdates;
 	//this is 10 bytes
 	7:optional list<binary> coarseGrainedStats;
-	
+
 	//the neighbor heartbeat can utilize this field to send its poolSize
 	8:optional i16 poolSize;
 	//buddies can get their poolSizeMap to each other to get a total count(N)
 	9:optional map<i16, i16> poolSizeMap;
-	
+
 }
 
 struct BuddyPayload {
@@ -158,7 +158,7 @@ struct WritableFogData {
 	1:required NodeInfoData node;
 	2:required WritePreference preference;
 	//this is necessary when the client finds out this Fog cannot serve
-	//its request, so it can again contact a Fog to find replicas for the 
+	//its request, so it can again contact a Fog to find replicas for the
 	//data by recalculating the reliability needed now while also including
 	//the list of blacklisted Fog devices to not choose from
 	3:required double reliability;
@@ -169,7 +169,7 @@ struct WritableFogData {
 //properties, one that is static and propagated via bloom filters and other
 //which is updatable where new fields can be added and old dynamic fields can
 //be modified or deleted. For this, each field should have a updatable flag
-//associated with it with true meaning that the field can be updated 
+//associated with it with true meaning that the field can be updated
 
 ############################################################################
 ########################## STREAM METADATA #################################
@@ -255,7 +255,7 @@ struct SQueryRequest {
 	3: optional ByteTypeStreamMetadata minReplica;
 	4: optional ByteTypeStreamMetadata maxReplica;
 	5: optional I32TypeStreamMetadata version;
-	6: optional NodeInfoPrimaryTypeStreamMetadata owner;	
+	6: optional NodeInfoPrimaryTypeStreamMetadata owner;
 
 }
 
@@ -345,7 +345,7 @@ struct StreamLeaseRenewalResponse {
 	2: required byte code;
 	3: optional i32 leaseTime;
 }
-	
+
 
 //this kind of pattern of attaching a message as well as code
 //is good to provide client the necessary information to react
@@ -377,31 +377,31 @@ service FogService {
 	TwoPhaseCommitResponse initiate2PhaseCommit(1:TwoPhaseCommitRequest commitRequest);
 
 	//oneway void heartBeat(1:MessageType msgType, 2:NodeInfoData node, 3:MessagePayload payload);
-	
+
 	//oneway void heartBeat(1:MessagePayload payload);
-	
+
 	oneway void buddyHeartBeat(1:BuddyPayload payload);
-	
+
 	oneway void neighborHeartBeat(1:NeighborPayload payload);
 
 	NodeInfoData getPoolMember(1:i16 buddyPoolId);
 
 	list<FogInfoData> getBuddyPoolMembers();
-	
+
 	//this is for acquiring lock and getting the count of eighbors from each pool of every buddy when a new node wants to collect neighbors
 	NeighborCount getNeighborCountPerPool();
 	list<NeighborInfoData> requestNeighbors(1:map<i16, i16> requestMap);
-	
+
 	//once a joining node completes the process i.e. gets buddies and acquires neighbors from its buddies, it can tell its buddies to release the lock
 	void nodeJoiningComplete();
-	
-	bool subscribe(1:NodeInfoData nodeInfoData);	
-		
+
+	bool subscribe(1:NodeInfoData nodeInfoData);
+
 	//These next set of services are the ones that are more useful in terms of the nearest goal
 	bool edgeHeartBeats(1:EdgePayload edgePayload);//expected to be called from a client
 
 	// Device Management API
-	//This is for Edge to join a particular fog 
+	//This is for Edge to join a particular fog
 	byte edgeJoin(1:EdgeInfoData  edgeInfoData);
 
 	//The edge may want to leave the cluster
@@ -409,27 +409,27 @@ service FogService {
 
 	//Terminate will remove the entry of a stream
 	byte terminate(1: string streamId);
-	
+
 	//Data management APIs
-	
+
 	//register stream with a Fog assuming client knows which Fog to contact
 	byte registerStream(1: string streamId, 2: StreamMetadata streamMetadata, 3:i64 startSequenceNumber);
-	
-	// Returns a sessionID 
+
+	// Returns a sessionID
 	string intentToWrite(1: byte clientId);
 
 	//StreamMetadata getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies);
 	StreamMetadataInfo getStreamMetadata(1:string streamId, 2:bool checkNeighbors, 3:bool checkBuddies,
 											4:bool forceLatest);
-	
+
 	StreamMetadata getStreamMetadataFromOwner(1:string streamId);
-	
+
 	//Returns a list of Fog Locations
-	//list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 
+	//list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata,
 	//										3: list<i16> blackListedFogs, 4:EdgeInfoData selfInfo);
-	list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 
+	list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata,
 											3: list<i16> blackListedFogs, 4:bool isEdge);
-	
+
 	//byte write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
 	WriteResponse write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
 
@@ -439,50 +439,50 @@ service FogService {
 	//Insert metadata once the write of mictobatch is succesfully completed
 	//if the client is directly writing to an edge device, it should make a call
 	//to the fog after completion to given the metadata which has edgeId as one of
-	//the attributes. If client writes via the fog, on completion of the write it 
+	//the attributes. If client writes via the fog, on completion of the write it
 	//will store the metadata as well, edgeInfo will set only the edgeID
-	
+
 	byte insertMetadata(1: Metadata mbMetadata, 2: EdgeInfoData edgeInfoData,3: map<string,string> metaKeyValueMap);
 
 	// Find the next micro bactch satisfying the query
 	binary findNext(1: string microbatchId);
-	
+
 	//list<FindReplica> find(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies,
 		//					4:EdgeInfoData selfInfo);
-							
+
 	list<FindReplica> find(1: i64 microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies,
-							4:EdgeInfoData selfInfo);						
-							
+							4:EdgeInfoData selfInfo);
+
 	//ReadReplica read(1: string microbatchId, 2:bool fetchMetadata);
 	ReadReplica read(1: i64 microbatchId, 2:bool fetchMetadata);
 
 	QueryReplica findUsingQuery(1: string metadataKey, 2:string metadataValue, 3:bool checkNeighbors, 4:bool checkBuddies);
-	
+
 	//only returning metadata in this operation
 	//ReadReplica getMeta(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
 	ReadReplica getMeta(1: i64 microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies);
-	
+
 	byte serializeState();
-	
+
 	//updating the StreamMetadata
 	StreamMetadataUpdateResponse updateStreamMetadata(1: StreamMetadata metadata);
-	
+
 	//open a stream for putting blocks
 	OpenStreamResponse open(1: string streamId, 2: string clientId, 3: i32 expectedLease, 4: bool setLease);
-	
+
 	//client will start writing by issuing putNext calls
 	WriteResponse putNext(1:Metadata mbMetadata, 2:binary data, 3: WritePreference preference,4: map<string,string> metaKeyValueMap);
-	
+
 	//once block is written, increment the block count at the owner Fog
 	BlockMetadataUpdateResponse incrementBlockCount(1:Metadata mbMetadata, 2:bool setLease);
-	
+
 	StreamLeaseRenewalResponse renewLease(1:string streamId, 2:string clientId, 3:string sessionSecret,
 											 4:i32 expectedLease, 5:bool setLease);
-	
+
 	//this is not used generally, only used to get the largest blockId persisted to a particular stream.
 	//This will be used when we are using discontinuous blockIds during different phases of experiment
-	//without doing resetting										 
-	i64 getLargestBlockId(1:string streamId); 
+	//without doing resetting
+	i64 getLargestBlockId(1:string streamId);
 
 	//findstream searches for streams that match a given set of static stream properties provided in the squery
 	SQueryResponse findStream(1: SQueryRequest squery);
@@ -495,10 +495,13 @@ service FogService {
 	//returns the mbids in a local partition
 	//this is mostly for testing purposes, but will be provided as a 'choice' in the EdgeClient.py file
 	set<i64> listLocalPartitionMbId(1:bool flag);
-	
+
 	// used to get neighbours of a fog
 	list<NeighborInfoData> requestAllNeighbors();
-	
+
 	//used to return mbIDLocationMap to the client
-	map<i64,map<i16,byte>> requestMbIDLocationMap();	
+	map<i64,map<i16,byte>> requestMbIDLocationMap();
+
+	//used to facilitate the api FindBlock(bquery)
+	map<i64,string> findBlockUsingQuery(1: map<string,string> metaKeyValueMap);
 }
