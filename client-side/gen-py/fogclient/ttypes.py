@@ -969,11 +969,13 @@ class BuddyPayload(object):
     """
     Attributes:
      - payload
+     - mbIdToStreamIdMap
     """
 
 
-    def __init__(self, payload=None,):
+    def __init__(self, payload=None, mbIdToStreamIdMap=None,):
         self.payload = payload
+        self.mbIdToStreamIdMap = mbIdToStreamIdMap
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -989,6 +991,17 @@ class BuddyPayload(object):
                     self.payload = iprot.readBinary()
                 else:
                     iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.MAP:
+                    self.mbIdToStreamIdMap = {}
+                    (_ktype17, _vtype18, _size16) = iprot.readMapBegin()
+                    for _i20 in range(_size16):
+                        _key21 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val22 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.mbIdToStreamIdMap[_key21] = _val22
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -1002,6 +1015,14 @@ class BuddyPayload(object):
         if self.payload is not None:
             oprot.writeFieldBegin('payload', TType.STRING, 1)
             oprot.writeBinary(self.payload)
+            oprot.writeFieldEnd()
+        if self.mbIdToStreamIdMap is not None:
+            oprot.writeFieldBegin('mbIdToStreamIdMap', TType.MAP, 2)
+            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.mbIdToStreamIdMap))
+            for kiter23, viter24 in self.mbIdToStreamIdMap.items():
+                oprot.writeString(kiter23.encode('utf-8') if sys.version_info[0] == 2 else kiter23)
+                oprot.writeString(viter24.encode('utf-8') if sys.version_info[0] == 2 else viter24)
+            oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -1027,11 +1048,13 @@ class NeighborPayload(object):
     """
     Attributes:
      - payload
+     - mbIdToStreamIdMap
     """
 
 
-    def __init__(self, payload=None,):
+    def __init__(self, payload=None, mbIdToStreamIdMap=None,):
         self.payload = payload
+        self.mbIdToStreamIdMap = mbIdToStreamIdMap
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -1047,6 +1070,17 @@ class NeighborPayload(object):
                     self.payload = iprot.readBinary()
                 else:
                     iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.MAP:
+                    self.mbIdToStreamIdMap = {}
+                    (_ktype26, _vtype27, _size25) = iprot.readMapBegin()
+                    for _i29 in range(_size25):
+                        _key30 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val31 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.mbIdToStreamIdMap[_key30] = _val31
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -1060,6 +1094,14 @@ class NeighborPayload(object):
         if self.payload is not None:
             oprot.writeFieldBegin('payload', TType.STRING, 1)
             oprot.writeBinary(self.payload)
+            oprot.writeFieldEnd()
+        if self.mbIdToStreamIdMap is not None:
+            oprot.writeFieldBegin('mbIdToStreamIdMap', TType.MAP, 2)
+            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.mbIdToStreamIdMap))
+            for kiter32, viter33 in self.mbIdToStreamIdMap.items():
+                oprot.writeString(kiter32.encode('utf-8') if sys.version_info[0] == 2 else kiter32)
+                oprot.writeString(viter33.encode('utf-8') if sys.version_info[0] == 2 else viter33)
+            oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -1192,11 +1234,11 @@ class NeighborCount(object):
             elif fid == 2:
                 if ftype == TType.MAP:
                     self.neighborCountPerPool = {}
-                    (_ktype17, _vtype18, _size16) = iprot.readMapBegin()
-                    for _i20 in range(_size16):
-                        _key21 = iprot.readI16()
-                        _val22 = iprot.readI16()
-                        self.neighborCountPerPool[_key21] = _val22
+                    (_ktype35, _vtype36, _size34) = iprot.readMapBegin()
+                    for _i38 in range(_size34):
+                        _key39 = iprot.readI16()
+                        _val40 = iprot.readI16()
+                        self.neighborCountPerPool[_key39] = _val40
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -1223,9 +1265,9 @@ class NeighborCount(object):
         if self.neighborCountPerPool is not None:
             oprot.writeFieldBegin('neighborCountPerPool', TType.MAP, 2)
             oprot.writeMapBegin(TType.I16, TType.I16, len(self.neighborCountPerPool))
-            for kiter23, viter24 in self.neighborCountPerPool.items():
-                oprot.writeI16(kiter23)
-                oprot.writeI16(viter24)
+            for kiter41, viter42 in self.neighborCountPerPool.items():
+                oprot.writeI16(kiter41)
+                oprot.writeI16(viter42)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.nodeInfoData is not None:
@@ -2016,12 +2058,12 @@ class StreamMetadata(object):
             elif fid == 9:
                 if ftype == TType.MAP:
                     self.otherProperties = {}
-                    (_ktype26, _vtype27, _size25) = iprot.readMapBegin()
-                    for _i29 in range(_size25):
-                        _key30 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val31 = DynamicTypeStreamMetadata()
-                        _val31.read(iprot)
-                        self.otherProperties[_key30] = _val31
+                    (_ktype44, _vtype45, _size43) = iprot.readMapBegin()
+                    for _i47 in range(_size43):
+                        _key48 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val49 = DynamicTypeStreamMetadata()
+                        _val49.read(iprot)
+                        self.otherProperties[_key48] = _val49
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -2070,9 +2112,9 @@ class StreamMetadata(object):
         if self.otherProperties is not None:
             oprot.writeFieldBegin('otherProperties', TType.MAP, 9)
             oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.otherProperties))
-            for kiter32, viter33 in self.otherProperties.items():
-                oprot.writeString(kiter32.encode('utf-8') if sys.version_info[0] == 2 else kiter32)
-                viter33.write(oprot)
+            for kiter50, viter51 in self.otherProperties.items():
+                oprot.writeString(kiter50.encode('utf-8') if sys.version_info[0] == 2 else kiter50)
+                viter51.write(oprot)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2251,10 +2293,10 @@ class SQueryResponse(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.streamList = []
-                    (_etype37, _size34) = iprot.readListBegin()
-                    for _i38 in range(_size34):
-                        _elem39 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.streamList.append(_elem39)
+                    (_etype55, _size52) = iprot.readListBegin()
+                    for _i56 in range(_size52):
+                        _elem57 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.streamList.append(_elem57)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2275,8 +2317,8 @@ class SQueryResponse(object):
         if self.streamList is not None:
             oprot.writeFieldBegin('streamList', TType.LIST, 2)
             oprot.writeListBegin(TType.STRING, len(self.streamList))
-            for iter40 in self.streamList:
-                oprot.writeString(iter40.encode('utf-8') if sys.version_info[0] == 2 else iter40)
+            for iter58 in self.streamList:
+                oprot.writeString(iter58.encode('utf-8') if sys.version_info[0] == 2 else iter58)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2638,10 +2680,10 @@ class FindResponse(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.data = []
-                    (_etype44, _size41) = iprot.readListBegin()
-                    for _i45 in range(_size41):
-                        _elem46 = iprot.readBinary()
-                        self.data.append(_elem46)
+                    (_etype62, _size59) = iprot.readListBegin()
+                    for _i63 in range(_size59):
+                        _elem64 = iprot.readBinary()
+                        self.data.append(_elem64)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2662,8 +2704,8 @@ class FindResponse(object):
         if self.data is not None:
             oprot.writeFieldBegin('data', TType.LIST, 2)
             oprot.writeListBegin(TType.STRING, len(self.data))
-            for iter47 in self.data:
-                oprot.writeBinary(iter47)
+            for iter65 in self.data:
+                oprot.writeBinary(iter65)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2858,17 +2900,17 @@ class QueryReplica(object):
             if fid == 1:
                 if ftype == TType.MAP:
                     self.matchingNodes = {}
-                    (_ktype49, _vtype50, _size48) = iprot.readMapBegin()
-                    for _i52 in range(_size48):
-                        _key53 = iprot.readI64()
-                        _val54 = []
-                        (_etype58, _size55) = iprot.readListBegin()
-                        for _i59 in range(_size55):
-                            _elem60 = NodeInfoData()
-                            _elem60.read(iprot)
-                            _val54.append(_elem60)
+                    (_ktype67, _vtype68, _size66) = iprot.readMapBegin()
+                    for _i70 in range(_size66):
+                        _key71 = iprot.readI64()
+                        _val72 = []
+                        (_etype76, _size73) = iprot.readListBegin()
+                        for _i77 in range(_size73):
+                            _elem78 = NodeInfoData()
+                            _elem78.read(iprot)
+                            _val72.append(_elem78)
                         iprot.readListEnd()
-                        self.matchingNodes[_key53] = _val54
+                        self.matchingNodes[_key71] = _val72
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -2885,11 +2927,11 @@ class QueryReplica(object):
         if self.matchingNodes is not None:
             oprot.writeFieldBegin('matchingNodes', TType.MAP, 1)
             oprot.writeMapBegin(TType.I64, TType.LIST, len(self.matchingNodes))
-            for kiter61, viter62 in self.matchingNodes.items():
-                oprot.writeI64(kiter61)
-                oprot.writeListBegin(TType.STRUCT, len(viter62))
-                for iter63 in viter62:
-                    iter63.write(oprot)
+            for kiter79, viter80 in self.matchingNodes.items():
+                oprot.writeI64(kiter79)
+                oprot.writeListBegin(TType.STRUCT, len(viter80))
+                for iter81 in viter80:
+                    iter81.write(oprot)
                 oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
@@ -3408,11 +3450,13 @@ all_structs.append(BuddyPayload)
 BuddyPayload.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'payload', 'BINARY', None, ),  # 1
+    (2, TType.MAP, 'mbIdToStreamIdMap', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 2
 )
 all_structs.append(NeighborPayload)
 NeighborPayload.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'payload', 'BINARY', None, ),  # 1
+    (2, TType.MAP, 'mbIdToStreamIdMap', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 2
 )
 all_structs.append(EdgePayload)
 EdgePayload.thrift_spec = (

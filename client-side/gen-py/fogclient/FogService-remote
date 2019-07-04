@@ -67,7 +67,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   listLocalPartitionMbId(bool flag)')
     print('   requestAllNeighbors()')
     print('   requestMbIDLocationMap()')
-    print('   findBlockUsingQuery( metaKeyValueMap)')
+    print('   findBlockUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies)')
     print('')
     sys.exit(0)
 
@@ -406,10 +406,10 @@ elif cmd == 'requestMbIDLocationMap':
     pp.pprint(client.requestMbIDLocationMap())
 
 elif cmd == 'findBlockUsingQuery':
-    if len(args) != 1:
-        print('findBlockUsingQuery requires 1 args')
+    if len(args) != 3:
+        print('findBlockUsingQuery requires 3 args')
         sys.exit(1)
-    pp.pprint(client.findBlockUsingQuery(eval(args[0]),))
+    pp.pprint(client.findBlockUsingQuery(eval(args[0]), eval(args[1]), eval(args[2]),))
 
 else:
     print('Unrecognized method %s' % cmd)

@@ -505,5 +505,5 @@ service FogService {
 	map<i64,map<i16,byte>> requestMbIDLocationMap();
 
 	//used to facilitate the api FindBlock(bquery)
-	map<i64,string> findBlockUsingQuery(1: map<string,string> metaKeyValueMap);
+	map<i64,string> findBlockUsingQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies);
 }

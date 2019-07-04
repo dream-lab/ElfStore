@@ -49,22 +49,25 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   getWriteLocations(i8 dataLength, Metadata metadata,  blackListedFogs, bool isEdge)')
     print('  WriteResponse write(Metadata mbMetadata, string data, WritePreference preference)')
     print('   writeNext(string sessionId, Metadata mbData, i8 dataLength)')
-    print('  i8 insertMetadata(Metadata mbMetadata, EdgeInfoData edgeInfoData)')
+    print('  i8 insertMetadata(Metadata mbMetadata, EdgeInfoData edgeInfoData,  metaKeyValueMap)')
     print('  string findNext(string microbatchId)')
-    print('   find(i64 microbatchId, bool checkNeighbors, bool checkBuddies, bool forceFetch, EdgeInfoData selfInfo)')
+    print('   find(i64 microbatchId, bool checkNeighbors, bool checkBuddies, EdgeInfoData selfInfo)')
     print('  ReadReplica read(i64 microbatchId, bool fetchMetadata)')
     print('  QueryReplica findUsingQuery(string metadataKey, string metadataValue, bool checkNeighbors, bool checkBuddies)')
     print('  ReadReplica getMeta(i64 microbatchId, bool checkNeighbors, bool checkBuddies)')
     print('  i8 serializeState()')
     print('  StreamMetadataUpdateResponse updateStreamMetadata(StreamMetadata metadata)')
-    print('  OpenStreamResponse open(string streamId, string clientId, i32 expectedLease)')
-    print('  WriteResponse putNext(Metadata mbMetadata, string data, WritePreference preference)')
-    print('  BlockMetadataUpdateResponse incrementBlockCount(Metadata mbMetadata)')
-    print('  StreamLeaseRenewalResponse renewLease(string streamId, string clientId, string sessionSecret, i32 expectedLease)')
+    print('  OpenStreamResponse open(string streamId, string clientId, i32 expectedLease, bool setLease)')
+    print('  WriteResponse putNext(Metadata mbMetadata, string data, WritePreference preference,  metaKeyValueMap)')
+    print('  BlockMetadataUpdateResponse incrementBlockCount(Metadata mbMetadata, bool setLease)')
+    print('  StreamLeaseRenewalResponse renewLease(string streamId, string clientId, string sessionSecret, i32 expectedLease, bool setLease)')
     print('  i64 getLargestBlockId(string streamId)')
+    print('  SQueryResponse findStream(SQueryRequest squery)')
+    print('  WriteResponse updateBlock(i64 mbId, Metadata mbMetadata, string mbData)')
     print('   listLocalPartitionMbId(bool flag)')
     print('   requestAllNeighbors()')
     print('   requestMbIDLocationMap()')
+    print('   findBlockUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies)')
     print('')
     sys.exit(0)
 
@@ -295,10 +298,10 @@ elif cmd == 'writeNext':
     pp.pprint(client.writeNext(args[0], eval(args[1]), eval(args[2]),))
 
 elif cmd == 'insertMetadata':
-    if len(args) != 2:
-        print('insertMetadata requires 2 args')
+    if len(args) != 3:
+        print('insertMetadata requires 3 args')
         sys.exit(1)
-    pp.pprint(client.insertMetadata(eval(args[0]), eval(args[1]),))
+    pp.pprint(client.insertMetadata(eval(args[0]), eval(args[1]), eval(args[2]),))
 
 elif cmd == 'findNext':
     if len(args) != 1:
@@ -307,10 +310,10 @@ elif cmd == 'findNext':
     pp.pprint(client.findNext(args[0],))
 
 elif cmd == 'find':
-    if len(args) != 5:
-        print('find requires 5 args')
+    if len(args) != 4:
+        print('find requires 4 args')
         sys.exit(1)
-    pp.pprint(client.find(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]), eval(args[4]),))
+    pp.pprint(client.find(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]),))
 
 elif cmd == 'read':
     if len(args) != 2:
@@ -343,34 +346,46 @@ elif cmd == 'updateStreamMetadata':
     pp.pprint(client.updateStreamMetadata(eval(args[0]),))
 
 elif cmd == 'open':
-    if len(args) != 3:
-        print('open requires 3 args')
+    if len(args) != 4:
+        print('open requires 4 args')
         sys.exit(1)
-    pp.pprint(client.open(args[0], args[1], eval(args[2]),))
+    pp.pprint(client.open(args[0], args[1], eval(args[2]), eval(args[3]),))
 
 elif cmd == 'putNext':
-    if len(args) != 3:
-        print('putNext requires 3 args')
+    if len(args) != 4:
+        print('putNext requires 4 args')
         sys.exit(1)
-    pp.pprint(client.putNext(eval(args[0]), args[1], eval(args[2]),))
+    pp.pprint(client.putNext(eval(args[0]), args[1], eval(args[2]), eval(args[3]),))
 
 elif cmd == 'incrementBlockCount':
-    if len(args) != 1:
-        print('incrementBlockCount requires 1 args')
+    if len(args) != 2:
+        print('incrementBlockCount requires 2 args')
         sys.exit(1)
-    pp.pprint(client.incrementBlockCount(eval(args[0]),))
+    pp.pprint(client.incrementBlockCount(eval(args[0]), eval(args[1]),))
 
 elif cmd == 'renewLease':
-    if len(args) != 4:
-        print('renewLease requires 4 args')
+    if len(args) != 5:
+        print('renewLease requires 5 args')
         sys.exit(1)
-    pp.pprint(client.renewLease(args[0], args[1], args[2], eval(args[3]),))
+    pp.pprint(client.renewLease(args[0], args[1], args[2], eval(args[3]), eval(args[4]),))
 
 elif cmd == 'getLargestBlockId':
     if len(args) != 1:
         print('getLargestBlockId requires 1 args')
         sys.exit(1)
     pp.pprint(client.getLargestBlockId(args[0],))
+
+elif cmd == 'findStream':
+    if len(args) != 1:
+        print('findStream requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.findStream(eval(args[0]),))
+
+elif cmd == 'updateBlock':
+    if len(args) != 3:
+        print('updateBlock requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.updateBlock(eval(args[0]), eval(args[1]), args[2],))
 
 elif cmd == 'listLocalPartitionMbId':
     if len(args) != 1:
@@ -389,6 +404,12 @@ elif cmd == 'requestMbIDLocationMap':
         print('requestMbIDLocationMap requires 0 args')
         sys.exit(1)
     pp.pprint(client.requestMbIDLocationMap())
+
+elif cmd == 'findBlockUsingQuery':
+    if len(args) != 3:
+        print('findBlockUsingQuery requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.findBlockUsingQuery(eval(args[0]), eval(args[1]), eval(args[2]),))
 
 else:
     print('Unrecognized method %s' % cmd)
