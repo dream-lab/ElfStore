@@ -75,9 +75,9 @@ class elfsCLI(Cmd):
             setLease = str(1)
 
         if tokens.v == True:
-            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,True)
+            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,True)
         else:
-            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease)
+            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease)
 
 
     def do_get(self,args):
@@ -129,9 +129,9 @@ class elfsCLI(Cmd):
         tokens = find_parser.parse_args(line)
 
         if tokens.v == True:
-            module_EdgeClientCLI_find.find(tokens.mbid,tokens.fogIp,tokens.fogPort,True)
+            module_EdgeClientCLI_find.find(tokens.mbid,tokens.metadata,tokens.fogIp,tokens.fogPort,True)
         else:
-            module_EdgeClientCLI_find.find(tokens.mbid,tokens.fogIp,tokens.fogPort)
+            module_EdgeClientCLI_find.find(tokens.mbid,tokens.metadata,tokens.fogIp,tokens.fogPort)
 
 
     def do_join(self,args):
@@ -158,7 +158,7 @@ class elfsCLI(Cmd):
         print("Put a file in ElfStore.")
         print("Perform a put with lease enabled on the stream using the --setLease flag.")
         print("Values of all parameters marked with * have to be specified during exection of the command.")
-        print("Usage : put *--path=(string) *--streamId=(string) *--start=(int) --singleBlock --setLease --v --fogIp=x.x.x.x --fogPort=(int) --edgeId=(int) --clientId=(string)")
+        print("Usage : put *--path=(string) *--streamId=(string) *--start=(int) --metadata=(jsonFilePath) --singleBlock --setLease --v --fogIp=x.x.x.x --fogPort=(int) --edgeId=(int) --clientId=(string)")
         print("If --singleBlock flag is specified then the file(s) is written as a single block of same size as as that of the file.")
     def help_get(self):
         print("Get file(s) using the microbatchId. If end is not specified then only the first block will be retreived (specified using start).")
@@ -179,11 +179,11 @@ class elfsCLI(Cmd):
     def help_join(self):
         print("Add new edges to the system, whose properties are defined in the config file.")
         print("Values of all parameters marked with * have to be specified during exection of the command.")
-        print("Usage : join *--configFile=pathToFile")
+        print("Usage : join *--configFiles=(pathToConfigFilesFolder)")
     def help_find(self):
-        print("To get the locations of a microbatch using the mbid of that batch.")
-        print("Values of all parameters marked with * have to be specified during exection of the command.")
-        print("Usage: find *--mbid=(int) --v")
+        print("Find locations of blocks or find mbIds of blocks that have specific metadata properties (specified in a json file)")
+        print("Usage (Find edges containing specified block): find --mbid=(int) --v")
+        print("Usage (Find blocks with specific metadata properties): find --metadata=(jsonFilePath) --v")
     def help_exit(self):
         print("Exit elfs.")
 
@@ -262,15 +262,17 @@ if __name__ == '__main__':
     ## 1. --path
     ## 2. --streamId
     ## 3. --start
-    ## 4. --fogIp (default, based on config file)
-    ## 5. --fogPort (default, based on config file)
-    ## 6. --edgeId (default, based on config file)
-    ## 7. --clientId (default, hashed based on the edge id)
-    ## 8. --setLease (flag)
+    ## 4. --metadata (default as None)
+    ## 5. --fogIp (default, based on config file)
+    ## 6. --fogPort (default, based on config file)
+    ## 7. --edgeId (default, based on config file)
+    ## 8. --clientId (default, hashed based on the edge id)
+    ## 9. --setLease (flag)
     put_parser = subparsers.add_parser("put")
     put_parser.add_argument("--path")
     put_parser.add_argument("--streamId")
     put_parser.add_argument("--start")
+    put_parser.add_argument("--metadata", default = None)
     put_parser.add_argument("--fogIp", default = FOG_IP)
     put_parser.add_argument("--fogPort", default = str(FOG_PORT))
     put_parser.add_argument("--edgeId", default = str(EDGE_ID))
@@ -323,13 +325,13 @@ if __name__ == '__main__':
     ## Arguments :
     ## 1. --fogIp (default, based on config file)
     ## 2. --fogPort (default, based on config file)
-    ## 3. --mbid
-    ## The above argument is to list the mbids in the local
-    ## partition only, specified by the fogIp and fogPort.
+    ## 3. --mbid    (specify any one from 3 or 4)
+    ## 4. --metadata (specify any one from 3 or 4)
     find_parser = subparsers.add_parser("find")
     find_parser.add_argument("--fogIp", default = FOG_IP)
     find_parser.add_argument("--fogPort", default = FOG_PORT)
-    find_parser.add_argument("--mbid")
+    find_parser.add_argument("--mbid", default = None)
+    find_parser.add_argument("--metadata",default = None)
     find_parser.add_argument("--v","--verbose", action = "store_true")
 
     ## Parser for join command

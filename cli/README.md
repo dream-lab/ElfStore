@@ -61,7 +61,7 @@
     ```
     regstream --id stream_id_test2 --reli .90 --minReplica 6 --maxReplica 8 --v
     ```
-* Put 'n' files ('n' is the number of files in the specified directory) , setLease is true
+* Put 'n' files ('n' is the number of files in the specified directory,splitting done based on default block size of 10MB) , setLease is true
     ```
     put --path=D:/Lab/DataAndLogs/Files --streamId=stream_id_test --start=100 --setLease
     ```
@@ -72,6 +72,10 @@
 * Put a single file, as single block
     ```
     put --path=D:/Lab/DataAndLogs/microbatch_single_file_test.txt --streamId=stream_id_test2 --start=300 --singleBlock
+    ```
+* Put a single file (splitting done based on default block size of 10MB) with additional metadata (in a json file)
+    ```
+    put --path=D:/Lab/DataAndLogs/microbatch_single_file_test.txt --streamId=stream_id_test2 --start=300 --metadata=additional-block-metadata/block_metadata_sample.json
     ```
 * Get microbatches/blocks in the range [100,104] (all inclusive)
     ```
@@ -100,4 +104,8 @@
 * Find the edge locations of microbatch 200
     ```
     find --mbid 200
+    ```
+* Find block(s) using metadata
+    ```
+    find --metadata additional-block-metadata/block_metadata_sample.json
     ```
