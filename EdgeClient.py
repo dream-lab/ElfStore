@@ -117,7 +117,7 @@ class EdgeClient:
     #     print result
 
     #     transport.close()
-       
+
 
         # self.closeSocket(transport)
 
@@ -158,7 +158,7 @@ class EdgeClient:
         if( hasattr(os,'statvfs')):
             #st = os.statvfs("/") #The root part
             st = os.statvfs("/")
-            free = st.f_bavail * st.f_frsize        
+            free = st.f_bavail * st.f_frsize
             total = st.f_blocks * st.f_frsize
             used = (st.f_blocks - st.f_bfree) * st.f_frsize
             print "Disk ",free," : ",total," : ",used
@@ -183,7 +183,7 @@ class EdgeClient:
         while(len(var)<5):
             var = var + '0'
 
-        var = var[::-1]    
+        var = var[::-1]
 
         return var
 
@@ -196,7 +196,7 @@ class EdgeClient:
 
         disk_space_in_MB = space/(1024*1024) #remove this before using
 
-        # print "Free space in GB ",int(free_space_GB)," Free Space in MB ",int(free_space_MB), " Free Space in KB ",int(free_space_KB)    
+        # print "Free space in GB ",int(free_space_GB)," Free Space in MB ",int(free_space_MB), " Free Space in KB ",int(free_space_KB)
         print "Requested space in MB ",int(disk_space_in_MB)
 
         disk_space = 0
@@ -208,8 +208,8 @@ class EdgeClient:
         #this is for 11GB to 64GB
         if(free_space_GB >=11.0 and free_space_GB<=66.0):
             disk_space = free_space_GB + 61
-        
-        #this is for 1100MB to 10900MB 
+
+        #this is for 1100MB to 10900MB
         if(free_space_GB>=1.0 and free_space_GB < 11.0):
             disk_space_in_100_MB = (disk_space_in_MB/100.0)
             disk_space = disk_space_in_100_MB - 38
@@ -221,29 +221,29 @@ class EdgeClient:
 
         print "The encoded disk_space is ",int(disk_space)
 
-        return int(disk_space),util 
+        return int(disk_space),util
 
     #Test Function to check decode logic
-    def decodeLogic(self,diskSpace):        
+    def decodeLogic(self,diskSpace):
 
-        if (diskSpace>=-128 and diskSpace<-27): 
+        if (diskSpace>=-128 and diskSpace<-27):
             diskSpace = (diskSpace + 128)*10
-        
+
         elif(diskSpace>=-27 and diskSpace<=72):
-            diskSpace = 1000 + (diskSpace + 28)*100 
-        
+            diskSpace = 1000 + (diskSpace + 28)*100
+
         else:
             diskSpace = 11000 + (diskSpace - 72 )*1000
 
         print diskSpace;
-        
+
     #collect disk stats
     def prepareDiskStatPayload(self,edgePayload, prevDiskSpace):
 
         freeDiskSpace,util = self.encodeFreeSpace(ENCODED_SPACE)
-        
+
         if(util>DISK_UTIL):
-            print "Watermark level",DISK_UTIL,"%", " breached!! disk utilization now at ",util, "%"        
+            print "Watermark level",DISK_UTIL,"%", " breached!! disk utilization now at ",util, "%"
 
         if(prevDiskSpace!=freeDiskSpace):
             edgePayload.encodedStorage = freeDiskSpace
@@ -264,7 +264,7 @@ class EdgeClient:
             edgePayload = EdgePayload(EDGE_ID) #only the edge ID
 
             if(counter%storagePayloadInterval==0): #include payload from storage
-                edgePayload, prevDiskSpace = self.prepareDiskStatPayload(edgePayload, prevDiskSpace)         
+                edgePayload, prevDiskSpace = self.prepareDiskStatPayload(edgePayload, prevDiskSpace)
 
 
             result = client.edgeHeartBeats(edgePayload)
@@ -280,21 +280,21 @@ class EdgeClient:
         print "Register Edge device method was called.."
         print "NodeId ",nodeId," Node IP ",nodeIp," port ",port, " reliability ",reliability
 
-        
+
         client,transport = self.openSocketConnection(FOG_IP,FOG_PORT, FOG_SERVICE)
 
         #register Edge device
         storage, util = self.encodeFreeSpace(storage_sent)
         edgeDevice = EdgeInfoData(nodeId,nodeIp,port,reliability,storage)
         client.edgeJoin(edgeDevice)
-       
+
         self.closeSocket(transport)
         timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
         myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
         myLogs.close()
 
-    #Send periodic updates 
+    #Send periodic updates
     def sendPeriodicUpdates(self):
 
         print "The fog IP ",FOG_IP," fog port ",FOG_PORT
@@ -303,15 +303,15 @@ class EdgeClient:
 
         #keep sending disk reports
         self.heartBeat(client)
-       
+
         # Close!
         self.closeSocket(transport)
 
-    def writeRequestToFog(self,microbatchID,streamId,filePath, data, fogReplicaMap, yetAnotherMap,sizeChoice):        
+    def writeRequestToFog(self,microbatchID,streamId,filePath, data, fogReplicaMap, yetAnotherMap,sizeChoice):
 
         #/home/swamiji/eclipse-workspace/edgefs_Europar/EdgeServer/Audio_02_06_2019_20_57_02.mp3
-         
-        #Read data and send it     
+
+        #Read data and send it
         # path = '/home/swamiji/phd/myFile.txt'
         #path = filePath
         #file = open(path,'r')
@@ -319,11 +319,11 @@ class EdgeClient:
         print "read the file ",len(data)
 
         #statinfo = os.stat(path)
-        #dataLength = statinfo.st_size              
-        encodedSpace,util = self.encodeFreeSpace(len(data)) #this is the length of the file   
+        #dataLength = statinfo.st_size
+        encodedSpace,util = self.encodeFreeSpace(len(data)) #this is the length of the file
 
         #lets see if there is an actual need to renew lease though we will be calling renew method anyways
-            
+
 
         print "fog ip, fog port , talking to fog for replica locations ",FOG_IP,FOG_PORT
         #write request going to a fog
@@ -336,8 +336,8 @@ class EdgeClient:
         # Wrap in a protocol
         protocol = TBinaryProtocol.TBinaryProtocol(transport)
 
-        # Create a client to use the protocol encoder        
-        myClient = FogService.Client(protocol)        
+        # Create a client to use the protocol encoder
+        myClient = FogService.Client(protocol)
 
         # Connect!
         transport.open()
@@ -345,7 +345,7 @@ class EdgeClient:
         #
         blackListedFogs = []
         #EdgeInfoData(nodeId,nodeIp,port,reliability,storage)getWriteLocations
-        # list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata, 
+        # list<WritableFogData> getWriteLocations(1: byte dataLength, 2: Metadata metadata,
         #                                     3: list<i16> blackListedFogs, 4:EdgeInfoData selfInfo)
         global STREAM_ID
         global CLIENT_ID
@@ -362,7 +362,7 @@ class EdgeClient:
 
 
         #print EDGE_ID,EDGE_IP,EDGE_PORT,EDGE_RELIABILITY,encodedSpace
-        #edgeInfo = EdgeInfoData(EDGE_ID,EDGE_IP,EDGE_PORT,EDGE_RELIABILITY,encodedSpace) 
+        #edgeInfo = EdgeInfoData(EDGE_ID,EDGE_IP,EDGE_PORT,EDGE_RELIABILITY,encodedSpace)
         #print "here also ",edgeInfo
         print "encodedSpace ",encodedSpace
 
@@ -371,7 +371,7 @@ class EdgeClient:
         #result = myClient.getWriteLocations(encodedSpace,metaData,blackListedFogs,edgeInfo) #datalength,
         result = myClient.getWriteLocations(encodedSpace,metaData,blackListedFogs,True)
         timestamp_record_getWrite = timestamp_record_getWrite +"endtime = " + repr(time.time()) +" , " + str(sizeChoice) + '\n'
-	
+
 	#we are calculating replicas using getWriteLocations()
 	yetAnotherMap[microbatchID] = {}
 
@@ -390,9 +390,9 @@ class EdgeClient:
                      insideDict["local"] = insideDict["local"] + 1
 
 		else:
-		     insideDict["local"] = 1	
+		     insideDict["local"] = 1
 
-	    else:	
+	    else:
 		if(str(w.node.nodeId) in fogReplicaMap):
                      fogReplicaMap[str(w.node.nodeId)] =  fogReplicaMap[str(w.node.nodeId)] + 1
                 else:
@@ -401,7 +401,7 @@ class EdgeClient:
 		if(str(w.node.nodeId) in insideDict):
 		      insideDict[str(w.node.nodeId)] = insideDict[str(w.node.nodeId)] + 1
 		else:
-		      insideDict[str(w.node.nodeId)] =  1	
+		      insideDict[str(w.node.nodeId)] =  1
 
 	#util map
 	yetAnotherMap[microbatchID] = insideDict
@@ -414,7 +414,7 @@ class EdgeClient:
 
         print "the write locations are ",result
 
-	timestamp_record = str(microbatchID) +  ",-1, local ,write req,starttime = " +   repr(time.time()) +    ","        
+	timestamp_record = str(microbatchID) +  ",-1, local ,write req,starttime = " +   repr(time.time()) +    ","
 
         #lets renew the lease. The behaviour should adhere with the policy of the lease time
         #left in comparison to the time taken to complete the operation
@@ -437,11 +437,11 @@ class EdgeClient:
 	    processes.append(writeProcess)
             writeProcess.start()
 	    index = index + 1
-        
+
 	for p in processes:
 	    p.join()
-	
-	print "all writes to replicas finished "     
+
+	print "all writes to replicas finished "
         self.closeSocket(transport)
 
         timestamp_record = timestamp_record +"endtime = " + repr(time.time())+" , " + str(sizeChoice) + '\n'
@@ -469,7 +469,7 @@ class EdgeClient:
             return -1
         else:
             return 1
-  
+
 
 
     # Write to either fog or edge depending on the result
@@ -483,10 +483,10 @@ class EdgeClient:
 
 	localTime = repr(time.time())
         timestamp_record = str(microbatchID)  + ","  +  str(index) +  "," +  device   + "," +    "write req,starttime = "+localTime+","
-	
+
         print "got the writable ",writable," the microbatchID is ",microbatchID
 
-        nodeInfo = writable.node #NodeInfoData 
+        nodeInfo = writable.node #NodeInfoData
         writePreference = writable.preference
         reliability = writable.reliability
         edgeInfoData = writable.edgeInfo # this is an optional field
@@ -504,20 +504,20 @@ class EdgeClient:
             # Wrap in a protocol
             protocol = TBinaryProtocol.TBinaryProtocol(transport)
 
-            # Create a client to use the protocol encoder        
+            # Create a client to use the protocol encoder
             client = EdgeService.Client(protocol)
 
             # Connect!
             transport.open()
 
-            #byte write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData) 
+            #byte write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData)
 
 	    #local write -150
 	    timestamp_record_local = str(microbatchID) +","+str(-150)+",local,write req,starttime = "+localTime+","
             #the response is not a byte anymore, its a WriteResponse
             response = client.write(microbatchID,metaData,data)
 	    timestamp_record_local = timestamp_record_local +"endtime = " + repr(time.time())+" , " + str(sizeChoice) + '\n'
-	    
+
             print "response from the edge ",response.status
 
             transport.close()
@@ -526,7 +526,7 @@ class EdgeClient:
             client,transport = self.openSocketConnection(nodeInfo.NodeIP,nodeInfo.port,FOG_SERVICE)
 
             #byte insertMetadata(1: Metadata mbMetadata, 2: EdgeInfoData edgeInfoData);
-            
+
             #this was valid as per previous implementation in which we assumed that a local
             #write means that the client will be writing to itself. However as per the new
             #implementation, it is not necessary and a local write means a write that is written
@@ -542,7 +542,7 @@ class EdgeClient:
             #hash_md5 = hashlib.md5()
             #hash_md5.update(data)
             #metaData.checksum = hash_md5.hexdigest()
-            
+
 	    #metadata insert to fog -50
 	    timeMetadata = str(microbatchID) +","+str(-50)+",local ,metadata req,starttime = "+repr(time.time())+","
             response = client.insertMetadata(metaData, edgeInfoData)
@@ -565,14 +565,14 @@ class EdgeClient:
 
             #response is now a WriteResponse and not a byte
             response = client.putNext(metaData, data, writable.preference)
-	
-	
+
+
             print "the response from the fog for write ",response.status
             self.closeSocket(transport)
 
         timestamp_record = timestamp_record +"endtime = " + repr(time.time())+" , " + str(sizeChoice) + '\n'
         print "the time stamp for write request is ",timestamp_record
-        
+
         myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
         myLogs.close()
@@ -587,10 +587,10 @@ class EdgeClient:
         edgeInfoData.nodeId = EDGE_ID
         edgeInfoData.nodeIp = EDGE_IP
         edgeInfoData.port = EDGE_PORT
-        edgeInfoData.reliability = EDGE_RELIABILITY            
+        edgeInfoData.reliability = EDGE_RELIABILITY
         edgeInfoData.storage = 12
 
-        timestamp_record = microbatchID+",read req,starttime = "+repr(time.time())+","
+        timestamp_record = str(microbatchID)+",read req,starttime = "+repr(time.time())+","
         response = client.read(microbatchID,True,True,True,edgeInfoData,True)#last bit is for recovery
         timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
 
@@ -598,10 +598,10 @@ class EdgeClient:
         myLogs.write(timestamp_record)
         myLogs.close()
 
-        if(response.status == 0):            
+        if(response.status == 0):
             print "File not found : cannot read file"
-        else:            
-            
+        else:
+
             edgeInfoRecv = response.edgeInfo
 
             if(edgeInfoRecv!=None):
@@ -617,14 +617,14 @@ class EdgeClient:
                 # Wrap in a protocol
                 protocol = TBinaryProtocol.TBinaryProtocol(transport)
 
-                # Create a client to use the protocol encoder        
+                # Create a client to use the protocol encoder
                 client = EdgeService.Client(protocol)
 
                 # Connect!
                 transport.open()
-                
+
                 response = client.read(microbatchID,1) #this is for recovery
-                
+
                 print "Read status is ",response.status
 
                 if response.status==0 :
@@ -646,8 +646,8 @@ class EdgeClient:
 
 
             self.closeSocket(transport)
-    
-    
+
+
     #find api, from client to a Fog, meta
     def find(self, metadataKey, metadataValue, checkNeighbors, checkBuddies):
 
@@ -665,7 +665,7 @@ class EdgeClient:
         self.closeSocket(transport)
 
 
-        
+
     #registers stream for the edge
     def registerStream(self, streamId, startBlockNum):
 
@@ -687,7 +687,7 @@ class EdgeClient:
         streamMD.version = I32TypeStreamMetadata(0, True)
         streamMD.otherProperties = dict()
         streamMD.otherProperties["update_prop"] = DynamicTypeStreamMetadata("0", "Integer", True)
-        
+
         print "The reliability is set to ",streamMD.reliability.value
         print "The min replica is ",streamMD.minReplica.value , "\n The max replica is ",streamMD.maxReplica.value
 
@@ -703,7 +703,7 @@ class EdgeClient:
         print "the response is ",response
         self.closeSocket(transport)
 
-    #Test code for testing read 
+    #Test code for testing read
     def testRecovery(self):
 
 
@@ -718,14 +718,14 @@ class EdgeClient:
         # Wrap in a protocol
         protocol = TBinaryProtocol.TBinaryProtocol(transport)
 
-        # Create a client to use the protocol encoder        
+        # Create a client to use the protocol encoder
         client = EdgeService.Client(protocol)
 
         # Connect!
         transport.open()
-        
+
         response = client.read("jsr.java",1) #this is for recovery
-        
+
         print "Read status is ",response.status
 
         if response.status==0 :
@@ -744,7 +744,7 @@ class EdgeClient:
         edgeInfoData.nodeId = EDGE_ID
         edgeInfoData.nodeIp = EDGE_IP
         edgeInfoData.port = EDGE_PORT
-        edgeInfoData.reliability = EDGE_RELIABILITY            
+        edgeInfoData.reliability = EDGE_RELIABILITY
         edgeInfoData.storage = 12
 
         client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
@@ -755,13 +755,13 @@ class EdgeClient:
 
         timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
         print "the time stamp for find request is ",timestamp_record
-        
+
         myLogs = open(BASE_LOG+ 'logs.txt','a')
         myLogs.write(timestamp_record)
         myLogs.close()
 
         self.closeSocket(transport)
-        print "Sent replicas ",response        
+        print "Sent replicas ",response
 
 
         for findReplica in response :
@@ -781,19 +781,19 @@ class EdgeClient:
                  # Wrap in a protocol
                  protocol = TBinaryProtocol.TBinaryProtocol(transport)
 
-                 # Create a client to use the protocol encoder        
+                 # Create a client to use the protocol encoder
                  client = EdgeService.Client(protocol)
 
                  # Connect!
                  transport.open()
-                
+
                  timestamp_record = str(microbatchId)+", 25 , "+ str(findReplica.node.nodeId) + " , Read req,starttime = "+repr(time.time())+","
                  response = client.read(microbatchId,0) #this is for recovery
                  timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
                  myLogs = open(BASE_LOG+ "logs.txt",'a')
                  myLogs.write(timestamp_record)
                  myLogs.close()
-                
+
                  print "Read status is ",response.status
 
                  if response.status==0 :
@@ -805,7 +805,7 @@ class EdgeClient:
                      return 1 #successful read
 
                  transport.close()
-             elif(findReplica.node!=None) :                
+             elif(findReplica.node!=None) :
 
                  fogNode = findReplica.node
 
@@ -834,7 +834,7 @@ class EdgeClient:
         #them to the main method and then merge all maps to create single picture there
         fogReplicaMap = {}
         yetAnotherMap = {}
-        
+
         newFilePath = ""
         numWrites = 0
 	recycle = 0
@@ -869,7 +869,7 @@ class EdgeClient:
         myLogs.close()
 
         return streamMetadataInfo.streamMetadata
-        
+
 
     #stream metadata update has an id of 300
     def updateStreamMD(self):
@@ -888,9 +888,9 @@ class EdgeClient:
         current_value = int(metadata.otherProperties["update_prop"].value)
         next_value = current_value + 1
         metadata.otherProperties["update_prop"] = DynamicTypeStreamMetadata(str(next_value), "Integer", True)
-        
+
         client,transport = self.openSocketConnection(ownerFog_ip, ownerFog_port, FOG_SERVICE)
-        
+
         #result type is StreamMetadataUpdateResponse
         result = client.updateStreamMetadata(metadata)
         #lets add the status as well as the last field in the log
@@ -900,9 +900,9 @@ class EdgeClient:
         else:
             #failure case
             timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",0" + '\n'
-        
+
         self.closeSocket(transport)
-        
+
         myLogs = open(BASE_LOG+ "logs.txt",'a')
         myLogs.write(timestamp_record)
         myLogs.close()
@@ -946,7 +946,7 @@ class EdgeClient:
         timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
 
         self.closeSocket(transport)
-        
+
         myLogs = open(BASE_LOG+ "logs.txt",'a')
         myLogs.write(timestamp_record)
         myLogs.close()
@@ -960,7 +960,7 @@ class EdgeClient:
     #then the renewLease() should return with a status of 1 and if that doesn't happen, it should be treated
     #as an exception. Similarly if the left lease time is less than the time for the operation, renewLease()
     #might return with a status of 0 and a negative code. In that case, some other client would have acquired
-    #the lock on the stream and we will then use the openStream to acquire the lock. To capture whether an 
+    #the lock on the stream and we will then use the openStream to acquire the lock. To capture whether an
     #exception occurs during this process, we use a code of 475
     def renew_lease(self, stream_id, client_id, session_secret, expected_lease, expected_completion_time, blockId):
         print "Lets check if there is a need to renew lease"
@@ -974,7 +974,7 @@ class EdgeClient:
         if TIME_LEASE_EXPIRE - current_time > expected_completion_time:
             #no need to call renewLease now, lets return and perform the operation
             return
-        
+
         #the behaviour of renewal of lease is as follows: the renewal can only succeed when the client holding
         #the lock is the previous holder as well i.e. no one has acquired the lock in between the lease expiration
         #and this renewal attempt. In case it fails, then go back to the open() api to get a fresh lock as some
@@ -1030,7 +1030,7 @@ class EdgeClient:
 
         print "Lets first issue request to renew the lease for incrementBlockCount()"
         self.renew_lease(metadata.streamId, metadata.clientId, metadata.sessionSecret, 0, ESTIMATE_INCR_BLOCK_COUNT, metadata.mbId)
-        
+
         global STREAM_OWNER_FOG_IP
         global STREAM_OWNER_FOG_PORT
         client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
@@ -1084,7 +1084,7 @@ class EdgeClient:
         edgeInfoData.nodeId = EDGE_ID
         edgeInfoData.nodeIp = EDGE_IP
         edgeInfoData.port = EDGE_PORT
-        edgeInfoData.reliability = EDGE_RELIABILITY            
+        edgeInfoData.reliability = EDGE_RELIABILITY
         edgeInfoData.storage = 12
 
         global STREAM_ID
@@ -1103,7 +1103,7 @@ class EdgeClient:
         client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
         response = client.find(700,True,True,edgeInfoData)
         self.closeSocket(transport)
-        print "Sent replicas ",response        
+        print "Sent replicas ",response
 
         file = open("/home/swamiji/phd/EdgeFS/ElfStore/Commands.txt",'r')
         data = file.read()
@@ -1134,14 +1134,14 @@ class EdgeClient:
                  # Wrap in a protocol
                  protocol = TBinaryProtocol.TBinaryProtocol(transport)
 
-                 # Create a client to use the protocol encoder        
+                 # Create a client to use the protocol encoder
                  client = EdgeService.Client(protocol)
 
                  # Connect!
-                 transport.open()                
-                 
+                 transport.open()
+
                  response = client.update(700,metaData, data) #this is for recovery
-                                
+
                  # print "Read status is ",response.status
 
                  # if response.status==0 :
@@ -1153,7 +1153,7 @@ class EdgeClient:
                  #     return 1 #successful read
 
                  transport.close()
-             elif(findReplica.node!=None) :                
+             elif(findReplica.node!=None) :
 
                  fogNode = findReplica.node
 
@@ -1177,7 +1177,7 @@ class EdgeClient:
 if __name__ == '__main__':
 
     myEdge = EdgeClient()
-       
+
     if(len(sys.argv)!=16):
         print "Usage: python EdgeClient.py 1 127.0.0.1 5000 85 127.0.0.1 9090 "
         print "python EdgeClient.py edge_conf.txt",len(sys.argv)
@@ -1185,8 +1185,8 @@ if __name__ == '__main__':
             print f.read()
         exit(0)
 
-    # with open('edge_conf.txt') as data_file:    
-    #     config = json.load(data_file)    
+    # with open('edge_conf.txt') as data_file:
+    #     config = json.load(data_file)
 
     # EDGE_ID = int(config["edgeid"])
     # EDGE_IP = (config["edgeip"])
@@ -1195,7 +1195,7 @@ if __name__ == '__main__':
     # choice = int(config["choice"])
     # mbId = config["microbatchid"]
     # streamId = config["streamid"]
-    # FOG_IP = config["fogip"] 
+    # FOG_IP = config["fogip"]
     # FOG_PORT = int(config["fogport"])
 
     # python2 EdgeClient_updated.py 2 127.0.0.1 8001 82 127.0.0.1 9090 test_2 1 5 /home/skmonga/ElfStore/logs_2/ 700 1 1 client_2 100 &
@@ -1261,7 +1261,7 @@ if __name__ == '__main__':
     if(choice == 20):
         num_updates = 100
         for i in range(num_updates):
-            myEdge.updateStreamMD() 
+            myEdge.updateStreamMD()
     #this is for testing the open() api
     if(choice == 21):
         #third argument is expected lease time which is not used currently
@@ -1273,11 +1273,11 @@ if __name__ == '__main__':
         #last argument is the blockId for which we are trying to renew
         #the lease. It can be a putNext() or incrementBlockCount()
         myEdge.renew_lease(STREAM_ID, CLIENT_ID, SESSION_SECRET, 0, 0, 0)
-    #this is to get the 
+    #this is to get the
     if(choice == 23):
         largest_id = myEdge.getLargestBlockId(streamId)
         print "The largest blockId is : ", str(largest_id)
-    if(choice==0):        
+    if(choice==0):
         myEdge.readFromEdge(microbatchid)
     elif(choice==1):
         print "Register Stream "
@@ -1287,7 +1287,7 @@ if __name__ == '__main__':
         myEdge.writeRequestToFog(microbatchId,streamId)
         # ports=[9090,9091,9092,9093,9094,9095]
         # for port in ports:
-        #     FOG_PORT = port 
+        #     FOG_PORT = port
         #     print "the port chosen is ",FOG_PORT
         #     myEdge.readFromEdgeOrFog(mbId)
 
@@ -1295,27 +1295,27 @@ if __name__ == '__main__':
         print "Read data from fog "
         # ports=[9090,9091,9092,9093]
         # for port in ports:
-        #     FOG_PORT = port 
+        #     FOG_PORT = port
         #     print "the port chosen is ",FOG_PORT
         #     myEdge.readFromEdgeOrFog(mbId)
 
         myEdge.readFromEdgeOrFog(microbatchId)
-    elif(choice==4):        
+    elif(choice==4):
         print "The find api.."
         # myEdge.find("Name","Sheshadri",True,True)
         myEdge.findAndRead(microbatchId)
     elif(choice==5):
         print "here"
         print "The stream reliability needed is : ", str(STREAM_RELIABILITY)
-	
+
 	filePath = "./edgefs/microbatch_data/microbatch"
 
 	byteArray = []
 	readFiles = 0
 
 	while(readFiles<10):
-	   
-            print "The file being read is ",filePath+str(readFiles)+".txt" 
+
+            print "The file being read is ",filePath+str(readFiles)+".txt"
 	    file = open(filePath+str(readFiles)+".txt",'r')
 	    byteArray.append(file.read(FILE_SIZE))
 	    print "appended ",len(byteArray[0]),"number of bytes"
@@ -1351,15 +1351,15 @@ if __name__ == '__main__':
 	    numReads = numReads + 1
     elif(choice==7):
         print "Stress Testing"
-	
+
 	filePath = "./edgefs/microbatch_data/microbatch"
 
 	byteArray = []
 	readFiles = 0
 
 	while(readFiles<10):
-	   
-            print "The file being read is ",filePath+str(readFiles)+".txt" 
+
+            print "The file being read is ",filePath+str(readFiles)+".txt"
 	    file = open(filePath+str(readFiles)+".txt",'r')
 	    byteArray.append(file.read())
 	    print "appended ",len(byteArray[0]),"number of bytes"
@@ -1381,8 +1381,8 @@ if __name__ == '__main__':
         return_dict = manager.dict()
 
         # -1 for microbatchId as this is not actually for a microbatch, -10000 for total time taken writing 1000 microbatches
-        # by a single client and edgeId is used as the nodeId in this case while usually its a fog nodeId 
-        timestamp_stress = "-1, -10000, " +  ",stress test write req,starttime = "+repr(time.time())+","        
+        # by a single client and edgeId is used as the nodeId in this case while usually its a fog nodeId
+        timestamp_stress = "-1, -10000, " +  ",stress test write req,starttime = "+repr(time.time())+","
         while(process_index < 4):
             w_process = multiprocessing.Process(target=myEdge.writeUsingProcess, args=(START, streamId, byteArray, process_index, return_dict))
             write_processes.append(w_process)
@@ -1411,7 +1411,7 @@ if __name__ == '__main__':
             for key in microbatchIdMap:
                 if key not in yetAnotherMap:
                     yetAnotherMap[key] = microbatchIdMap[key]
-        
+
     else:
         print "Wrong choice 1: register, 2: write 3: read 4: find"
 
@@ -1430,9 +1430,9 @@ if __name__ == '__main__':
 
 
 
-        
-    
-#call the main 
-# main()  
+
+
+#call the main
+# main()
 
 #######################################ADDITIONAL FOR DEBUG THINGS ##############################################
