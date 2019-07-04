@@ -18,7 +18,7 @@ public class BuddyPayload implements org.apache.thrift.TBase<BuddyPayload, Buddy
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new BuddyPayloadTupleSchemeFactory();
 
   public java.nio.ByteBuffer payload; // required
-  public java.util.Map<java.lang.String,java.lang.String> mbIdToStreamIdMap; // optional
+  public java.util.Map<java.lang.Long,java.lang.String> mbIdToStreamIdMap; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -90,7 +90,7 @@ public class BuddyPayload implements org.apache.thrift.TBase<BuddyPayload, Buddy
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING        , true)));
     tmpMap.put(_Fields.MB_ID_TO_STREAM_ID_MAP, new org.apache.thrift.meta_data.FieldMetaData("mbIdToStreamIdMap", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
-            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64), 
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(BuddyPayload.class, metaDataMap);
@@ -114,7 +114,7 @@ public class BuddyPayload implements org.apache.thrift.TBase<BuddyPayload, Buddy
       this.payload = org.apache.thrift.TBaseHelper.copyBinary(other.payload);
     }
     if (other.isSetMbIdToStreamIdMap()) {
-      java.util.Map<java.lang.String,java.lang.String> __this__mbIdToStreamIdMap = new java.util.HashMap<java.lang.String,java.lang.String>(other.mbIdToStreamIdMap);
+      java.util.Map<java.lang.Long,java.lang.String> __this__mbIdToStreamIdMap = new java.util.HashMap<java.lang.Long,java.lang.String>(other.mbIdToStreamIdMap);
       this.mbIdToStreamIdMap = __this__mbIdToStreamIdMap;
     }
   }
@@ -167,18 +167,18 @@ public class BuddyPayload implements org.apache.thrift.TBase<BuddyPayload, Buddy
     return (this.mbIdToStreamIdMap == null) ? 0 : this.mbIdToStreamIdMap.size();
   }
 
-  public void putToMbIdToStreamIdMap(java.lang.String key, java.lang.String val) {
+  public void putToMbIdToStreamIdMap(long key, java.lang.String val) {
     if (this.mbIdToStreamIdMap == null) {
-      this.mbIdToStreamIdMap = new java.util.HashMap<java.lang.String,java.lang.String>();
+      this.mbIdToStreamIdMap = new java.util.HashMap<java.lang.Long,java.lang.String>();
     }
     this.mbIdToStreamIdMap.put(key, val);
   }
 
-  public java.util.Map<java.lang.String,java.lang.String> getMbIdToStreamIdMap() {
+  public java.util.Map<java.lang.Long,java.lang.String> getMbIdToStreamIdMap() {
     return this.mbIdToStreamIdMap;
   }
 
-  public BuddyPayload setMbIdToStreamIdMap(java.util.Map<java.lang.String,java.lang.String> mbIdToStreamIdMap) {
+  public BuddyPayload setMbIdToStreamIdMap(java.util.Map<java.lang.Long,java.lang.String> mbIdToStreamIdMap) {
     this.mbIdToStreamIdMap = mbIdToStreamIdMap;
     return this;
   }
@@ -216,7 +216,7 @@ public class BuddyPayload implements org.apache.thrift.TBase<BuddyPayload, Buddy
       if (value == null) {
         unsetMbIdToStreamIdMap();
       } else {
-        setMbIdToStreamIdMap((java.util.Map<java.lang.String,java.lang.String>)value);
+        setMbIdToStreamIdMap((java.util.Map<java.lang.Long,java.lang.String>)value);
       }
       break;
 
@@ -424,12 +424,12 @@ public class BuddyPayload implements org.apache.thrift.TBase<BuddyPayload, Buddy
             if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
                 org.apache.thrift.protocol.TMap _map18 = iprot.readMapBegin();
-                struct.mbIdToStreamIdMap = new java.util.HashMap<java.lang.String,java.lang.String>(2*_map18.size);
-                java.lang.String _key19;
+                struct.mbIdToStreamIdMap = new java.util.HashMap<java.lang.Long,java.lang.String>(2*_map18.size);
+                long _key19;
                 java.lang.String _val20;
                 for (int _i21 = 0; _i21 < _map18.size; ++_i21)
                 {
-                  _key19 = iprot.readString();
+                  _key19 = iprot.readI64();
                   _val20 = iprot.readString();
                   struct.mbIdToStreamIdMap.put(_key19, _val20);
                 }
@@ -464,10 +464,10 @@ public class BuddyPayload implements org.apache.thrift.TBase<BuddyPayload, Buddy
         if (struct.isSetMbIdToStreamIdMap()) {
           oprot.writeFieldBegin(MB_ID_TO_STREAM_ID_MAP_FIELD_DESC);
           {
-            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.mbIdToStreamIdMap.size()));
-            for (java.util.Map.Entry<java.lang.String, java.lang.String> _iter22 : struct.mbIdToStreamIdMap.entrySet())
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I64, org.apache.thrift.protocol.TType.STRING, struct.mbIdToStreamIdMap.size()));
+            for (java.util.Map.Entry<java.lang.Long, java.lang.String> _iter22 : struct.mbIdToStreamIdMap.entrySet())
             {
-              oprot.writeString(_iter22.getKey());
+              oprot.writeI64(_iter22.getKey());
               oprot.writeString(_iter22.getValue());
             }
             oprot.writeMapEnd();
@@ -501,9 +501,9 @@ public class BuddyPayload implements org.apache.thrift.TBase<BuddyPayload, Buddy
       if (struct.isSetMbIdToStreamIdMap()) {
         {
           oprot.writeI32(struct.mbIdToStreamIdMap.size());
-          for (java.util.Map.Entry<java.lang.String, java.lang.String> _iter23 : struct.mbIdToStreamIdMap.entrySet())
+          for (java.util.Map.Entry<java.lang.Long, java.lang.String> _iter23 : struct.mbIdToStreamIdMap.entrySet())
           {
-            oprot.writeString(_iter23.getKey());
+            oprot.writeI64(_iter23.getKey());
             oprot.writeString(_iter23.getValue());
           }
         }
@@ -518,13 +518,13 @@ public class BuddyPayload implements org.apache.thrift.TBase<BuddyPayload, Buddy
       java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TMap _map24 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.mbIdToStreamIdMap = new java.util.HashMap<java.lang.String,java.lang.String>(2*_map24.size);
-          java.lang.String _key25;
+          org.apache.thrift.protocol.TMap _map24 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I64, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mbIdToStreamIdMap = new java.util.HashMap<java.lang.Long,java.lang.String>(2*_map24.size);
+          long _key25;
           java.lang.String _val26;
           for (int _i27 = 0; _i27 < _map24.size; ++_i27)
           {
-            _key25 = iprot.readString();
+            _key25 = iprot.readI64();
             _val26 = iprot.readString();
             struct.mbIdToStreamIdMap.put(_key25, _val26);
           }

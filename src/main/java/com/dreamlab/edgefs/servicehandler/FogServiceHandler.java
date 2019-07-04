@@ -1627,9 +1627,9 @@ public class FogServiceHandler implements FogService.Iface {
 			// throw error or do something to make the client know of the error
 		}
 		// Update the metaToMBIdListMap
-		//updateMetaMbIdMbIdMap(mbMetadata,metaKeyValueMap);
+		// updateMetaMbIdMbIdMap(mbMetadata,metaKeyValueMap);
 
-		updateMicrobatchLocalInfo(mbMetadata, null, edgeInfo,metaKeyValueMap);
+		updateMicrobatchLocalInfo(mbMetadata, null, edgeInfo, metaKeyValueMap);
 
 		// this call comes from a local write and once it completes, we can remove
 		// this mbId from the localWritesInProgess map which is a way to prevent
@@ -1957,7 +1957,8 @@ public class FogServiceHandler implements FogService.Iface {
 		return wrResponse;
 	}
 
-	private void updateMicrobatchLocalInfo(Metadata mbMetadata, ByteBuffer data, EdgeInfo edgeInfo,Map<String,String> metaKeyValueMap) {
+	private void updateMicrobatchLocalInfo(Metadata mbMetadata, ByteBuffer data, EdgeInfo edgeInfo,
+			Map<String, String> metaKeyValueMap) {
 		// microbatch to edgeId mapping
 		// fog.getMbIDLocationMap().put(mbMetadata.getMbId(), edgeInfo.getNodeId());
 		edgeMicrobatchLock.lock();
@@ -1990,11 +1991,11 @@ public class FogServiceHandler implements FogService.Iface {
 		// commented due to above CONCURRENT WRITES comment
 		// fog.getStreamMbIdMap().put(mbMetadata.getStreamId(), mbSet);
 
-		//ISHAN:
-		//For updating mbIdStreamIdMap (reverse map of streamMbIdMap)
-		Map<Long,String> mbIdStreamIdMap = fog.getMbIdStreamIdMap();
-		mbIdStreamIdMap.put(mbMetadata.getMbId(),mbMetadata.getStreamId());
-		fog.setMbIdStreamIdMap(mbIdStreamIdMap);
+		// ISHAN: /** sheshadri **/
+		// For updating mbIdStreamIdMap (reverse map of streamMbIdMap)
+		Map<Long, String> mbIdStreamIdMap = fog.getMbIdToStreamIdMap();
+		mbIdStreamIdMap.put(mbMetadata.getMbId(), mbMetadata.getStreamId());
+		fog.setMbIdToStreamIdMap(mbIdStreamIdMap);
 
 		// edge to list of microbatchId for recovery purposes
 		// the null case will again not come as we have initialized it on edgeJoin()
@@ -2009,11 +2010,11 @@ public class FogServiceHandler implements FogService.Iface {
 
 		// metadata 'key:value' to the microbatchId map
 		// may need to check for the concurrent writes scenario
-		updateMetadataMap(mbMetadata, edgeInfo,metaKeyValueMap);
+		updateMetadataMap(mbMetadata, edgeInfo, metaKeyValueMap);
 
 		// update the edge bloomfilter as well as fog's personal bloomfilter
 		// may need to check for the concurrent writes scenario
-		updateBloomFilters(mbMetadata, edgeInfo,metaKeyValueMap);
+		updateBloomFilters(mbMetadata, edgeInfo, metaKeyValueMap);
 
 		// add the MD5 checksum for the block of data as well
 		// Note:: This call can come from the write() or insertMetadata()
@@ -2034,8 +2035,8 @@ public class FogServiceHandler implements FogService.Iface {
 		// update which stream the microbatch belongs to
 		fog.getMicroBatchToStream().put(mbMetadata.getMbId(), mbMetadata.getStreamId());
 
-		// update the mbid to stream id map
-		fog.getMbIdToStreamIdMap().put(mbMetadata.getMbId()+"", mbMetadata.getStreamId()+"");
+		// update the mbid to stream id map /** sheshadri **/
+		fog.getMbIdToStreamIdMap().put(mbMetadata.getMbId(), mbMetadata.getStreamId() + "");
 
 		fog.setMostRecentSelfBFUpdate(System.currentTimeMillis());
 		fog.setMostRecentNeighborBFUpdate(System.currentTimeMillis());
@@ -2067,7 +2068,7 @@ public class FogServiceHandler implements FogService.Iface {
 	// personal bloomfilter is sent to subscribers and also in consolidated
 	// form to neighbors. Its aim is to purely facilitate microbatch searches
 	// based on microbatch metadata (though streamId can also be used)
-	private void updateBloomFilters(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String,String> metaKeyValueMap) {
+	private void updateBloomFilters(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String, String> metaKeyValueMap) {
 		byte[] fogBFilter = fog.getPersonalBloomFilter();
 		byte[] edgeBFilter = fog.getEdgeBloomFilters().get(edgeInfo.getNodeId());
 		updateFogAndEdgeBloomFilters(Constants.MICROBATCH_METADATA_ID, String.valueOf(mbMetadata.getMbId()), fogBFilter,
@@ -2095,11 +2096,12 @@ public class FogServiceHandler implements FogService.Iface {
 			}
 		}
 
-		//updating the bloom filters for the new metadata properties defined by the user
-		//during runtime
-		// Testing for only one key value pair
-		Iterator<Map.Entry<String,String>> itr = metaKeyValueMap.entrySet().iterator();
-		while(itr.hasNext()) {
+		// updating the bloom filters for the new metadata properties defined by the
+		// user
+		// during runtime
+		// :ISHAN Testing for only one key value pair 
+		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
+		while (itr.hasNext()) {
 			Map.Entry<String, String> entry = itr.next();
 			updateFogAndEdgeBloomFilters(entry.getKey(), entry.getValue(), fogBFilter, edgeBFilter);
 		}
@@ -2110,7 +2112,7 @@ public class FogServiceHandler implements FogService.Iface {
 		BloomFilter.storeEntry(key, value, edgeBFilter);
 	}
 
-	private void updateMetadataMap(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String,String> metaKeyValueMap) {
+	private void updateMetadataMap(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String, String> metaKeyValueMap) {
 		// for every key:value present in the mbMetadata, we need to store that
 		// in the map to faciliate find
 		// no need to insert mbId in this map as there is a separate map for it
@@ -2154,15 +2156,15 @@ public class FogServiceHandler implements FogService.Iface {
 			}
 		}
 
-		//Updating additional metadata properties that are passed by the user
-		//during runtime
+		// Updating additional metadata properties that are passed by the user
+		// during runtime
 
 		// Updating the metaToMBIdListMap via setMetaMbIdMap()
 		// Testing for only one key value pair
-		Iterator<Map.Entry<String,String>> itr = metaKeyValueMap.entrySet().iterator();
-		while(itr.hasNext()) {
+		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
+		while (itr.hasNext()) {
 			Map.Entry<String, String> entry = itr.next();
-			//formulate the searchKey for setMetaMbIdMap
+			// formulate the searchKey for setMetaMbIdMap
 			String searchKeyOther = entry.getKey() + ":" + entry.getValue();
 			checkAndInsertEntry(searchKeyOther, mbMetadata.getMbId());
 		}
@@ -2399,6 +2401,19 @@ public class FogServiceHandler implements FogService.Iface {
 			fog.setMostRecentNeighborStatsUpdate(System.currentTimeMillis());
 			fog.setMostRecentFogStatsUpdate(System.currentTimeMillis());
 		}
+
+		/** newly added by sheshadri **/
+		if (payload.isSetMbIdToStreamIdMap()) {
+			Map<Long, String> myMap = payload.getMbIdToStreamIdMap();
+
+			if (myMap != null) {
+				/** Newly added by sheshadri **/
+				for (Long key : myMap.keySet()) {
+					fog.getMbIdToStreamIdMap().put(key, myMap.get(key));
+				}
+			}
+
+		}
 	}
 
 	@Override
@@ -2442,10 +2457,15 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 
 		if (payload.isSetMbIdToStreamIdMap()) {
-			Map<String, String> myMap = payload.getMbIdToStreamIdMap();
+			Map<Long, String> myMap = payload.getMbIdToStreamIdMap();
 
-			/** Newly added by sheshadri **/
-//			for(Map.Entry<K, V>  )
+			if (myMap != null) {
+				/** Newly added by sheshadri **/
+				for (Long key : myMap.keySet()) {
+					fog.getMbIdToStreamIdMap().put(key, myMap.get(key));
+				}
+				anyStatsUpdate = true;
+			}
 
 		}
 
@@ -2586,8 +2606,8 @@ public class FogServiceHandler implements FogService.Iface {
 			transport.close();
 		}
 		// Update the metaToMBIdListMap
-		//updateMetaMbIdMbIdMap(mbMetadata,metaKeyValueMap);
-		updateMicrobatchLocalInfo(mbMetadata, data, localEdge,metaKeyValueMap);
+		// updateMetaMbIdMbIdMap(mbMetadata,metaKeyValueMap);
+		updateMicrobatchLocalInfo(mbMetadata, data, localEdge, metaKeyValueMap);
 		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", putNext, endTime=" + System.currentTimeMillis());
 		// make sure that edge reliability is set correctly when the various edges
 		// are started as we are returning the WriteResponse returned directly
@@ -2595,19 +2615,21 @@ public class FogServiceHandler implements FogService.Iface {
 		return wrResponse;
 	}
 
-	// This method is used to update the metaToMBIdListMap variable present in the fog class.
-	// This updation process is required in order to facilitate finding of blocks using their
+	// This method is used to update the metaToMBIdListMap variable present in the
+	// fog class.
+	// This updation process is required in order to facilitate finding of blocks
+	// using their
 	// static metadata.
 	// This function will be called in putNext() and insertMetadata() functions.
-	private void updateMetaMbIdMbIdMap(Metadata mbMetadata, Map<String,String> metaKeyValueMap) {
-		//ISHAN:
+	private void updateMetaMbIdMbIdMap(Metadata mbMetadata, Map<String, String> metaKeyValueMap) {
+		// ISHAN:
 		// Updating the metaToMBIdListMap via setMetaMbIdMap()
 		// Testing for only one key value pair
-		Iterator<Map.Entry<String,String>> itr = metaKeyValueMap.entrySet().iterator();
-		while(itr.hasNext()) {
+		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
+		while (itr.hasNext()) {
 			Map.Entry<String, String> entry = itr.next();
 
-			//formulate the searchKey for setMetaMbIdMap
+			// formulate the searchKey for setMetaMbIdMap
 			String searchKey = entry.getKey() + ":" + entry.getValue();
 			checkAndInsertEntry(searchKey, mbMetadata.getMbId());
 		}
@@ -2824,108 +2846,122 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	@Override
-	public Map<Long,String> findBlockUsingQuery(Map<String,String> metaKeyValueMap,boolean checkNeighbors,boolean checkBuddies){
+	public Map<Long, String> findBlockUsingQuery(Map<String, String> metaKeyValueMap, boolean checkNeighbors,
+			boolean checkBuddies) {
 		Set<Long> validMbTdList = new HashSet<>();
-		Map<Long,String> mbIdStreamIdMapResponse  = new ConcurrentHashMap<>();
+		Map<Long, String> mbIdStreamIdMapResponse = new ConcurrentHashMap<>();
 		boolean firstPass = true;
-		Iterator<Map.Entry<String,String>> itr = metaKeyValueMap.entrySet().iterator();
-		while(itr.hasNext()) {
+		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
+		while (itr.hasNext()) {
 			Map.Entry<String, String> entry = itr.next();
-			//formulate the searchKey for setMetaMbIdMap
+			// formulate the searchKey for setMetaMbIdMap
 			String searchKey = entry.getKey() + ":" + entry.getValue();
 			List<Long> matchingMbIds = fog.getMetaToMBIdListMap().get(searchKey);
-			if(firstPass) {
-				validMbTdList.addAll(matchingMbIds);
+			if (firstPass) {
+				
+				if(matchingMbIds!=null)
+					validMbTdList.addAll(matchingMbIds);
 				firstPass = false;
+			} else {
+				if(matchingMbIds!=null)
+					validMbTdList.retainAll(matchingMbIds);
 			}
-			else
-				validMbTdList.retainAll(matchingMbIds);
 		}
-		//formulate the final mbIdStreamIdMap by fetching the streamid as well.
-		for(Long mbid : validMbTdList)
-			mbIdStreamIdMapResponse.put(mbid,fog.getMbIdStreamIdMap().get(mbid));
+		// formulate the final mbIdStreamIdMap by fetching the streamid as well.
+		for (Long mbid : validMbTdList)
+			mbIdStreamIdMapResponse.put(mbid, fog.getMbIdToStreamIdMap().get(mbid));
 
-		if(checkNeighbors) {
-			getMbIdStreamIdMatchMapFromNeighbors(metaKeyValueMap,mbIdStreamIdMapResponse);
+		if (checkNeighbors) {
+			getMbIdStreamIdMatchMapFromNeighbors(metaKeyValueMap, mbIdStreamIdMapResponse);
 		}
-		if(checkBuddies){
-			getMbIdStreamIdMatchMapFromBuddies(metaKeyValueMap,mbIdStreamIdMapResponse);
+		if (checkBuddies) {
+			getMbIdStreamIdMatchMapFromBuddies(metaKeyValueMap, mbIdStreamIdMapResponse);
 		}
 		return mbIdStreamIdMapResponse;
 	}
 
-	private void getMbIdStreamIdMatchMapFromNeighbors(Map<String,String> metaKeyValueMap, Map<Long,String> currentMbIdStreamIdMap) {
+	private void getMbIdStreamIdMatchMapFromNeighbors(Map<String, String> metaKeyValueMap,
+			Map<Long, String> currentMbIdStreamIdMap) {
 		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
 			FogExchangeInfo nInfo = entry.getValue();
 			if (nInfo != null) {
 				byte[] bloomFilter = nInfo.getBloomFilterUpdates();
 
-				//Iteration needed; based on number of properties passed for condition checking in the map
+				// Iteration needed; based on number of properties passed for condition checking
+				// in the map
 				boolean allSatisfiedFlag = true;
-				Iterator<Map.Entry<String,String>> itr = metaKeyValueMap.entrySet().iterator();
-				while(itr.hasNext()) {
+				Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
+				while (itr.hasNext()) {
 					Map.Entry<String, String> entryMeta = itr.next();
 
 					if (BloomFilter.search(entryMeta.getKey(), entryMeta.getValue(), bloomFilter))
 						continue;
 					else {
-						//i.e at least one of the perperty does not match in the blocks present under this neighbor
+						// i.e at least one of the perperty does not match in the blocks present under
+						// this neighbor
 						allSatisfiedFlag = false;
 						break;
 					}
 				}
-			if(allSatisfiedFlag) {
-				//i.e all the metadata key value pairs are present
-				NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
-				Map<Long,String> nMatchingMbIdStreamIdMap = fetchMbIdStreamIdMapFromOtherFog(neighbor.getNode().getNodeIP(),neighbor.getNode().getPort(), metaKeyValueMap, false, false);
-				// Take a union of nMatchingMbIdStreamIdMap and currentMbIdStreamIdMap
-				for(Long mbid : nMatchingMbIdStreamIdMap.keySet()) {
-					if(!currentMbIdStreamIdMap.containsKey(mbid))
-						currentMbIdStreamIdMap.put(mbid, nMatchingMbIdStreamIdMap.get(mbid));
+				if (allSatisfiedFlag) {
+					// i.e all the metadata key value pairs are present
+					NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
+					Map<Long, String> nMatchingMbIdStreamIdMap = fetchMbIdStreamIdMapFromOtherFog(
+							neighbor.getNode().getNodeIP(), neighbor.getNode().getPort(), metaKeyValueMap, false,
+							false);
+					// Take a union of nMatchingMbIdStreamIdMap and currentMbIdStreamIdMap
+					for (Long mbid : nMatchingMbIdStreamIdMap.keySet()) {
+						if (!currentMbIdStreamIdMap.containsKey(mbid))
+							currentMbIdStreamIdMap.put(mbid, nMatchingMbIdStreamIdMap.get(mbid));
+					}
 				}
-			  }
 
 			}
 		}
 	}
 
-	private void getMbIdStreamIdMatchMapFromBuddies(Map<String,String> metaKeyValueMap, Map<Long,String> currentMbIdStreamIdMap) {
+	private void getMbIdStreamIdMatchMapFromBuddies(Map<String, String> metaKeyValueMap,
+			Map<Long, String> currentMbIdStreamIdMap) {
 		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
 			FogExchangeInfo buddyInfo = entry.getValue();
 			if (buddyInfo != null) {
 				byte[] bloomFilter = buddyInfo.getBloomFilterUpdates();
-				//Iteration needed; based on number of properties passed for condition checking in the map
+				// Iteration needed; based on number of properties passed for condition checking
+				// in the map
 				boolean allSatisfiedFlag = true;
-				Iterator<Map.Entry<String,String>> itr = metaKeyValueMap.entrySet().iterator();
-				while(itr.hasNext()) {
+				Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
+				while (itr.hasNext()) {
 					Map.Entry<String, String> entryMeta = itr.next();
 					if (BloomFilter.search(entryMeta.getKey(), entryMeta.getValue(), bloomFilter))
 						continue;
 					else {
-						//i.e at least one of the perperty does not match in the blocks present under this neighbor
+						// i.e at least one of the perperty does not match in the blocks present under
+						// this neighbor
 						allSatisfiedFlag = false;
 						break;
 					}
 				}
-			if(allSatisfiedFlag) {
-				//i.e all the metadata key value pairs are present
-				FogInfo buddy = fog.getBuddyMap().get(entry.getKey());
-				Map<Long,String> bMatchingMbIdStreamIdMap = fetchMbIdStreamIdMapFromOtherFog(buddy.getNodeIP(), buddy.getPort(), metaKeyValueMap, true, false);
-				// Take a union of nMatchingMbIdStreamIdMap and currentMbIdStreamIdMap
-				for(Long mbid : bMatchingMbIdStreamIdMap.keySet()) {
-					if(!currentMbIdStreamIdMap.containsKey(mbid))
-						currentMbIdStreamIdMap.put(mbid, bMatchingMbIdStreamIdMap.get(mbid));
+				if (allSatisfiedFlag) {
+					// i.e all the metadata key value pairs are present
+					FogInfo buddy = fog.getBuddyMap().get(entry.getKey());
+					Map<Long, String> bMatchingMbIdStreamIdMap = fetchMbIdStreamIdMapFromOtherFog(buddy.getNodeIP(),
+							buddy.getPort(), metaKeyValueMap, true, false);
+					// Take a union of nMatchingMbIdStreamIdMap and currentMbIdStreamIdMap
+					for (Long mbid : bMatchingMbIdStreamIdMap.keySet()) {
+						if (!currentMbIdStreamIdMap.containsKey(mbid))
+							currentMbIdStreamIdMap.put(mbid, bMatchingMbIdStreamIdMap.get(mbid));
+					}
 				}
-			  }
 
 			}
 		}
 	}
 
-		private Map<Long,String> fetchMbIdStreamIdMapFromOtherFog(String ip, int port, Map<String,String> metaKeyValueMap,boolean checkNeighbors, boolean checkBuddies) {
-		Map<Long,String> otherMbIdStreamIdMap = new ConcurrentHashMap<>();
+	private Map<Long, String> fetchMbIdStreamIdMapFromOtherFog(String ip, int port, Map<String, String> metaKeyValueMap,
+			boolean checkNeighbors, boolean checkBuddies) {
+		Map<Long, String> otherMbIdStreamIdMap = new ConcurrentHashMap<>();
 		TTransport transport = new TFramedTransport(new TSocket(ip, port));
 		try {
 			transport.open();
@@ -2947,7 +2983,6 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 		return otherMbIdStreamIdMap;
 	}
-
 
 	@Override
 	public SQueryResponse findStream(SQueryRequest squery) throws TException {
