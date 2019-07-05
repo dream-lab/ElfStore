@@ -20,7 +20,11 @@ for configFile in edgeConfigFiles:
     dataFolder = "./DataAndLogs/edge"+str(edge['edgeId'])+"_data"
     if os.path.isdir(dataFolder) == False : os.mkdir(dataFolder)
     print("Starting Edge "+str(edge['edgeId']))
-    command = "start /B java -cp target/edgefilesystem-0.1-jar-with-dependencies.jar com.dreamlab.edgefs.edge.server.EdgeServer "+str(edge["edgeId"])+" "+edge["edgeIp"]+" "+str(edge["edgePort"])+" "+str(edge["reliability"])+" "+edge["fogIp"]+" "+str(edge["fogPort"])+" "+dataFolder+" "+edge["baseLog"]
+    ## the command is platform specific
+    if sys.platform[0:3] == "win":
+        command = "start /B java -cp target/edgefilesystem-0.1-jar-with-dependencies.jar com.dreamlab.edgefs.edge.server.EdgeServer "+str(edge["edgeId"])+" "+edge["edgeIp"]+" "+str(edge["edgePort"])+" "+str(edge["reliability"])+" "+edge["fogIp"]+" "+str(edge["fogPort"])+" "+dataFolder+" "+edge["baseLog"]
+    else:
+        command = "start java -cp target/edgefilesystem-0.1-jar-with-dependencies.jar com.dreamlab.edgefs.edge.server.EdgeServer "+str(edge["edgeId"])+" "+edge["edgeIp"]+" "+str(edge["edgePort"])+" "+str(edge["reliability"])+" "+edge["fogIp"]+" "+str(edge["fogPort"])+" "+dataFolder+" "+edge["baseLog"]+" &"
     subprocess.call(command,shell=True,stdout = devnull,stderr = devnull)
 
 print("Done.")

@@ -17,6 +17,7 @@
 
 
 ### Prerequisites
+* Install the packages mentioned in the requirements.txt file.
 * The fogs must be active in their respective terminals.
 * Put the edgefilesystem-0.1-jar-with-dependencies.jar file, after compilation, in cli/target/ folder.
     * The above step has to be done manually.

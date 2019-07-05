@@ -13,7 +13,7 @@ from EdgeServices import EdgeService
 from EdgeServices.ttypes import *
 import time
 import os
-import wmi
+import psutil
 import collections
 import json
 import multiprocessing
@@ -266,37 +266,18 @@ class EdgeClient:
 
     #utility function to return the systems's utilizaion and free space
     def returnDiskSpace(self):
-        ## for windows os
-        if sys.platform[0:3] == "win":
-            wmiObject = wmi.WMI()
-            for drive in wmiObject.Win32_LogicalDisk():
-                ## get the properties of the corect drive
-                if os.getcwd()[0:2] == drive.Name:
-                    total = int(drive.Size)
-                    free = int(drive.FreeSpace)
-                    used = total - free
-                    print("Disk ",free," : ",total," : ",used)
+        ## psutil (process and system utilities) is a cross-platform library for
+        ## retrieving information on storage running processes.
+        if( hasattr(psutil,'disk_usage')):
+            total = psutil.disk_usage('/').total
+            free = psutil.disk_usage('/').free
+            used = psutil.disk_usage('/').used
+            print("Disk ",free," : ",total," : ",used)
 
-                    util = used/float(total)*100
-                    disk_space_in_MB = float(free/(1024*1024.0))
-                    return disk_space_in_MB,util
-        ## for unix, linux or mac
-        else:
-            if( hasattr(os,'statvfs')):
-                #st = os.statvfs("/") #The root part
-                st = os.statvfs("/")
-                free = st.f_bavail * st.f_frsize
-                total = st.f_blocks * st.f_frsize
-                used = (st.f_blocks - st.f_bfree) * st.f_frsize
-                print("Disk ",free," : ",total," : ",used)
+            util = used/float(total)*100
+            disk_space_in_MB = float(free/(1024*1024.0))
+            return disk_space_in_MB,util
 
-                util = used/float(total)*100
-                # print "Disk util is " ,util
-                # return GB_part,(MB_part*1024),int(KB_part*1024),int(util)
-                disk_space_in_MB = float(free /(1024*1024.0))
-                return disk_space_in_MB,util
-
-                return 0 #default return value
         return 0 #default return value
 
     #Encode free space available in disk, (7-bit) 1st bit for GB/MB order, 2nd bit for encoding , 5 bits for units
