@@ -303,7 +303,7 @@ def printMbidMap(mbids,groupBy):
         for edgeId in mbids.keys():
             print("Edge "+str(edgeId)+":")
             mbids[edgeId].sort()
-            print(" ".join(str(x) for x in mbids[edgeId]) + "\n")
+            print(" ".join(str(x) for x in set(mbids[edgeId])) + "\n")
 
     ## For groupBy = 2 (i.e group by mbid), the format resembles as follows :
     ## Microbatch 1: []
