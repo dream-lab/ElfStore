@@ -544,8 +544,9 @@ class EdgeClient:
             #metaData.checksum = hash_md5.hexdigest()
 
 	    #metadata insert to fog -50
+            my_dict = {}
 	    timeMetadata = str(microbatchID) +","+str(-50)+",local ,metadata req,starttime = "+repr(time.time())+","
-            response = client.insertMetadata(metaData, edgeInfoData)
+            response = client.insertMetadata(metaData, edgeInfoData, my_dict)
 	    timeMetadata = timeMetadata + " endTime = "+repr(time.time())+" , " + str(sizeChoice)+'\n'
 
 
@@ -564,7 +565,8 @@ class EdgeClient:
             client,transport = self.openSocketConnection(nodeInfo.NodeIP,nodeInfo.port,FOG_SERVICE)
 
             #response is now a WriteResponse and not a byte
-            response = client.putNext(metaData, data, writable.preference)
+            my_dict = {}
+            response = client.putNext(metaData, data, writable.preference, my_dict)
 
 
             print "the response from the fog for write ",response.status

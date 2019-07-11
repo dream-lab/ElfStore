@@ -13,7 +13,7 @@ from EdgeServices import EdgeService
 from EdgeServices.ttypes import *
 import time
 import os
-import wmi
+# import wmi
 import collections
 import json
 import multiprocessing
@@ -268,18 +268,19 @@ class EdgeClient:
     def returnDiskSpace(self):
         ## for windows os
         if sys.platform[0:3] == "win":
-            wmiObject = wmi.WMI()
-            for drive in wmiObject.Win32_LogicalDisk():
-                ## get the properties of the corect drive
-                if os.getcwd()[0:2] == drive.Name:
-                    total = int(drive.Size)
-                    free = int(drive.FreeSpace)
-                    used = total - free
-                    print("Disk ",free," : ",total," : ",used)
+            pass
+            # wmiObject = wmi.WMI()
+            # for drive in wmiObject.Win32_LogicalDisk():
+            #     ## get the properties of the corect drive
+            #     if os.getcwd()[0:2] == drive.Name:
+            #         total = int(drive.Size)
+            #         free = int(drive.FreeSpace)
+            #         used = total - free
+            #         print("Disk ",free," : ",total," : ",used)
 
-                    util = used/float(total)*100
-                    disk_space_in_MB = float(free/(1024*1024.0))
-                    return disk_space_in_MB,util
+            #         util = used/float(total)*100
+            #         disk_space_in_MB = float(free/(1024*1024.0))
+            #         return disk_space_in_MB,util
         ## for unix, linux or mac
         else:
             if( hasattr(os,'statvfs')):

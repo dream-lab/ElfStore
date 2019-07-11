@@ -1673,6 +1673,8 @@ public class FogServiceHandler implements FogService.Iface {
 		LOGGER.info("MicrobatchId : " + metadata.getMbId() + ", getWriteLocations, startTime="
 				+ System.currentTimeMillis());
 		StreamMetadataInfo strMetadata = getStreamMetadata(metadata.getStreamId(), true, true, false);
+		
+		/** stream id returning null **/
 		if (strMetadata == null) {
 			LOGGER.info("Unable to locate the stream metadata for streamId : " + metadata.getStreamId());
 			return null;
@@ -2699,15 +2701,18 @@ public class FogServiceHandler implements FogService.Iface {
 	private BlockMetadataUpdateMessage checkLeaseOwnership(Metadata mbMetadata, boolean setLease) {
 		LOGGER.info(" checkLeaseOwnership : The setlease flag is set to " + setLease);
 
+		/** Ishan reported a concurrent writes returned fail no lock
+		 * when the set lease was false, this is the fix
+		 */
+		if (setLease == false) {
+			return BlockMetadataUpdateMessage.SUCCESS;
+		}
+		
 		BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(mbMetadata.getStreamId());
 		// if no one holds the lock or some other client holds the lock
 		if (blockMetadata.getLock() == null || !blockMetadata.getLock().equals(mbMetadata.getClientId())
 				|| !blockMetadata.getSessionSecret().equals(mbMetadata.getSessionSecret()))
 			return BlockMetadataUpdateMessage.FAIL_NO_LOCK;
-
-		if (setLease == false) {
-			return BlockMetadataUpdateMessage.SUCCESS;
-		}
 
 		// this client definitely holds the lock
 		if ((System.currentTimeMillis() - blockMetadata.getLeaseStartTime()) < blockMetadata.getLeaseDuration()) {
