@@ -21,11 +21,11 @@ from pprint import pprint
 import hashlib
 import contextlib
 
-if os.path.isdir("./DataAndLogs") == False:
-    os.mkdir("./DataAndLogs")
+if os.path.isdir("/edgefs/logs") == False:
+    os.mkdir("/edgefs/logs")
 
 ## the file logs.txt will be created later
-BASE_LOG = "./DataAndLogs/"
+BASE_LOG = "/edgefs/logs/"
 FOG_SERVICE = 0
 #this is assigned when the open() api succeeds
 SESSION_SECRET = 'test'
@@ -478,7 +478,7 @@ class EdgeClient:
             print("Client does not hold the lock, should open the stream before writing")
             return -3
         else:
-            return response.code
+            return 1
 
 
     # Write to either fog or edge depending on the result
@@ -669,6 +669,7 @@ def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,split
                 #print "appended ",len(byteArray[len(byteArray)-1]),"number of bytes"
             file.close()
             print("number of binary files",len(byteArray))
+            print(str(setLease))
             newFilePath = ""
             for i in range(0,len(byteArray)):
                 fileSizeMB = len(byteArray[i]) / 10000000 ## in MB

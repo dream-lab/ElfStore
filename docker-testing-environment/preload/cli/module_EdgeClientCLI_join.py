@@ -8,7 +8,7 @@ PATH = sys.argv[1]
 devnull = open(os.devnull,'w')
 
 ## Check for data and logs folder
-if os.path.isdir("./DataAndLogs") == False : os.mkdir("./DataAndLogs")
+if os.path.isdir("/edgefs/logs") == False : os.mkdir("/edgefs/logs")
 
 edgeConfigFiles = os.listdir(PATH)
 
@@ -17,7 +17,7 @@ print("Starting the edges...")
 for configFile in edgeConfigFiles:
     edge = json.load(open(PATH+"/"+configFile,'r'))
     ## Check for dataAndLogs folder for the corresponding edge
-    dataFolder = "./DataAndLogs/edge"+str(edge['edgeId'])+"_data"
+    dataFolder = "/edgefs/logs/edge"+str(edge['edgeId'])+"_data"
     if os.path.isdir(dataFolder) == False : os.mkdir(dataFolder)
     print("Starting Edge "+str(edge['edgeId']))
     ## the command is platform specific

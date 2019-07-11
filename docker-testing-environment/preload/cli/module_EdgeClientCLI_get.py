@@ -20,11 +20,11 @@ from pprint import pprint
 import hashlib
 import contextlib
 
-if os.path.isdir("./DataAndLogs") == False:
-    os.mkdir("./DataAndLogs")
+if os.path.isdir("/edgefs/logs") == False:
+    os.mkdir("/edgefs/logs")
 
 ## the file logs.txt will be created later
-BASE_LOG = "./DataAndLogs/"
+BASE_LOG = "/edgefs/logs/"
 FOG_SERVICE = 0
 
 
@@ -194,7 +194,6 @@ class EdgeClient:
                  myLogs.write(timestamp_record)
                  myLogs.close()
                  if(response.status == 1):
-                     self.formulateJsonResponse(microbatchId,response)
                      print("Fog Amount of bytes read ",len(response.data))
                      return 1 #successful read
                  else:
