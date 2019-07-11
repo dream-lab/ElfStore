@@ -2779,6 +2779,11 @@ public class FogServiceHandler implements FogService.Iface {
 		} else { /* lock is present */
 			if ((System.currentTimeMillis() - blockMetadata.getLeaseStartTime()) < (fog.getStreamHardLease() * 1000)) {
 				blockMetadata.setLeaseStartTime(System.currentTimeMillis());
+				
+				if(expectedLease <=0 ) {
+					expectedLease = 90; // set 90s as default lease duration
+				}
+				
 				blockMetadata.setLeaseDuration(expectedLease
 						* 1000); /**
 									 * expected lease is added here previously => fog.getStreamSoftLease() * 1000
