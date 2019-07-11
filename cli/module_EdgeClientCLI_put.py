@@ -478,7 +478,7 @@ class EdgeClient:
             print("Client does not hold the lock, should open the stream before writing")
             return -3
         else:
-            return 1
+            return response.code
 
 
     # Write to either fog or edge depending on the result
@@ -669,7 +669,6 @@ def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,split
                 #print "appended ",len(byteArray[len(byteArray)-1]),"number of bytes"
             file.close()
             print("number of binary files",len(byteArray))
-            print(str(setLease))
             newFilePath = ""
             for i in range(0,len(byteArray)):
                 fileSizeMB = len(byteArray[i]) / 10000000 ## in MB
