@@ -544,8 +544,9 @@ class EdgeClient:
             #metaData.checksum = hash_md5.hexdigest()
 
 	    #metadata insert to fog -50
+            my_dict = {}
 	    timeMetadata = str(microbatchID) +","+str(-50)+",local ,metadata req,starttime = "+repr(time.time())+","
-            response = client.insertMetadata(metaData, edgeInfoData)
+            response = client.insertMetadata(metaData, edgeInfoData, my_dict)
 	    timeMetadata = timeMetadata + " endTime = "+repr(time.time())+" , " + str(sizeChoice)+'\n'
 
 
@@ -564,7 +565,8 @@ class EdgeClient:
             client,transport = self.openSocketConnection(nodeInfo.NodeIP,nodeInfo.port,FOG_SERVICE)
 
             #response is now a WriteResponse and not a byte
-            response = client.putNext(metaData, data, writable.preference)
+            my_dict = {}
+            response = client.putNext(metaData, data, writable.preference, my_dict)
 
 
             print "the response from the fog for write ",response.status
@@ -932,7 +934,8 @@ class EdgeClient:
 
         while True:
             #type of response is OpenStreamResponse
-            response = client.open(stream_id, client_id, expected_lease, False)
+            # sheshadri setlease
+            response = client.open(stream_id, client_id, expected_lease, True)
             print "The response of open stream is ",response.status
             if response.status == 1:
                 # if the set lease is false , then only IS_LOCK_HELD is needed
@@ -972,7 +975,9 @@ class EdgeClient:
         global TIME_LOCK_ACQUIRED
         current_time = int((time.time() * 1000))
         if TIME_LEASE_EXPIRE - current_time > expected_completion_time:
+            temp = TIME_LEASE_EXPIRE - current_time
             #no need to call renewLease now, lets return and perform the operation
+            print "There is some problem with renew lease ",temp," expected completed time ",expected_completion_time
             return
 
         #the behaviour of renewal of lease is as follows: the renewal can only succeed when the client holding
@@ -998,7 +1003,8 @@ class EdgeClient:
             client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
 
             #the response type is StreamLeaseRenewalResponse
-            response = client.renewLease(stream_id, client_id, session_secret, expected_lease, False)
+            # sheshadri setlease
+            response = client.renewLease(stream_id, client_id, session_secret, expected_lease, True)
             if response.status == 1:
                 print "renewLease() successful"
                 timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",1" + '\n'
@@ -1035,7 +1041,8 @@ class EdgeClient:
         global STREAM_OWNER_FOG_PORT
         client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
         #the response type is BlockMetadataUpdateResponse
-        response = client.incrementBlockCount(metadata, False)
+        # sheshadri setlease
+        response = client.incrementBlockCount(metadata, True)
         timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
         self.closeSocket(transport)
 

@@ -18,7 +18,7 @@ public class NeighborPayload implements org.apache.thrift.TBase<NeighborPayload,
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new NeighborPayloadTupleSchemeFactory();
 
   public java.nio.ByteBuffer payload; // required
-  public java.util.Map<java.lang.String,java.lang.String> mbIdToStreamIdMap; // optional
+  public java.util.Map<java.lang.Long,java.lang.String> mbIdToStreamIdMap; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -90,7 +90,7 @@ public class NeighborPayload implements org.apache.thrift.TBase<NeighborPayload,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING        , true)));
     tmpMap.put(_Fields.MB_ID_TO_STREAM_ID_MAP, new org.apache.thrift.meta_data.FieldMetaData("mbIdToStreamIdMap", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
-            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64), 
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(NeighborPayload.class, metaDataMap);
@@ -114,7 +114,7 @@ public class NeighborPayload implements org.apache.thrift.TBase<NeighborPayload,
       this.payload = org.apache.thrift.TBaseHelper.copyBinary(other.payload);
     }
     if (other.isSetMbIdToStreamIdMap()) {
-      java.util.Map<java.lang.String,java.lang.String> __this__mbIdToStreamIdMap = new java.util.HashMap<java.lang.String,java.lang.String>(other.mbIdToStreamIdMap);
+      java.util.Map<java.lang.Long,java.lang.String> __this__mbIdToStreamIdMap = new java.util.HashMap<java.lang.Long,java.lang.String>(other.mbIdToStreamIdMap);
       this.mbIdToStreamIdMap = __this__mbIdToStreamIdMap;
     }
   }
@@ -167,18 +167,18 @@ public class NeighborPayload implements org.apache.thrift.TBase<NeighborPayload,
     return (this.mbIdToStreamIdMap == null) ? 0 : this.mbIdToStreamIdMap.size();
   }
 
-  public void putToMbIdToStreamIdMap(java.lang.String key, java.lang.String val) {
+  public void putToMbIdToStreamIdMap(long key, java.lang.String val) {
     if (this.mbIdToStreamIdMap == null) {
-      this.mbIdToStreamIdMap = new java.util.HashMap<java.lang.String,java.lang.String>();
+      this.mbIdToStreamIdMap = new java.util.HashMap<java.lang.Long,java.lang.String>();
     }
     this.mbIdToStreamIdMap.put(key, val);
   }
 
-  public java.util.Map<java.lang.String,java.lang.String> getMbIdToStreamIdMap() {
+  public java.util.Map<java.lang.Long,java.lang.String> getMbIdToStreamIdMap() {
     return this.mbIdToStreamIdMap;
   }
 
-  public NeighborPayload setMbIdToStreamIdMap(java.util.Map<java.lang.String,java.lang.String> mbIdToStreamIdMap) {
+  public NeighborPayload setMbIdToStreamIdMap(java.util.Map<java.lang.Long,java.lang.String> mbIdToStreamIdMap) {
     this.mbIdToStreamIdMap = mbIdToStreamIdMap;
     return this;
   }
@@ -216,7 +216,7 @@ public class NeighborPayload implements org.apache.thrift.TBase<NeighborPayload,
       if (value == null) {
         unsetMbIdToStreamIdMap();
       } else {
-        setMbIdToStreamIdMap((java.util.Map<java.lang.String,java.lang.String>)value);
+        setMbIdToStreamIdMap((java.util.Map<java.lang.Long,java.lang.String>)value);
       }
       break;
 
@@ -424,12 +424,12 @@ public class NeighborPayload implements org.apache.thrift.TBase<NeighborPayload,
             if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
                 org.apache.thrift.protocol.TMap _map28 = iprot.readMapBegin();
-                struct.mbIdToStreamIdMap = new java.util.HashMap<java.lang.String,java.lang.String>(2*_map28.size);
-                java.lang.String _key29;
+                struct.mbIdToStreamIdMap = new java.util.HashMap<java.lang.Long,java.lang.String>(2*_map28.size);
+                long _key29;
                 java.lang.String _val30;
                 for (int _i31 = 0; _i31 < _map28.size; ++_i31)
                 {
-                  _key29 = iprot.readString();
+                  _key29 = iprot.readI64();
                   _val30 = iprot.readString();
                   struct.mbIdToStreamIdMap.put(_key29, _val30);
                 }
@@ -464,10 +464,10 @@ public class NeighborPayload implements org.apache.thrift.TBase<NeighborPayload,
         if (struct.isSetMbIdToStreamIdMap()) {
           oprot.writeFieldBegin(MB_ID_TO_STREAM_ID_MAP_FIELD_DESC);
           {
-            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.mbIdToStreamIdMap.size()));
-            for (java.util.Map.Entry<java.lang.String, java.lang.String> _iter32 : struct.mbIdToStreamIdMap.entrySet())
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I64, org.apache.thrift.protocol.TType.STRING, struct.mbIdToStreamIdMap.size()));
+            for (java.util.Map.Entry<java.lang.Long, java.lang.String> _iter32 : struct.mbIdToStreamIdMap.entrySet())
             {
-              oprot.writeString(_iter32.getKey());
+              oprot.writeI64(_iter32.getKey());
               oprot.writeString(_iter32.getValue());
             }
             oprot.writeMapEnd();
@@ -501,9 +501,9 @@ public class NeighborPayload implements org.apache.thrift.TBase<NeighborPayload,
       if (struct.isSetMbIdToStreamIdMap()) {
         {
           oprot.writeI32(struct.mbIdToStreamIdMap.size());
-          for (java.util.Map.Entry<java.lang.String, java.lang.String> _iter33 : struct.mbIdToStreamIdMap.entrySet())
+          for (java.util.Map.Entry<java.lang.Long, java.lang.String> _iter33 : struct.mbIdToStreamIdMap.entrySet())
           {
-            oprot.writeString(_iter33.getKey());
+            oprot.writeI64(_iter33.getKey());
             oprot.writeString(_iter33.getValue());
           }
         }
@@ -518,13 +518,13 @@ public class NeighborPayload implements org.apache.thrift.TBase<NeighborPayload,
       java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TMap _map34 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.mbIdToStreamIdMap = new java.util.HashMap<java.lang.String,java.lang.String>(2*_map34.size);
-          java.lang.String _key35;
+          org.apache.thrift.protocol.TMap _map34 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I64, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mbIdToStreamIdMap = new java.util.HashMap<java.lang.Long,java.lang.String>(2*_map34.size);
+          long _key35;
           java.lang.String _val36;
           for (int _i37 = 0; _i37 < _map34.size; ++_i37)
           {
-            _key35 = iprot.readString();
+            _key35 = iprot.readI64();
             _val36 = iprot.readString();
             struct.mbIdToStreamIdMap.put(_key35, _val36);
           }

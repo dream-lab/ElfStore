@@ -375,7 +375,7 @@ public class Fog implements Serializable {
 	private Map<Double, Set<String>> streamRelStreamIdMap = new ConcurrentHashMap<Double, Set<String>>();
 	
 	/** mbid to streamid map**/
-	private Map<String, String> mbIdToStreamIdMap = new ConcurrentHashMap<String, String>();
+	private Map<Long, String> mbIdToStreamIdMap = new ConcurrentHashMap<Long, String>();
 
 	public Map<Double, Set<String>> getStreamRelStreamIdMap() {
 		return streamRelStreamIdMap;
@@ -822,11 +822,12 @@ public class Fog implements Serializable {
 		this.streamMetaStreamIdMap = minReplicaStreamMap;
 	}
 	
-	public Map<String, String> getMbIdToStreamIdMap() {
+	/** sheshadri **/
+	public Map<Long, String> getMbIdToStreamIdMap() {
 		return mbIdToStreamIdMap;
 	}
 
-	public void setMbIdToStreamIdMap(Map<String, String> mbIdToStreamIdMap) {
+	public void setMbIdToStreamIdMap(Map<Long, String> mbIdToStreamIdMap) {
 		this.mbIdToStreamIdMap = mbIdToStreamIdMap;
 	}
 	
