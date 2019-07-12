@@ -1,5 +1,5 @@
 ### Supported Commands
-* `join` - start edges.
+* `join` - start edges. (for testing in local machine)
 * `regstream` - register a stream.
 * `get` - read microbatches/blocks using the mictobatchId.
 * `put` - perform a write operation.
@@ -50,7 +50,7 @@
     ```
     python -W ignore elfs_cli.py edge-config-files\edge7_config.json
     ```
-* Start all the edges (i.e it will start the edges in background whose config files are present in the edge-config-file directory)
+* Start all the edges (i.e it will start the edges in background whose config files are present in the edge-config-file directory, use this command when testing in local machine only)
     ```
     join --configFiles edge-config-files
     ```
@@ -74,9 +74,13 @@
     ```
     put --path=D:/Lab/DataAndLogs/microbatch_single_file_test.txt --streamId=stream_id_test2 --start=300 --singleBlock
     ```
+* Put a single file, as single block, with lease duration set to 105 seconds
+    ```
+    put --path=D:/Lab/DataAndLogs/microbatch_single_file_test.txt --streamId=stream_id_test2 --start=400 --duration=105
+    ```
 * Put a single file (splitting done based on default block size of 10MB) with additional metadata (in a json file)
     ```
-    put --path=D:/Lab/DataAndLogs/microbatch_single_file_test.txt --streamId=stream_id_test2 --start=300 --metadata=additional-block-metadata/block_metadata_sample.json
+    put --path=D:/Lab/DataAndLogs/microbatch_single_file_test.txt --streamId=stream_id_test2 --start=500 --metadata=additional-block-metadata/block_metadata_sample.json
     ```
 * Get microbatches/blocks in the range [100,104] (all inclusive)
     ```

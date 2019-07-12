@@ -75,9 +75,9 @@ class elfsCLI(Cmd):
             setLease = str(1)
 
         if tokens.v == True:
-            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,True)
+            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,True)
         else:
-            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease)
+            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration)
 
 
     def do_get(self,args):
@@ -158,8 +158,9 @@ class elfsCLI(Cmd):
         print("Put a file in ElfStore.")
         print("Perform a put with lease enabled on the stream using the --setLease flag.")
         print("Values of all parameters marked with * have to be specified during exection of the command.")
-        print("Usage : put *--path=(string) *--streamId=(string) *--start=(int) --metadata=(jsonFilePath) --singleBlock --setLease --v --fogIp=x.x.x.x --fogPort=(int) --edgeId=(int) --clientId=(string)")
+        print("Usage : put *--path=(string) *--streamId=(string) *--start=(int) --metadata=(jsonFilePath) --duration=(int) --singleBlock --setLease --v --fogIp=x.x.x.x --fogPort=(int) --edgeId=(int) --clientId=(string)")
         print("If --singleBlock flag is specified then the file(s) is written as a single block of same size as as that of the file.")
+        print("The duration paramater used to set the lease duration during a put. Default is 90 seconds")
     def help_get(self):
         print("Get file(s) using the microbatchId. If end is not specified then only the first block will be retreived (specified using start).")
         print("Values of all parameters marked with * have to be specified during exection of the command.")
@@ -268,6 +269,7 @@ if __name__ == '__main__':
     ## 7. --edgeId (default, based on config file)
     ## 8. --clientId (default, hashed based on the edge id)
     ## 9. --setLease (flag)
+    ## 10. --duration (same as expected lease implemented in server; default value as 0)
     put_parser = subparsers.add_parser("put")
     put_parser.add_argument("--path")
     put_parser.add_argument("--streamId")
@@ -279,6 +281,7 @@ if __name__ == '__main__':
     put_parser.add_argument("--clientId", default = CLIENT_ID)
     put_parser.add_argument("--singleBlock", action ="store_true")
     put_parser.add_argument("--setLease", action ="store_true")
+    put_parser.add_argument("--duration",default=str(0))
     put_parser.add_argument("--v","--verbose", action ="store_true")
 
     ## Parser for get command
