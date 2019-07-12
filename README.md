@@ -3,8 +3,8 @@
 Sumit K Monga, Sheshadri K R, Yogesh Simmhan.
 
 ElfStore, a first-of-its-kind edge-local federated store for streams of data blocks. It uses reliable fog devices as a super-peer
-overlay to monitor the edge resources, oers federated metadata indexing using Bloom filters, locates data within 2-hops, and maintains approxi
-mate global statistics about the reliability and storage capacity of edges. Edges host the actual data blocks, and we use a unique dierential replication scheme to select edges on which to replicate blocks, to guarantee a minimum reliability and to balance storage utilization.
+overlay to monitor the edge resources, over federated metadata indexing using Bloom filters, locates data within 2-hops, and maintains approxi
+mate global statistics about the reliability and storage capacity of edges. Edges host the actual data blocks, and we use a unique diferential replication scheme to select edges on which to replicate blocks, to guarantee a minimum reliability and to balance storage utilization.
 
 Command Line Interface (CLI) , credits : Ishan Sharma (ishandnr@gmail.com)
 
