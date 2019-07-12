@@ -18,7 +18,7 @@
 
 ### Prerequisites
 * Install the packages mentioned in the requirements.txt file.
-* The fogs must be active in their respective terminals.
+* The fogs must be active in their respective terminals. (for starting the fogs please refer to ElfStore/commands.txt)
 * Put the edgefilesystem-0.1-jar-with-dependencies.jar file, after compilation, in cli/target/ folder.
     * The above step has to be done manually.
     * The jar file is only required for `join`.
