@@ -54,6 +54,10 @@ SPLIT_CHOICE = int()
 ## default block size is 10MB
 DEFAULT_BLOCK_SIZE = 10000000
 SET_LEASE = bool()
+#duration for expected lease; specified by user; used during a put
+#The default value is set to 0 here; if it is found to be <=0 at the server side
+#then it is set to 90 seconds in FogServiceHandler
+EXPECTED_LEASE = int()
 
 ## Used when the --v (i.e verbose) is set to false
 ## The output of the python file of the correspoding command is written here
@@ -105,7 +109,7 @@ class EdgeClient:
         timestamp_record = str(metadata.mbId) + ", 500,"+ STREAM_OWNER_FOG_IP  + ",increment last blockId,starttime = "+repr(time.time())+","
 
         print("Lets first issue request to renew the lease for incrementBlockCount()")
-        self.renew_lease(metadata.streamId, metadata.clientId, metadata.sessionSecret, 0, ESTIMATE_INCR_BLOCK_COUNT, metadata.mbId,setLease)
+        self.renew_lease(metaData.streamId, metaData.clientId, metaData.sessionSecret, EXPECTED_LEASE, ESTIMATE_PUT_NEXT, metaData.mbId,setLease)
 
 
         client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
@@ -269,9 +273,9 @@ class EdgeClient:
         ## psutil (process and system utilities) is a cross-platform library for
         ## retrieving information on storage running processes.
         if( hasattr(psutil,'disk_usage')):
-            total = psutil.disk_usage('/').total
-            free = psutil.disk_usage('/').free
-            used = psutil.disk_usage('/').used
+            total = psutil.disk_usage('/edgedatatemp').total
+            free = psutil.disk_usage('/edgedatatemp').free
+            used = psutil.disk_usage('/edgedatatemp').used
             print("Disk ",free," : ",total," : ",used)
 
             util = used/float(total)*100
@@ -429,7 +433,7 @@ class EdgeClient:
         #lets renew the lease. The behaviour should adhere with the policy of the lease time
         #left in comparison to the time taken to complete the operation
         print("Lets first issue request to renew the lease for putNext()")
-        self.renew_lease(metaData.streamId, metaData.clientId, metaData.sessionSecret, 0, ESTIMATE_PUT_NEXT, metaData.mbId,setLease)
+        self.renew_lease(metaData.streamId, metaData.clientId, metaData.sessionSecret, EXPECTED_LEASE, ESTIMATE_PUT_NEXT, metaData.mbId,setLease)
 
         #ISSUE ALERT:: Since the metaData object is prepared above, it might happen that the clientId and sessionSecret
         #were set to dummy global values since before issuing the first write, we do a renew lease which is last code line
@@ -478,7 +482,7 @@ class EdgeClient:
             print("Client does not hold the lock, should open the stream before writing")
             return -3
         else:
-            return 1
+            return response.code
 
 
     # Write to either fog or edge depending on the result
@@ -583,7 +587,7 @@ class EdgeClient:
         myLogs.write(timestamp_record)
         myLogs.close()
 
-def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,splitChoice,setLease,verbose = False):
+def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,splitChoice,setLease,leaseDuration,verbose = False):
     myEdge = EdgeClient()
 
     global PATH
@@ -604,6 +608,8 @@ def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,split
     SPLIT_CHOICE = int(splitChoice)
     global STREAM_RELIABILITY
     STREAM_RELIABILITY = myEdge.getStreamMetadataReliability(STREAM_ID)
+    global EXPECTED_LEASE
+    EXPECTED_LEASE = int(leaseDuration)
 
     ## Initialize the metaKeyValueMap dict. This dicionary/map comtains the optional metadata
     ## properties that can be specified by the end user during runtime.
@@ -669,7 +675,7 @@ def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,split
                 #print "appended ",len(byteArray[len(byteArray)-1]),"number of bytes"
             file.close()
             print("number of binary files",len(byteArray))
-            print(str(setLease))
+
             newFilePath = ""
             for i in range(0,len(byteArray)):
                 fileSizeMB = len(byteArray[i]) / 10000000 ## in MB

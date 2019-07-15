@@ -20,11 +20,11 @@ from pprint import pprint
 import hashlib
 import contextlib
 
-if os.path.isdir("./DataAndLogs") == False:
-    os.mkdir("./DataAndLogs")
+if os.path.isdir("/edgefs/logs") == False:
+    os.mkdir("/edgefs/logs")
 
 ## the file logs.txt will be created later
-BASE_LOG = "./DataAndLogs/"
+BASE_LOG = "/edgefs/logs/"
 FOG_SERVICE = 0
 
 

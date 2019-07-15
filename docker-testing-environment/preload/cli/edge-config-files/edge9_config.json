@@ -1,0 +1,10 @@
+{
+  "edgeId" : 9,
+  "edgeIp" : "174.10.10.8",
+  "edgePort" : 7008,
+  "reliability" : 85,
+  "fogIp" : "174.10.0.4",
+  "fogPort" : 9092,
+  "logsFolder" : "D:/Lab/DataAndLogs/edge9_logs",
+  "baseLog" : "D:/Lab/LogsFolder/base_logs"
+}

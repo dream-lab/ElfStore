@@ -7,7 +7,7 @@ networks:
 
 services :
   fog1:
-    image: elfstore
+    image: elfstoretemp
     networks:
       default:
         ipv4_address: 174.10.0.2
@@ -16,7 +16,7 @@ services :
     command: java -cp edgefs/cli/target/edgefilesystem-0.1-jar-with-dependencies.jar com.dreamlab.edgefs.controlplane.FogServer 174.10.0.2 9090 1 1 0.25 0
 
   fog2:
-    image: elfstore
+    image: elfstoretemp
     networks:
       default:
         ipv4_address: 174.10.0.3
@@ -25,7 +25,7 @@ services :
     command: java -cp edgefs/cli/target/edgefilesystem-0.1-jar-with-dependencies.jar com.dreamlab.edgefs.controlplane.FogServer 174.10.0.3 9091 1 2 0.25 0
 
   fog3:
-    image: elfstore
+    image: elfstoretemp
     networks:
       default:
         ipv4_address: 174.10.0.4
@@ -34,7 +34,7 @@ services :
     command: java -cp edgefs/cli/target/edgefilesystem-0.1-jar-with-dependencies.jar com.dreamlab.edgefs.controlplane.FogServer 174.10.0.4 9092 2 3 0.25 0
 
   fog4:
-    image: elfstore
+    image: elfstoretemp
     networks:
       default:
         ipv4_address: 174.10.0.5

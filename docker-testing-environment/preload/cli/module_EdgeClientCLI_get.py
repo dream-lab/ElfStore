@@ -194,6 +194,7 @@ class EdgeClient:
                  myLogs.write(timestamp_record)
                  myLogs.close()
                  if(response.status == 1):
+                     self.formulateJsonResponse(microbatchId,response)
                      print("Fog Amount of bytes read ",len(response.data))
                      return 1 #successful read
                  else:
