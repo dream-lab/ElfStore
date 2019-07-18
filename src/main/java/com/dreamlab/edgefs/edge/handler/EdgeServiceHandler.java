@@ -43,10 +43,14 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 						"MicrobatchId : " + mbMetadata.getMbId() + ", write, startTime=" + System.currentTimeMillis());
 
 				// data
+				int length = mbData.remaining();
+   			byte[] mbDataInBytesArray = new byte[length];
+   			mbData.get(mbDataInBytesArray);
+
 				File myFile = new File(edge.getDatapath() + "/" + mbId + ".data");
-				FileUtils.writeByteArrayToFile(myFile, mbData.array());
-				
-				int mbSize = mbData.array().length/(1000 * 1000);
+				FileUtils.writeByteArrayToFile(myFile, mbDataInBytesArray);
+
+				int mbSize = mbDataInBytesArray.length/(1000 * 1000);
 				edge.setStorage(edge.getStorage() - mbSize);
 
 				// Metadata
@@ -108,7 +112,7 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 		replica.setStatus(Constants.SUCCESS);
 		return replica;
 	}
-	
+
 	@Override
 	public ReadReplica getMetadata(long mbId) throws TException {
 		ReadReplica replica = new ReadReplica();
@@ -169,7 +173,7 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 				// data
 				File myFile = new File(edge.getDatapath() + "/" + mbId + ".data");
 				FileUtils.writeByteArrayToFile(myFile, mbData.array());
-				
+
 				int mbSize = mbData.array().length/(1000 * 1000);
 				edge.setStorage(edge.getStorage() - mbSize);
 
