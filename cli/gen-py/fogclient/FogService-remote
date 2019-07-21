@@ -66,7 +66,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  WriteResponse updateBlock(i64 mbId, Metadata mbMetadata, string mbData)')
     print('   listLocalPartitionMbId(bool flag)')
     print('   requestAllNeighbors()')
-    print('   requestMbIDLocationMap()')
+    print('   requestEdgeMicrobatchMap()')
     print('   findBlockUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies)')
     print('')
     sys.exit(0)
@@ -399,11 +399,11 @@ elif cmd == 'requestAllNeighbors':
         sys.exit(1)
     pp.pprint(client.requestAllNeighbors())
 
-elif cmd == 'requestMbIDLocationMap':
+elif cmd == 'requestEdgeMicrobatchMap':
     if len(args) != 0:
-        print('requestMbIDLocationMap requires 0 args')
+        print('requestEdgeMicrobatchMap requires 0 args')
         sys.exit(1)
-    pp.pprint(client.requestMbIDLocationMap())
+    pp.pprint(client.requestEdgeMicrobatchMap())
 
 elif cmd == 'findBlockUsingQuery':
     if len(args) != 3:

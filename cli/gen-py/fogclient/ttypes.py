@@ -996,7 +996,7 @@ class BuddyPayload(object):
                     self.mbIdToStreamIdMap = {}
                     (_ktype17, _vtype18, _size16) = iprot.readMapBegin()
                     for _i20 in range(_size16):
-                        _key21 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _key21 = iprot.readI64()
                         _val22 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                         self.mbIdToStreamIdMap[_key21] = _val22
                     iprot.readMapEnd()
@@ -1018,9 +1018,9 @@ class BuddyPayload(object):
             oprot.writeFieldEnd()
         if self.mbIdToStreamIdMap is not None:
             oprot.writeFieldBegin('mbIdToStreamIdMap', TType.MAP, 2)
-            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.mbIdToStreamIdMap))
+            oprot.writeMapBegin(TType.I64, TType.STRING, len(self.mbIdToStreamIdMap))
             for kiter23, viter24 in self.mbIdToStreamIdMap.items():
-                oprot.writeString(kiter23.encode('utf-8') if sys.version_info[0] == 2 else kiter23)
+                oprot.writeI64(kiter23)
                 oprot.writeString(viter24.encode('utf-8') if sys.version_info[0] == 2 else viter24)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
@@ -1075,7 +1075,7 @@ class NeighborPayload(object):
                     self.mbIdToStreamIdMap = {}
                     (_ktype26, _vtype27, _size25) = iprot.readMapBegin()
                     for _i29 in range(_size25):
-                        _key30 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _key30 = iprot.readI64()
                         _val31 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                         self.mbIdToStreamIdMap[_key30] = _val31
                     iprot.readMapEnd()
@@ -1097,9 +1097,9 @@ class NeighborPayload(object):
             oprot.writeFieldEnd()
         if self.mbIdToStreamIdMap is not None:
             oprot.writeFieldBegin('mbIdToStreamIdMap', TType.MAP, 2)
-            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.mbIdToStreamIdMap))
+            oprot.writeMapBegin(TType.I64, TType.STRING, len(self.mbIdToStreamIdMap))
             for kiter32, viter33 in self.mbIdToStreamIdMap.items():
-                oprot.writeString(kiter32.encode('utf-8') if sys.version_info[0] == 2 else kiter32)
+                oprot.writeI64(kiter32)
                 oprot.writeString(viter33.encode('utf-8') if sys.version_info[0] == 2 else viter33)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
@@ -3450,13 +3450,13 @@ all_structs.append(BuddyPayload)
 BuddyPayload.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'payload', 'BINARY', None, ),  # 1
-    (2, TType.MAP, 'mbIdToStreamIdMap', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 2
+    (2, TType.MAP, 'mbIdToStreamIdMap', (TType.I64, None, TType.STRING, 'UTF8', False), None, ),  # 2
 )
 all_structs.append(NeighborPayload)
 NeighborPayload.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'payload', 'BINARY', None, ),  # 1
-    (2, TType.MAP, 'mbIdToStreamIdMap', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 2
+    (2, TType.MAP, 'mbIdToStreamIdMap', (TType.I64, None, TType.STRING, 'UTF8', False), None, ),  # 2
 )
 all_structs.append(EdgePayload)
 EdgePayload.thrift_spec = (

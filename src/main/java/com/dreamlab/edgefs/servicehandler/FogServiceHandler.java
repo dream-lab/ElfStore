@@ -1673,7 +1673,7 @@ public class FogServiceHandler implements FogService.Iface {
 		LOGGER.info("MicrobatchId : " + metadata.getMbId() + ", getWriteLocations, startTime="
 				+ System.currentTimeMillis());
 		StreamMetadataInfo strMetadata = getStreamMetadata(metadata.getStreamId(), true, true, false);
-		
+
 		/** stream id returning null **/
 		if (strMetadata == null) {
 			LOGGER.info("Unable to locate the stream metadata for streamId : " + metadata.getStreamId());
@@ -2101,7 +2101,7 @@ public class FogServiceHandler implements FogService.Iface {
 		// updating the bloom filters for the new metadata properties defined by the
 		// user
 		// during runtime
-		// :ISHAN Testing for only one key value pair 
+		// :ISHAN Testing for only one key value pair
 		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
 		while (itr.hasNext()) {
 			Map.Entry<String, String> entry = itr.next();
@@ -2707,7 +2707,7 @@ public class FogServiceHandler implements FogService.Iface {
 		if (setLease == false) {
 			return BlockMetadataUpdateMessage.SUCCESS;
 		}
-		
+
 		BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(mbMetadata.getStreamId());
 		// if no one holds the lock or some other client holds the lock
 		if (blockMetadata.getLock() == null || !blockMetadata.getLock().equals(mbMetadata.getClientId())
@@ -2779,11 +2779,11 @@ public class FogServiceHandler implements FogService.Iface {
 		} else { /* lock is present */
 			if ((System.currentTimeMillis() - blockMetadata.getLeaseStartTime()) < (fog.getStreamHardLease() * 1000)) {
 				blockMetadata.setLeaseStartTime(System.currentTimeMillis());
-				
+
 				if(expectedLease <=0 ) {
 					expectedLease = 90; // set 90s as default lease duration
 				}
-				
+
 				blockMetadata.setLeaseDuration(expectedLease
 						* 1000); /**
 									 * expected lease is added here previously => fog.getStreamSoftLease() * 1000
@@ -2849,10 +2849,10 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	@Override
-	public Map<Long, Map<Short, Byte>> requestMbIDLocationMap() {
-		Map<Long, Map<Short, Byte>> mbidMap = new ConcurrentHashMap<>();
-		mbidMap = fog.getMbIDLocationMap();
-		return mbidMap;
+	public Map<Short, Set<Long>> requestEdgeMicrobatchMap() {
+		Map<Short, Set<Long>> edgeMbIdMap = new ConcurrentHashMap<>();
+		edgeMbIdMap = fog.getEdgeMicrobatchMap();
+		return edgeMbIdMap;
 	}
 
 	@Override
@@ -2868,7 +2868,7 @@ public class FogServiceHandler implements FogService.Iface {
 			String searchKey = entry.getKey() + ":" + entry.getValue();
 			List<Long> matchingMbIds = fog.getMetaToMBIdListMap().get(searchKey);
 			if (firstPass) {
-				
+
 				if(matchingMbIds!=null)
 					validMbTdList.addAll(matchingMbIds);
 				firstPass = false;

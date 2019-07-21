@@ -85,29 +85,40 @@ class EdgeClient:
         transport.close()
 
     #ISHAN:
-    def getMbIDLocationMapByMbIdLocal(self, mbidMap):
-        for mbid,edgeInfo in mbidMap.items():
-            for edgeId in edgeInfo.keys():
-                mbidMap[mbid] = [edgeId]
+    def getMbIDLocationMapByMbIdLocal(self, edgeMbIdMap):
+        # for mbid,edgeInfo in mbidMap.items():
+        #     for edgeId in edgeInfo.keys():
+        #         mbidMap[mbid] = [edgeId]
+        # return mbidMap
+        mbidMap = dict()
+        allMbIdset = set()
+        # form a global set of all the microbatches in the system
+        for edgeId in edgeMbIdMap.keys():
+            allMbIdSet = allMbIdSet | edgeMbIdMap[edgeId]
+        # for each mbid iterate over the map and udpate the global hash map.
+        for mbid in allMbIdSet:
+            mbidMap.update({mbid:set()})
+            for edgeId,mbIdList in edgeIdMap.items():
+                if mbid in mbIdList: mbidMap[mbid].add(edgeId)
         return mbidMap
 
     def combineMaps(self,map1, map2):
-        for id2 in list(map2.keys()):
-            if id2 not in list(map1.keys()):
+        for id2 in map2.keys():
+            if id2 not in map1.keys():
                 map1.update({id2: map2[id2]})
             else:
-                map1[id2] = map1[id2] + map2[id2]
+                map1[id2] = map1[id2] | map2[id2]
         return map1
 
     ## The following function reverse maps the mbIDLocationMap
-    def getMbIDLocationMapByEdgeLocal(self,mbidMap):
-        mbidMapByEdge = dict()
-        for mbid,edgeInfo in list(mbidMap.items()):
-             for edgeId in list(edgeInfo.keys()):
-                if edgeId not in list(mbidMapByEdge.keys()) : mbidMapByEdge.update({edgeId : []})
-
-                mbidMapByEdge[edgeId].append(mbid)
-        return mbidMapByEdge
+    def getMbIDLocationMapByEdgeLocal(self,edgeMbIdMap):
+        # mbidMapByEdge = dict()
+        # for mbid,edgeInfo in mbidMap.items():
+        #      for edgeId in edgeInfo.keys():
+        #         if edgeId not in mbidMapByEdge.keys() : mbidMapByEdge.update({edgeId : []})
+        #
+        #         mbidMapByEdge[edgeId].append(mbid)
+        return edgeMbIdMap
 
 
     ## groupBy = 1 means that group by edgeId
@@ -116,12 +127,12 @@ class EdgeClient:
     def lsLocal(self,groupBy):
         if groupBy == 1:
             client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
-            mbidMapByEdge = self.getMbIDLocationMapByEdgeLocal(client.requestMbIDLocationMap())
+            mbidMapByEdge = self.getMbIDLocationMapByEdgeLocal(client.requestEdgeMicrobatchMap())
             return mbidMapByEdge
             self.closeSocket(transport)
         if groupBy == 2:
             client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
-            mbidMapByMbId = self.getMbIDLocationMapByMbIdLocal(client.requestMbIDLocationMap())
+            mbidMapByMbId = self.getMbIDLocationMapByMbIdLocal(client.requestEdgeMicrobatchMap())
             return mbidMapByMbId
 
     ## list mbids for the neighbors of the called fog
@@ -133,7 +144,7 @@ class EdgeClient:
             for neighbor in neighbors:
                 clientNeighbor,transportNeighbor = self.openSocketConnection(neighbor.nodeInstance.NodeIP,neighbor.nodeInstance.port,FOG_SERVICE)
                 print("Reading  mbids from the neighbor ",neighbor.nodeInstance.NodeIP," ",neighbor.nodeInstance.port)
-                neighborMbIdByEdge = self.getMbIDLocationMapByEdgeLocal(clientNeighbor.requestMbIDLocationMap())
+                neighborMbIdByEdge = self.getMbIDLocationMapByEdgeLocal(clientNeighbor.requestEdgeMicrobatchMap())
                 mbidMapByEdge = self.combineMaps(mbidMapByEdge, neighborMbIdByEdge)
                 self.closeSocket(transportNeighbor)
 
@@ -146,7 +157,7 @@ class EdgeClient:
             for neighbor in neighbors:
                 clientNeighbor,transportNeighbor = self.openSocketConnection(neighbor.nodeInstance.NodeIP,neighbor.nodeInstance.port,FOG_SERVICE)
                 print("Reading  mbids from the neighbor ",neighbor.nodeInstance.NodeIP," ",neighbor.nodeInstance.port)
-                neighborMbIdByMbId = self.getMbIDLocationMapByMbIdLocal(clientNeighbor.requestMbIDLocationMap())
+                neighborMbIdByMbId = self.getMbIDLocationMapByMbIdLocal(clientNeighbor.requestEdgeMicrobatchMap())
                 mbidMapByMbId = self.combineMaps(mbidMapByMbId, neighborMbIdByMbId)
                 self.closeSocket(transportNeighbor)
 
@@ -162,7 +173,7 @@ class EdgeClient:
             for buddy in buddies:
                 clientBuddy,transportBuddy = self.openSocketConnection(buddy.nodeInstance.NodeIP, buddy.nodeInstance.port, FOG_SERVICE)
                 print("Reading mbids from the buddy ",buddy.nodeInstance.NodeIP," ",buddy.nodeInstance.port)
-                buddyMbIdByEdge = self.getMbIDLocationMapByEdgeLocal(clientBuddy.requestMbIDLocationMap())
+                buddyMbIdByEdge = self.getMbIDLocationMapByEdgeLocal(clientBuddy.requestEdgeMicrobatchMap())
                 mbidMapByEdge = self.combineMaps(mbidMapByEdge, buddyMbIdByEdge)
                 self.closeSocket(transportBuddy)
 
@@ -175,7 +186,7 @@ class EdgeClient:
             for buddy in buddies:
                 clientBuddy,transportBuddy = self.openSocketConnection(buddy.nodeInstance.NodeIP, buddy.nodeInstance.port, FOG_SERVICE)
                 print("Reading mbids from the buddy ",buddy.nodeInstance.NodeIP," ",buddy.nodeInstance.port)
-                buddyMbIdByMbId = self.getMbIDLocationMapByMbIdLocal(clientBuddy.requestMbIDLocationMap())
+                buddyMbIdByMbId = self.getMbIDLocationMapByMbIdLocal(clientBuddy.requestEdgeMicrobatchMap())
                 mbidMapByMbId = self.combineMaps(mbidMapByMbId, buddyMbIdByMbId)
                 self.closeSocket(transportBuddy)
 
@@ -194,7 +205,7 @@ class EdgeClient:
             ## 1. Get mbids from the the current fog to which the client made a call
             client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
             print("Read mbids from the fog ",FOG_IP," ",FOG_PORT)
-            mbidMapByEdgeLocal = self.getMbIDLocationMapByEdgeLocal(client.requestMbIDLocationMap())
+            mbidMapByEdgeLocal = self.getMbIDLocationMapByEdgeLocal(client.requestEdgeMicrobatchMap())
             mbidMapByEdgeSystem = self.combineMaps(mbidMapByEdgeSystem,mbidMapByEdgeLocal)
 
             ## 2. Get mbids from the current fogs' neighbors
@@ -202,7 +213,7 @@ class EdgeClient:
             for neighbor in neighbors:
                 clientNeighbor,transportNeighbor = self.openSocketConnection(neighbor.nodeInstance.NodeIP,neighbor.nodeInstance.port,FOG_SERVICE)
                 print("Reading  mbids from the neighbor ",neighbor.nodeInstance.NodeIP," ",neighbor.nodeInstance.port)
-                neighborMbIdByEdge = self.getMbIDLocationMapByEdgeLocal(clientNeighbor.requestMbIDLocationMap())
+                neighborMbIdByEdge = self.getMbIDLocationMapByEdgeLocal(clientNeighbor.requestEdgeMicrobatchMap())
                 mbidMapByEdgeSystem = self.combineMaps(mbidMapByEdgeSystem, neighborMbIdByEdge)
                 self.closeSocket(transportNeighbor)
 
@@ -219,7 +230,7 @@ class EdgeClient:
             ## 1. Get mbids from the the current fog to which the client made a call
             client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
             print("Read mbids from the fog ",FOG_IP," ",FOG_PORT)
-            mbidMapByMbIdLocal = self.getMbIDLocationMapByMbIdLocal(client.requestMbIDLocationMap())
+            mbidMapByMbIdLocal = self.getMbIDLocationMapByMbIdLocal(client.requestEdgeMicrobatchMap())
             mbidMapByMbIdSystem = self.combineMaps(mbidMapByMbIdSystem,mbidMapByMbIdLocal)
 
             ## 2. Get mbids from the current fogs' neighbors
@@ -227,7 +238,7 @@ class EdgeClient:
             for neighbor in neighbors:
                 clientNeighbor,transportNeighbor = self.openSocketConnection(neighbor.nodeInstance.NodeIP,neighbor.nodeInstance.port,FOG_SERVICE)
                 print("Reading  mbids from the neighbor ",neighbor.nodeInstance.NodeIP," ",neighbor.nodeInstance.port)
-                neighborMbIdByMbId = self.getMbIDLocationMapByMbIdLocal(clientNeighbor.requestMbIDLocationMap())
+                neighborMbIdByMbId = self.getMbIDLocationMapByMbIdLocal(clientNeighbor.requestEdgeMicrobatchMap())
                 mbidMapByMbIdSystem = self.combineMaps(mbidMapByMbIdSystem, neighborMbIdByMbId)
                 self.closeSocket(transportNeighbor)
 
@@ -253,7 +264,7 @@ class EdgeClient:
             ## 1. Get mbids from the the buddy
             print("Reading  mbids from the local partition of the buddy ",buddy.nodeInstance.NodeIP," ",buddy.nodeInstance.port)
             clientBuddy,transportBuddy = self.openSocketConnection(buddy.nodeInstance.NodeIP, buddy.nodeInstance.port, FOG_SERVICE)
-            buddyMbIdByEdge = self.getMbIDLocationMapByEdgeLocal(clientBuddy.requestMbIDLocationMap())
+            buddyMbIdByEdge = self.getMbIDLocationMapByEdgeLocal(clientBuddy.requestEdgeMicrobatchMap())
             mbidMapByEdge = self.combineMaps(mbidMapByEdge, buddyMbIdByEdge)
 
             ## 2. Get mbids from the buddy's neighbors
@@ -261,7 +272,7 @@ class EdgeClient:
             for neighbor in neighbors:
                 clientNeighbor,transportNeighbor = self.openSocketConnection(neighbor.nodeInstance.NodeIP,neighbor.nodeInstance.port,FOG_SERVICE)
                 print("Reading  mbids from the buddy's neighbor ",neighbor.nodeInstance.NodeIP," ",neighbor.nodeInstance.port)
-                neighborMbIdByEdge = self.getMbIDLocationMapByEdgeLocal(clientNeighbor.requestMbIDLocationMap())
+                neighborMbIdByEdge = self.getMbIDLocationMapByEdgeLocal(clientNeighbor.requestEdgeMicrobatchMap())
                 mbidMapByEdge = self.combineMaps(mbidMapByEdge, neighborMbIdByEdge)
                 self.closeSocket(transportNeighbor)
 
@@ -274,7 +285,7 @@ class EdgeClient:
             ## 1. Get mbids from the the buddy
             print("Reading  mbids from the local partition of the buddy ",buddy.nodeInstance.NodeIP," ",buddy.nodeInstance.port)
             clientBuddy,transportBuddy = self.openSocketConnection(buddy.nodeInstance.NodeIP, buddy.nodeInstance.port, FOG_SERVICE)
-            buddyMbIdByMbId = self.getMbIDLocationMapByMbIdLocal(clientBuddy.requestMbIDLocationMap())
+            buddyMbIdByMbId = self.getMbIDLocationMapByMbIdLocal(clientBuddy.requestEdgeMicrobatchMap())
             mbidMapByMbId = self.combineMaps(mbidMapByMbId, buddyMbIdByMbId)
 
             ## 2. Get mbids from the buddy's neighbors
@@ -282,7 +293,7 @@ class EdgeClient:
             for neighbor in neighbors:
                 clientNeighbor,transportNeighbor = self.openSocketConnection(neighbor.nodeInstance.NodeIP,neighbor.nodeInstance.port,FOG_SERVICE)
                 print("Reading  mbids from the buddy's neighbor ",neighbor.nodeInstance.NodeIP," ",neighbor.nodeInstance.port)
-                neighborMbIdByMbId = self.getMbIDLocationMapByMbIdLocal(clientNeighbor.requestMbIDLocationMap())
+                neighborMbIdByMbId = self.getMbIDLocationMapByMbIdLocal(clientNeighbor.requestEdgeMicrobatchMap())
                 mbidMapByMbId = self.combineMaps(mbidMapByMbId, neighborMbIdByMbId)
                 self.closeSocket(transportNeighbor)
 
@@ -302,7 +313,7 @@ def printMbidMap(mbids,groupBy):
     if groupBy == 1:
         for edgeId in mbids.keys():
             print("Edge "+str(edgeId)+":")
-            mbids[edgeId].sort()
+            list(mbids[edgeId]).sort()
             print(" ".join(str(x) for x in set(mbids[edgeId])) + "\n")
 
     ## For groupBy = 2 (i.e group by mbid), the format resembles as follows :
@@ -314,7 +325,7 @@ def printMbidMap(mbids,groupBy):
         ## before printing. This is because there may be redundant edgeId values
         ## for each mbId key value.
         for mbId in mbids.keys():
-            mbids[mbId].sort()
+            list(mbids[mbId]).sort()
             print("Microbatch "+str(mbId)+": "+str(list(set(mbids[mbId]))) + "\n")
 
 
@@ -342,7 +353,7 @@ def ls(fogIp,fogPort,choice,groupBy,verbose = False):
             sys.stdout = sys.__stdout__
         print("The mbids present in the neighbors and the buddy pool of the current fog "+FOG_IP+" "+str(FOG_PORT)+" are :")
         printMbidMap(mbids,groupBy)
-        return json.dumps(mbids)
+        return (mbids)
 
     ## list mbids for owner fog's neighbors
     if(CHOICE == 15):
@@ -353,7 +364,7 @@ def ls(fogIp,fogPort,choice,groupBy,verbose = False):
             sys.stdout = sys.__stdout__
         print("The mbids present in the neighbors of the current fog "+FOG_IP+" "+str(FOG_PORT)+" are :")
         printMbidMap(mbids,groupBy)
-        return json.dumps(mbids)
+        return (mbids)
 
     ## list mbids for owner fog's buddies
     if(CHOICE == 16):
@@ -364,12 +375,12 @@ def ls(fogIp,fogPort,choice,groupBy,verbose = False):
             sys.stdout = sys.__stdout__
         print("The mbids present in the buddy pool of the current fog "+FOG_IP+" "+str(FOG_PORT)+" are :")
         printMbidMap(mbids,groupBy)
-        return json.dumps(mbids)
+        return (mbids)
 
     ## list mbids for local partition
     if(CHOICE == 18):
         mbids = myEdge.lsLocal(GROUP_BY)
-        return json.dumps(mbids)
+        return (mbids)
     ## list mbids for the whole system
     if(CHOICE == 19):
         if verbose ==True: mbids = myEdge.lsMbIdSystem(GROUP_BY)
@@ -379,7 +390,7 @@ def ls(fogIp,fogPort,choice,groupBy,verbose = False):
             sys.stdout = sys.__stdout__
         print("The mbids in the whole system are : ")
         printMbidMap(mbids,groupBy)
-        return json.dumps(mbids)
+        return (mbids)
 
     ## this will only be used by module_EdgeClientCLI_find.find()
     if(CHOICE == 20):

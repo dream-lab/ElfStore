@@ -332,7 +332,7 @@ class Iface(object):
     def requestAllNeighbors(self):
         pass
 
-    def requestMbIDLocationMap(self):
+    def requestEdgeMicrobatchMap(self):
         pass
 
     def findBlockUsingQuery(self, metaKeyValueMap, checkNeighbors, checkBuddies):
@@ -1673,18 +1673,18 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "requestAllNeighbors failed: unknown result")
 
-    def requestMbIDLocationMap(self):
-        self.send_requestMbIDLocationMap()
-        return self.recv_requestMbIDLocationMap()
+    def requestEdgeMicrobatchMap(self):
+        self.send_requestEdgeMicrobatchMap()
+        return self.recv_requestEdgeMicrobatchMap()
 
-    def send_requestMbIDLocationMap(self):
-        self._oprot.writeMessageBegin('requestMbIDLocationMap', TMessageType.CALL, self._seqid)
-        args = requestMbIDLocationMap_args()
+    def send_requestEdgeMicrobatchMap(self):
+        self._oprot.writeMessageBegin('requestEdgeMicrobatchMap', TMessageType.CALL, self._seqid)
+        args = requestEdgeMicrobatchMap_args()
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
 
-    def recv_requestMbIDLocationMap(self):
+    def recv_requestEdgeMicrobatchMap(self):
         iprot = self._iprot
         (fname, mtype, rseqid) = iprot.readMessageBegin()
         if mtype == TMessageType.EXCEPTION:
@@ -1692,12 +1692,12 @@ class Client(Iface):
             x.read(iprot)
             iprot.readMessageEnd()
             raise x
-        result = requestMbIDLocationMap_result()
+        result = requestEdgeMicrobatchMap_result()
         result.read(iprot)
         iprot.readMessageEnd()
         if result.success is not None:
             return result.success
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "requestMbIDLocationMap failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "requestEdgeMicrobatchMap failed: unknown result")
 
     def findBlockUsingQuery(self, metaKeyValueMap, checkNeighbors, checkBuddies):
         """
@@ -1781,7 +1781,7 @@ class Processor(Iface, TProcessor):
         self._processMap["updateBlock"] = Processor.process_updateBlock
         self._processMap["listLocalPartitionMbId"] = Processor.process_listLocalPartitionMbId
         self._processMap["requestAllNeighbors"] = Processor.process_requestAllNeighbors
-        self._processMap["requestMbIDLocationMap"] = Processor.process_requestMbIDLocationMap
+        self._processMap["requestEdgeMicrobatchMap"] = Processor.process_requestEdgeMicrobatchMap
         self._processMap["findBlockUsingQuery"] = Processor.process_findBlockUsingQuery
 
     def process(self, iprot, oprot):
@@ -2741,13 +2741,13 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
-    def process_requestMbIDLocationMap(self, seqid, iprot, oprot):
-        args = requestMbIDLocationMap_args()
+    def process_requestEdgeMicrobatchMap(self, seqid, iprot, oprot):
+        args = requestEdgeMicrobatchMap_args()
         args.read(iprot)
         iprot.readMessageEnd()
-        result = requestMbIDLocationMap_result()
+        result = requestEdgeMicrobatchMap_result()
         try:
-            result.success = self._handler.requestMbIDLocationMap()
+            result.success = self._handler.requestEdgeMicrobatchMap()
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -2759,7 +2759,7 @@ class Processor(Iface, TProcessor):
             logging.exception('Unexpected exception in handler')
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
-        oprot.writeMessageBegin("requestMbIDLocationMap", msg_type, seqid)
+        oprot.writeMessageBegin("requestEdgeMicrobatchMap", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -8272,7 +8272,7 @@ requestAllNeighbors_result.thrift_spec = (
 )
 
 
-class requestMbIDLocationMap_args(object):
+class requestEdgeMicrobatchMap_args(object):
 
 
     def read(self, iprot):
@@ -8293,7 +8293,7 @@ class requestMbIDLocationMap_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('requestMbIDLocationMap_args')
+        oprot.writeStructBegin('requestEdgeMicrobatchMap_args')
         oprot.writeFieldStop()
         oprot.writeStructEnd()
 
@@ -8310,12 +8310,12 @@ class requestMbIDLocationMap_args(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(requestMbIDLocationMap_args)
-requestMbIDLocationMap_args.thrift_spec = (
+all_structs.append(requestEdgeMicrobatchMap_args)
+requestEdgeMicrobatchMap_args.thrift_spec = (
 )
 
 
-class requestMbIDLocationMap_result(object):
+class requestEdgeMicrobatchMap_result(object):
     """
     Attributes:
      - success
@@ -8339,14 +8339,13 @@ class requestMbIDLocationMap_result(object):
                     self.success = {}
                     (_ktype180, _vtype181, _size179) = iprot.readMapBegin()
                     for _i183 in range(_size179):
-                        _key184 = iprot.readI64()
-                        _val185 = {}
-                        (_ktype187, _vtype188, _size186) = iprot.readMapBegin()
+                        _key184 = iprot.readI16()
+                        _val185 = set()
+                        (_etype189, _size186) = iprot.readSetBegin()
                         for _i190 in range(_size186):
-                            _key191 = iprot.readI16()
-                            _val192 = iprot.readByte()
-                            _val185[_key191] = _val192
-                        iprot.readMapEnd()
+                            _elem191 = iprot.readI64()
+                            _val185.add(_elem191)
+                        iprot.readSetEnd()
                         self.success[_key184] = _val185
                     iprot.readMapEnd()
                 else:
@@ -8360,17 +8359,16 @@ class requestMbIDLocationMap_result(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('requestMbIDLocationMap_result')
+        oprot.writeStructBegin('requestEdgeMicrobatchMap_result')
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.MAP, 0)
-            oprot.writeMapBegin(TType.I64, TType.MAP, len(self.success))
-            for kiter193, viter194 in self.success.items():
-                oprot.writeI64(kiter193)
-                oprot.writeMapBegin(TType.I16, TType.BYTE, len(viter194))
-                for kiter195, viter196 in viter194.items():
-                    oprot.writeI16(kiter195)
-                    oprot.writeByte(viter196)
-                oprot.writeMapEnd()
+            oprot.writeMapBegin(TType.I16, TType.SET, len(self.success))
+            for kiter192, viter193 in self.success.items():
+                oprot.writeI16(kiter192)
+                oprot.writeSetBegin(TType.I64, len(viter193))
+                for iter194 in viter193:
+                    oprot.writeI64(iter194)
+                oprot.writeSetEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -8389,9 +8387,9 @@ class requestMbIDLocationMap_result(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(requestMbIDLocationMap_result)
-requestMbIDLocationMap_result.thrift_spec = (
-    (0, TType.MAP, 'success', (TType.I64, None, TType.MAP, (TType.I16, None, TType.BYTE, None, False), False), None, ),  # 0
+all_structs.append(requestEdgeMicrobatchMap_result)
+requestEdgeMicrobatchMap_result.thrift_spec = (
+    (0, TType.MAP, 'success', (TType.I16, None, TType.SET, (TType.I64, None, False), False), None, ),  # 0
 )
 
 
@@ -8421,11 +8419,11 @@ class findBlockUsingQuery_args(object):
             if fid == 1:
                 if ftype == TType.MAP:
                     self.metaKeyValueMap = {}
-                    (_ktype198, _vtype199, _size197) = iprot.readMapBegin()
-                    for _i201 in range(_size197):
-                        _key202 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val203 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.metaKeyValueMap[_key202] = _val203
+                    (_ktype196, _vtype197, _size195) = iprot.readMapBegin()
+                    for _i199 in range(_size195):
+                        _key200 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val201 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.metaKeyValueMap[_key200] = _val201
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -8452,9 +8450,9 @@ class findBlockUsingQuery_args(object):
         if self.metaKeyValueMap is not None:
             oprot.writeFieldBegin('metaKeyValueMap', TType.MAP, 1)
             oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.metaKeyValueMap))
-            for kiter204, viter205 in self.metaKeyValueMap.items():
-                oprot.writeString(kiter204.encode('utf-8') if sys.version_info[0] == 2 else kiter204)
-                oprot.writeString(viter205.encode('utf-8') if sys.version_info[0] == 2 else viter205)
+            for kiter202, viter203 in self.metaKeyValueMap.items():
+                oprot.writeString(kiter202.encode('utf-8') if sys.version_info[0] == 2 else kiter202)
+                oprot.writeString(viter203.encode('utf-8') if sys.version_info[0] == 2 else viter203)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.checkNeighbors is not None:
@@ -8512,11 +8510,11 @@ class findBlockUsingQuery_result(object):
             if fid == 0:
                 if ftype == TType.MAP:
                     self.success = {}
-                    (_ktype207, _vtype208, _size206) = iprot.readMapBegin()
-                    for _i210 in range(_size206):
-                        _key211 = iprot.readI64()
-                        _val212 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success[_key211] = _val212
+                    (_ktype205, _vtype206, _size204) = iprot.readMapBegin()
+                    for _i208 in range(_size204):
+                        _key209 = iprot.readI64()
+                        _val210 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success[_key209] = _val210
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -8533,9 +8531,9 @@ class findBlockUsingQuery_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.MAP, 0)
             oprot.writeMapBegin(TType.I64, TType.STRING, len(self.success))
-            for kiter213, viter214 in self.success.items():
-                oprot.writeI64(kiter213)
-                oprot.writeString(viter214.encode('utf-8') if sys.version_info[0] == 2 else viter214)
+            for kiter211, viter212 in self.success.items():
+                oprot.writeI64(kiter211)
+                oprot.writeString(viter212.encode('utf-8') if sys.version_info[0] == 2 else viter212)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()

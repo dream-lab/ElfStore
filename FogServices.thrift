@@ -501,8 +501,9 @@ service FogService {
 	// used to get neighbours of a fog
 	list<NeighborInfoData> requestAllNeighbors();
 
-	//used to return mbIDLocationMap to the client
-	map<i64,map<i16,byte>> requestMbIDLocationMap();
+
+	//used to return edgeMicrobatchMap to the edge client
+	map<i16,set<i64>> requestEdgeMicrobatchMap();
 
 	//used to facilitate the api FindBlock(bquery)
 	map<i64,string> findBlockUsingQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies);
