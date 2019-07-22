@@ -91,14 +91,14 @@ class EdgeClient:
         #         mbidMap[mbid] = [edgeId]
         # return mbidMap
         mbidMap = dict()
-        allMbIdset = set()
+        allMbIdSet = set()
         # form a global set of all the microbatches in the system
         for edgeId in edgeMbIdMap.keys():
             allMbIdSet = allMbIdSet | edgeMbIdMap[edgeId]
         # for each mbid iterate over the map and udpate the global hash map.
         for mbid in allMbIdSet:
             mbidMap.update({mbid:set()})
-            for edgeId,mbIdList in edgeIdMap.items():
+            for edgeId,mbIdList in edgeMbIdMap.items():
                 if mbid in mbIdList: mbidMap[mbid].add(edgeId)
         return mbidMap
 

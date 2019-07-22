@@ -26,6 +26,7 @@ FOG_PORT = int()
 LOGS_FOLDER = str()
 BASE_LOG = str()
 CLIENT_ID = str()
+COMP_FORMAT = str()
 
 ## Used when the --v (i.e verbose) is set to false
 ## The output of the python file of the correspoding command is written here
@@ -75,9 +76,9 @@ class elfsCLI(Cmd):
             setLease = str(1)
 
         if tokens.v == True:
-            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,True)
+            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,tokens.comp,True)
         else:
-            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration)
+            module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,tokens.comp)
 
 
     def do_get(self,args):
@@ -152,39 +153,40 @@ class elfsCLI(Cmd):
     ## The following functions are used for documentation that can be refered by the user using the 'help' command
     def help_regstream(self):
         print("Register a stream.")
-        print("Values of all parameters marked with * have to be specified during exection of the command.")
-        print("Usage :  regstream *--streamId=(string) *--streamReli=(short) --v --start=(int) --fogIp=x.x.x.x --fogPort=(int) ")
+        print("-> Values of all parameters marked with * have to be specified during exection of the command.")
+        print("** Usage :  regstream *--streamId=(string) *--streamReli=(short) --v --start=(int) --fogIp=x.x.x.x --fogPort=(int) ")
     def help_put(self):
         print("Put a file in ElfStore.")
-        print("Perform a put with lease enabled on the stream using the --setLease flag.")
-        print("Values of all parameters marked with * have to be specified during exection of the command.")
-        print("Usage : put *--path=(string) *--streamId=(string) *--start=(int) --metadata=(jsonFilePath) --duration=(int) --singleBlock --setLease --v --fogIp=x.x.x.x --fogPort=(int) --edgeId=(int) --clientId=(string)")
-        print("If --singleBlock flag is specified then the file(s) is written as a single block of same size as as that of the file.")
-        print("The duration paramater used to set the lease duration during a put. Default is 90 seconds")
+        print("-> Perform a put with lease enabled on the stream using the --setLease flag.")
+        print("-> Values of all parameters marked with * have to be specified during exection of the command.")
+        print("** Usage : put *--path=(string) *--streamId=(string) *--start=(int) --comp --metadata=(jsonFilePath) --duration=(int) --singleBlock --setLease --v --fogIp=x.x.x.x --fogPort=(int) --edgeId=(int) --clientId=(string)")
+        print("-> If --singleBlock flag is specified then the file(s) is written as a single block of same size as as that of the file.")
+        print("-> The default value is NA, specified in edge confie file. Supported formats\n1.Snappy\n2.Gzip")
+        print("-> The duration paramater used to set the lease duration during a put. Default is 90 seconds")
     def help_get(self):
         print("Get file(s) using the microbatchId. If end is not specified then only the first block will be retreived (specified using start).")
-        print("Values of all parameters marked with * have to be specified during exection of the command.")
-        print("Usage :  get *--start=(int) --end=(int) --v --edgeId=(int) --edgeIp=x.x.x.x --edgePort=(int) --edgeReli=(int) --fogIp=x.x.x.x --fogPort=(int) ")
+        print("-> Values of all parameters marked with * have to be specified during exection of the command.")
+        print("** Usage :  get *--start=(int) --end=(int) --v --edgeId=(int) --edgeIp=x.x.x.x --edgePort=(int) --edgeReli=(int) --fogIp=x.x.x.x --fogPort=(int) ")
     def help_ls(self):
         print("List blocks in neighbors, buddy pool or in the whole system. Can by grouped by Edge or MbId")
-        print("The --neighbors argument is used to indicate listing of blocks present in the neighbors of the default/specified fog.")
-        print("The --buddies argument is used to indicate listing of blocks present in the buddy pool of the default/specified fog.")
-        print("The --all argument is used to indicate listing of blocks in the whole system.")
-        print("Grouping can be done using --groupBy argument either by 'edge' or by 'mbid'.")
-        print("Values of all parameters marked with * have to be specified during exection of the command.")
-        print("Usage (to list blocks in neighbors):  ls *--neighbors --groupBy=(str) --v --fogIp=x.x.x.x --fogPort=(int)")
-        print("Usage (to list blocks in buddy pool): ls *--buddies --groupBy=(str) --v --fogIp=x.x.x.x --fogPort=(int)")
-        print("Usage (to list blocks in neighbors and buddy pool): ls *--neighbors *--buddies --groupBy=(str) --v --fogIp=x.x.x.x --fogPort=(int)")
-        print("Usage (to list blocks in the entire system): ls *--all --groupBy=(str) --v --fogIp=x.x.x.x --fogPort=(int)")
-        print("The default value for --groupBy is 'edge'.")
+        print("-> The --neighbors argument is used to indicate listing of blocks present in the neighbors of the default/specified fog.")
+        print("-> The --buddies argument is used to indicate listing of blocks present in the buddy pool of the default/specified fog.")
+        print("-> The --all argument is used to indicate listing of blocks in the whole system.")
+        print("-> Grouping can be done using --groupBy argument either by 'edge' or by 'mbid'.")
+        print("-> Values of all parameters marked with * have to be specified during exection of the command.")
+        print("** Usage (to list blocks in neighbors):  ls *--neighbors --groupBy=(str) --v --fogIp=x.x.x.x --fogPort=(int)")
+        print("** Usage (to list blocks in buddy pool): ls *--buddies --groupBy=(str) --v --fogIp=x.x.x.x --fogPort=(int)")
+        print("** Usage (to list blocks in neighbors and buddy pool): ls *--neighbors *--buddies --groupBy=(str) --v --fogIp=x.x.x.x --fogPort=(int)")
+        print("** Usage (to list blocks in the entire system): ls *--all --groupBy=(str) --v --fogIp=x.x.x.x --fogPort=(int)")
+        print("-> The default value for --groupBy is 'edge'.")
     def help_join(self):
         print("Add new edges to the system, whose properties are defined in the config file.")
-        print("Values of all parameters marked with * have to be specified during exection of the command.")
-        print("Usage : join *--configFiles=(pathToConfigFilesFolder)")
+        print("-> Values of all parameters marked with * have to be specified during exection of the command.")
+        print("-> Usage : join *--configFiles=(pathToConfigFilesFolder)")
     def help_find(self):
         print("Find locations of blocks or find mbIds of blocks that have specific metadata properties (specified in a json file)")
-        print("Usage (Find edges containing specified block): find --mbid=(int) --v")
-        print("Usage (Find blocks with specific metadata properties): find --metadata=(jsonFilePath) --v")
+        print("** Usage (Find edges containing specified block): find --mbid=(int) --v")
+        print("** Usage (Find blocks with specific metadata properties): find --metadata=(jsonFilePath) --v")
     def help_exit(self):
         print("Exit elfs.")
 
@@ -222,6 +224,9 @@ if __name__ == '__main__':
     ## Hashed based on the edge id, since it is unique.
     #global CLIENT_ID
     CLIENT_ID = hashlib.md5(str(EDGE_ID).encode('utf-8')).hexdigest()
+
+    ## The default compression format is NA
+    COMP_FORMAT = edgeConfig['compFormat']
 
     ##Printing the session information.
     print("Session Information")
@@ -270,6 +275,7 @@ if __name__ == '__main__':
     ## 8. --clientId (default, hashed based on the edge id)
     ## 9. --setLease (flag)
     ## 10. --duration (same as expected lease implemented in server; default value as 0)
+    ## 11. --comp (has default, based on config file)
     put_parser = subparsers.add_parser("put")
     put_parser.add_argument("--path")
     put_parser.add_argument("--streamId")
@@ -282,6 +288,7 @@ if __name__ == '__main__':
     put_parser.add_argument("--singleBlock", action ="store_true")
     put_parser.add_argument("--setLease", action ="store_true")
     put_parser.add_argument("--duration",default=str(0))
+    put_parser.add_argument("--comp",default=COMP_FORMAT)
     put_parser.add_argument("--v","--verbose", action ="store_true")
 
     ## Parser for get command

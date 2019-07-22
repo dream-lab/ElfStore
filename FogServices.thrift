@@ -287,6 +287,8 @@ struct Metadata {
 	6: optional string checksum;
 	//this is similar to key value pairs as received for the stream
 	7: optional string properties;
+	8: optional string compFormat;
+	9: optional i64 uncompSize;
 }
 
 struct ReadResponse {
@@ -456,7 +458,7 @@ service FogService {
 							4:EdgeInfoData selfInfo);
 
 	//ReadReplica read(1: string microbatchId, 2:bool fetchMetadata);
-	ReadReplica read(1: i64 microbatchId, 2:bool fetchMetadata);
+	ReadReplica read(1: i64 microbatchId, 2:bool fetchMetadata,3:string compFormat,4:i64 uncompSize);
 
 	QueryReplica findUsingQuery(1: string metadataKey, 2:string metadataValue, 3:bool checkNeighbors, 4:bool checkBuddies);
 
@@ -504,6 +506,9 @@ service FogService {
 
 	//used to return edgeMicrobatchMap to the edge client
 	map<i16,set<i64>> requestEdgeMicrobatchMap();
+
+	// used to return compression format of a given microbatch/blockid
+	map<string,i64> requestCompFormatSize(1:i64 mbId);
 
 	//used to facilitate the api FindBlock(bquery)
 	map<i64,string> findBlockUsingQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies);

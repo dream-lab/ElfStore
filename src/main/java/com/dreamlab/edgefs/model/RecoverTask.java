@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -27,17 +29,17 @@ import com.dreamlab.edgefs.thrift.WritePreference;
 public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(RecoverTask.class);
-	
+
 	private short edgeId;
 	private Integer reliability;
 //	private String microbatchId;
 	private Long microbatchId;
 	private FogServiceHandler handler;
-	
+
 	public RecoverTask() {
-		
+
 	}
-	
+
 	public RecoverTask(short edgeId, Integer reliability, /*String microbatchId,*/
 			Long microbatchId, FogServiceHandler handler) {
 		super();
@@ -46,7 +48,7 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 		this.microbatchId = microbatchId;
 		this.handler = handler;
 	}
-	
+
 	public short getEdgeId() {
 		return edgeId;
 	}
@@ -102,7 +104,14 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 			TProtocol protocol = new TBinaryProtocol(transport);
 			FogService.Client fogClient = new FogService.Client(protocol);
 			try {
-				read = fogClient.read(microBatchId, true);
+				Map<String,Long> formatSize = new HashMap<>();
+				//This map will only contain a single entry
+				formatSize = fogClient.requestCompFormatSize(microbatchId);
+				//Read the first and only entry in the map
+				Map.Entry<String,Long> entry = formatSize.entrySet().iterator().next();
+				String compFormat = entry.getKey();
+				Long uncompSize = entry.getValue();
+				read = fogClient.read(microBatchId, true, compFormat, uncompSize);
 				LOGGER.info("Write complete for recovery");
 				break;
 			} catch (TException e) {
@@ -142,7 +151,7 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 					buffer.put(data, 0, data.length);
 					buffer.flip();
 					fogClient.write(read.getMetadata(), buffer, WritePreference.HHH);
-					
+
 				} catch (TException e) {
 					LOGGER.error("Error while writing data during recovery : " + e);
 					e.printStackTrace();
@@ -151,11 +160,11 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 					transport.close();
 				}
 			}
-			LOGGER.info("Successfully recovered microbatch : " + microBatchId 
+			LOGGER.info("Successfully recovered microbatch : " + microBatchId
 					+ " lost from edgeId: " + edgeId);
 			LOGGER.info("Recovery for microbatchId : " + microBatchId + " belonging to EdgeId: " + edgeId
 					+ " ends at " + System.currentTimeMillis());
-			
+
 			//remove the microbatch from the list of microbatches the edge has
 			//fetch edge from MbIdLocation map and remove this microbatchId
 			//Since the microbatchId is removed from the set, make sure to not
@@ -168,7 +177,7 @@ public class RecoverTask implements Comparable<RecoverTask>, Runnable {
 				LOGGER.info("All microbatches recovered for EdgeId: " + edgeId + " at " + System.currentTimeMillis());
 			}
 		}
-		
+
 	}
 
 }

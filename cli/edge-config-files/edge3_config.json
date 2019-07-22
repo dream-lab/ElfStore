@@ -6,5 +6,6 @@
   "fogIp" : "127.0.0.1",
   "fogPort" : 9091,
   "logsFolder" : "D:/Lab/DataAndLogs/edge3_logs",
-  "baseLog" : "D:/Lab/LogsFolder/base_logs"
+  "baseLog" : "D:/Lab/LogsFolder/base_logs",
+  "compFormat": "NA"
 }

@@ -9,6 +9,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 
+import java.lang.reflect.Method;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -44,12 +46,19 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 
 				// data
 				int length = mbData.remaining();
-   			byte[] mbDataInBytesArray = new byte[length];
-   			mbData.get(mbDataInBytesArray);
+				byte[] mbDataInBytesArray = new byte[length];
+				mbData.get(mbDataInBytesArray);
 
-				File myFile = new File(edge.getDatapath() + "/" + mbId + ".data");
-				FileUtils.writeByteArrayToFile(myFile, mbDataInBytesArray);
+				String filePath = edge.getDatapath() + "/" + mbId + ".data";
+				CompressionAndDecompression compAndDecompObj = new CompressionAndDecompression();
+				Class cls = compAndDecompObj.getClass();
+				Method compressAndWriteMethod = cls.getDeclaredMethod("compressAndWrite" + mbMetadata.getCompFormat(),String.class,byte[].class);
+				compressAndWriteMethod.invoke(compAndDecompObj,filePath,mbDataInBytesArray);
 
+				//File myFile = new File(edge.getDatapath() + "/" + mbId + ".data");
+				//FileUtils.writeByteArrayToFile(myFile, mbDataInBytesArray);
+
+				//ISHAN : Storage to be modified
 				int mbSize = mbDataInBytesArray.length/(1000 * 1000);
 				edge.setStorage(edge.getStorage() - mbSize);
 
@@ -70,18 +79,25 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 			} catch (IOException e) {
 				LOGGER.error("Error while writing the microbatch " + e);
 				e.printStackTrace();
+			} catch(Exception e){
+				e.printStackTrace();
 			}
 		}
 		return wrResponse;
 	}
 
 	@Override
-	public ReadReplica read(long mbId, byte fetchMetadata) throws TException {
+	public ReadReplica read(long mbId, byte fetchMetadata, String compFormat,long uncompSize) throws TException {
 		ReadReplica replica = new ReadReplica();
 		replica.setStatus(Constants.FAILURE);
-		File mbFile = new File(edge.getDatapath() + "/" + mbId + ".data");
+		String filePath = edge.getDatapath() + "/" + mbId + ".data";
+		//File mbFile = new File(edge.getDatapath() + "/" + mbId + ".data");
 		try {
-			byte[] byteArray = FileUtils.readFileToByteArray(mbFile);
+			CompressionAndDecompression compAndDecompObj = new CompressionAndDecompression();
+			Class cls = compAndDecompObj.getClass();
+			Method decompressAndReadMethod = cls.getDeclaredMethod("decompressAndRead" + compFormat,String.class,long.class);
+			byte[] byteArray = (byte[]) decompressAndReadMethod.invoke(compAndDecompObj, filePath,uncompSize);
+			//byte[] byteArray = FileUtils.readFileToByteArray(mbFile);
 			if (byteArray != null) {
 				replica.setData(byteArray);
 			} else {
@@ -108,6 +124,8 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 			LOGGER.error("Error while reading the microbatchId : " + mbId);
 			e.printStackTrace();
 			return replica;
+		} catch(Exception e){
+			e.printStackTrace();
 		}
 		replica.setStatus(Constants.SUCCESS);
 		return replica;

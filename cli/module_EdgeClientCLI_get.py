@@ -66,7 +66,16 @@ class EdgeClient:
 
 
     def formulateJsonResponse(self,mbid,replica):
-        metadataClientId = None; metadataSessionSecret = None; metadataStreamId = None; metadataMbId  = None; metadataTimeStamp = None; metadataChecksum = None; metadataProperties = None;
+        metadataClientId = None;
+        metadataSessionSecret = None;
+        metadataStreamId = None;
+        metadataMbId  = None;
+        metadataTimeStamp = None;
+        metadataChecksum = None;
+        metadataProperties = None;
+        metadataCompFormat = None;
+        metadataUncompSize = None;
+
         if replica.metadata != None:
             metadataClientId = replica.metadata.clientId
             metadataSessionSecret = replica.metadata.sessionSecret
@@ -75,8 +84,25 @@ class EdgeClient:
             metadataTimeStamp = replica.metadata.timestamp
             metadataChecksum = replica.metadata.checksum
             metadataProperties = replica.metadata.properties
+            metadataCompFormat  = replica.metadata.compFormat
+            metadataUncompSize = replica.metadata,uncompSize;
         mbData  = str(replica.data)
-        jsonResponse = {mbid : {"status": replica.status, "data": mbData,"metadata":{"clientId" : metadataClientId,"sessionSecret" : metadataSessionSecret,"streamId" : metadataStreamId,"mbId" : metadataMbId, "timestamp" : metadataTimeStamp,"checksum" : metadataChecksum,"properties" : metadataProperties}}}
+        jsonResponse = {mbid :
+         {
+        "status": replica.status,
+         "data": mbData,
+         "metadata":{
+            "clientId" : metadataClientId,
+            "sessionSecret" : metadataSessionSecret,
+            "streamId" : metadataStreamId,
+            "mbId" : metadataMbId,
+            "timestamp" : metadataTimeStamp,
+            "checksum" : metadataChecksum,
+            "properties" : metadataProperties,
+            "compFormat":metadataCompFormat,
+            "uncompSize": metadataUncompSize}
+            }
+        }
         global JSON_RESPONSE
         JSON_RESPONSE.update(jsonResponse)
 
@@ -128,6 +154,10 @@ class EdgeClient:
         timestamp_record = str(microbatchId)+ ",23, local ,find req,starttime = "+repr(time.time())+","
 
         response = client.find(microbatchId,True,True,edgeInfoData)
+        ## for obtaining compression format. required for performing read as filePath has to be formulated.
+        compFormatSize = client.requestCompFormatSize(microbatchId);
+        compFormat = list(compFormatSize.keys())[0];
+        uncompSize = compFormatSize[compFormat];
 
         timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
         print("the time stamp for find request is ",timestamp_record)
@@ -164,7 +194,7 @@ class EdgeClient:
                  transport.open()
 
                  timestamp_record = str(microbatchId)+", 25 , "+ str(findReplica.node.nodeId) + " , Read req,starttime = "+repr(time.time())+","
-                 response = client.read(microbatchId,0) #this is for recovery
+                 response = client.read(microbatchId,0,compFormat,uncompSize) #this is for recovery
                  timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
                  myLogs = open(BASE_LOG+ "logs.txt",'a')
                  myLogs.write(timestamp_record)
@@ -188,7 +218,7 @@ class EdgeClient:
                  client,transport = self.openSocketConnection(fogNode.NodeIP,fogNode.port,FOG_SERVICE)
 
                  timestamp_record = str(microbatchId)+", 27 ,"+str(findReplica.node.nodeId)  + ",write req,starttime = "+repr(time.time())+","
-                 response = client.read(microbatchId,0)
+                 response = client.read(microbatchId,0,compFormat,uncompSize)
                  timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
                  myLogs = open(BASE_LOG+ "logs.txt",'a')
                  myLogs.write(timestamp_record)

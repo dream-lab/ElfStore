@@ -59,6 +59,9 @@ SET_LEASE = bool()
 #The default value is set to 0 here; if it is found to be <=0 at the server side
 #then it is set to 90 seconds in FogServiceHandler
 EXPECTED_LEASE = int()
+# format for compression of blocks before storing them on edges
+COMP_FORMAT = str()
+UNCOMP_SIZE = int()
 
 ## Used when the --v (i.e verbose) is set to false
 ## The output of the python file of the correspoding command is written here
@@ -374,6 +377,8 @@ class EdgeClient:
         additional_prop = {}
         additional_prop["Name"] = "Sheshadri"
         metaData.properties = json.dumps(additional_prop)
+        metaData.compFormat = COMP_FORMAT
+        metaData.uncompSize = len(data)
 
 
         #print EDGE_ID,EDGE_IP,EDGE_PORT,EDGE_RELIABILITY,encodedSpace
@@ -588,7 +593,7 @@ class EdgeClient:
         myLogs.write(timestamp_record)
         myLogs.close()
 
-def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,splitChoice,setLease,leaseDuration,verbose = False):
+def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,splitChoice,setLease,leaseDuration,compFormat,verbose = False):
     myEdge = EdgeClient()
 
     global PATH
@@ -611,6 +616,8 @@ def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,split
     STREAM_RELIABILITY = myEdge.getStreamMetadataReliability(STREAM_ID)
     global EXPECTED_LEASE
     EXPECTED_LEASE = int(leaseDuration)
+    global COMP_FORMAT
+    COMP_FORMAT = compFormat
 
     ## Initialize the metaKeyValueMap dict. This dicionary/map comtains the optional metadata
     ## properties that can be specified by the end user during runtime.

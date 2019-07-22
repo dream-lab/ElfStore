@@ -52,11 +52,22 @@ class Iface(object):
         """
         pass
 
-    def read(self, mbId, fetchMetadata):
+    def update(self, mbId, mbMetadata, mbData):
+        """
+        Parameters:
+         - mbId
+         - mbMetadata
+         - mbData
+        """
+        pass
+
+    def read(self, mbId, fetchMetadata, compFormat, uncompSize):
         """
         Parameters:
          - mbId
          - fetchMetadata
+         - compFormat
+         - uncompSize
         """
         pass
 
@@ -212,20 +223,59 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "write failed: unknown result")
 
-    def read(self, mbId, fetchMetadata):
+    def update(self, mbId, mbMetadata, mbData):
+        """
+        Parameters:
+         - mbId
+         - mbMetadata
+         - mbData
+        """
+        self.send_update(mbId, mbMetadata, mbData)
+        return self.recv_update()
+
+    def send_update(self, mbId, mbMetadata, mbData):
+        self._oprot.writeMessageBegin('update', TMessageType.CALL, self._seqid)
+        args = update_args()
+        args.mbId = mbId
+        args.mbMetadata = mbMetadata
+        args.mbData = mbData
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_update(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = update_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "update failed: unknown result")
+
+    def read(self, mbId, fetchMetadata, compFormat, uncompSize):
         """
         Parameters:
          - mbId
          - fetchMetadata
+         - compFormat
+         - uncompSize
         """
-        self.send_read(mbId, fetchMetadata)
+        self.send_read(mbId, fetchMetadata, compFormat, uncompSize)
         return self.recv_read()
 
-    def send_read(self, mbId, fetchMetadata):
+    def send_read(self, mbId, fetchMetadata, compFormat, uncompSize):
         self._oprot.writeMessageBegin('read', TMessageType.CALL, self._seqid)
         args = read_args()
         args.mbId = mbId
         args.fetchMetadata = fetchMetadata
+        args.compFormat = compFormat
+        args.uncompSize = uncompSize
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -300,6 +350,7 @@ class Processor(Iface, TProcessor):
         self._processMap["insert"] = Processor.process_insert
         self._processMap["add"] = Processor.process_add
         self._processMap["write"] = Processor.process_write
+        self._processMap["update"] = Processor.process_update
         self._processMap["read"] = Processor.process_read
         self._processMap["getMetadata"] = Processor.process_getMetadata
         self._processMap["zip"] = Processor.process_zip
@@ -411,13 +462,36 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
+    def process_update(self, seqid, iprot, oprot):
+        args = update_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = update_result()
+        try:
+            result.success = self._handler.update(args.mbId, args.mbMetadata, args.mbData)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("update", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
     def process_read(self, seqid, iprot, oprot):
         args = read_args()
         args.read(iprot)
         iprot.readMessageEnd()
         result = read_result()
         try:
-            result.success = self._handler.read(args.mbId, args.fetchMetadata)
+            result.success = self._handler.read(args.mbId, args.fetchMetadata, args.compFormat, args.uncompSize)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -958,17 +1032,168 @@ write_result.thrift_spec = (
 )
 
 
+class update_args(object):
+    """
+    Attributes:
+     - mbId
+     - mbMetadata
+     - mbData
+    """
+
+
+    def __init__(self, mbId=None, mbMetadata=None, mbData=None,):
+        self.mbId = mbId
+        self.mbMetadata = mbMetadata
+        self.mbData = mbData
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I64:
+                    self.mbId = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.mbMetadata = Metadata()
+                    self.mbMetadata.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.mbData = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('update_args')
+        if self.mbId is not None:
+            oprot.writeFieldBegin('mbId', TType.I64, 1)
+            oprot.writeI64(self.mbId)
+            oprot.writeFieldEnd()
+        if self.mbMetadata is not None:
+            oprot.writeFieldBegin('mbMetadata', TType.STRUCT, 2)
+            self.mbMetadata.write(oprot)
+            oprot.writeFieldEnd()
+        if self.mbData is not None:
+            oprot.writeFieldBegin('mbData', TType.STRING, 3)
+            oprot.writeBinary(self.mbData)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(update_args)
+update_args.thrift_spec = (
+    None,  # 0
+    (1, TType.I64, 'mbId', None, None, ),  # 1
+    (2, TType.STRUCT, 'mbMetadata', [Metadata, None], None, ),  # 2
+    (3, TType.STRING, 'mbData', 'BINARY', None, ),  # 3
+)
+
+
+class update_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = WriteResponse()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('update_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(update_result)
+update_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [WriteResponse, None], None, ),  # 0
+)
+
+
 class read_args(object):
     """
     Attributes:
      - mbId
      - fetchMetadata
+     - compFormat
+     - uncompSize
     """
 
 
-    def __init__(self, mbId=None, fetchMetadata=None,):
+    def __init__(self, mbId=None, fetchMetadata=None, compFormat=None, uncompSize=None,):
         self.mbId = mbId
         self.fetchMetadata = fetchMetadata
+        self.compFormat = compFormat
+        self.uncompSize = uncompSize
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -989,6 +1214,16 @@ class read_args(object):
                     self.fetchMetadata = iprot.readByte()
                 else:
                     iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.compFormat = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I64:
+                    self.uncompSize = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -1006,6 +1241,14 @@ class read_args(object):
         if self.fetchMetadata is not None:
             oprot.writeFieldBegin('fetchMetadata', TType.BYTE, 2)
             oprot.writeByte(self.fetchMetadata)
+            oprot.writeFieldEnd()
+        if self.compFormat is not None:
+            oprot.writeFieldBegin('compFormat', TType.STRING, 3)
+            oprot.writeString(self.compFormat.encode('utf-8') if sys.version_info[0] == 2 else self.compFormat)
+            oprot.writeFieldEnd()
+        if self.uncompSize is not None:
+            oprot.writeFieldBegin('uncompSize', TType.I64, 4)
+            oprot.writeI64(self.uncompSize)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -1028,6 +1271,8 @@ read_args.thrift_spec = (
     None,  # 0
     (1, TType.I64, 'mbId', None, None, ),  # 1
     (2, TType.BYTE, 'fetchMetadata', None, None, ),  # 2
+    (3, TType.STRING, 'compFormat', 'UTF8', None, ),  # 3
+    (4, TType.I64, 'uncompSize', None, None, ),  # 4
 )
 
 

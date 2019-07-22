@@ -1222,7 +1222,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	@Override
-	public ReadReplica read(long microbatchId, boolean fetchMetadata) throws TException {
+	public ReadReplica read(long microbatchId, boolean fetchMetadata, String compFormat, long uncompSize) throws TException {
 		ReadReplica data = new ReadReplica();
 		data.setStatus(Constants.FAILURE);
 
@@ -1260,9 +1260,9 @@ public class FogServiceHandler implements FogService.Iface {
 						EdgeService.Client edgeClient = new EdgeService.Client(protocol);
 						try {
 							if (fetchMetadata) {
-								data = edgeClient.read(microbatchId, (byte) 1);
+								data = edgeClient.read(microbatchId, (byte) 1, compFormat,uncompSize);
 							} else {
-								data = edgeClient.read(microbatchId, (byte) 0);
+								data = edgeClient.read(microbatchId, (byte) 0, compFormat,uncompSize);
 							}
 							readData = true;
 						} catch (TException e) {
@@ -2853,6 +2853,14 @@ public class FogServiceHandler implements FogService.Iface {
 		Map<Short, Set<Long>> edgeMbIdMap = new ConcurrentHashMap<>();
 		edgeMbIdMap = fog.getEdgeMicrobatchMap();
 		return edgeMbIdMap;
+	}
+
+	@Override
+	public Map<String,Long> requestCompFormatSize(long mbId){
+		Map<String,Long> response =new HashMap<String,Long>();
+		Metadata mbMetadata = fog.getBlockMetadata().get(mbId);
+		response.put(mbMetadata.getCompFormat(),mbMetadata.getUncompSize());
+		return response;
 	}
 
 	@Override

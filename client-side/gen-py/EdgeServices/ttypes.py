@@ -110,10 +110,12 @@ class Metadata(object):
      - timestamp
      - checksum
      - properties
+     - compFormat
+     - uncompSize
     """
 
 
-    def __init__(self, clientId=None, sessionSecret=None, streamId=None, mbId=None, timestamp=None, checksum=None, properties=None,):
+    def __init__(self, clientId=None, sessionSecret=None, streamId=None, mbId=None, timestamp=None, checksum=None, properties=None, compFormat=None, uncompSize=None,):
         self.clientId = clientId
         self.sessionSecret = sessionSecret
         self.streamId = streamId
@@ -121,6 +123,8 @@ class Metadata(object):
         self.timestamp = timestamp
         self.checksum = checksum
         self.properties = properties
+        self.compFormat = compFormat
+        self.uncompSize = uncompSize
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -166,6 +170,16 @@ class Metadata(object):
                     self.properties = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
+            elif fid == 8:
+                if ftype == TType.STRING:
+                    self.compFormat = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 9:
+                if ftype == TType.I64:
+                    self.uncompSize = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -203,6 +217,14 @@ class Metadata(object):
         if self.properties is not None:
             oprot.writeFieldBegin('properties', TType.STRING, 7)
             oprot.writeString(self.properties.encode('utf-8') if sys.version_info[0] == 2 else self.properties)
+            oprot.writeFieldEnd()
+        if self.compFormat is not None:
+            oprot.writeFieldBegin('compFormat', TType.STRING, 8)
+            oprot.writeString(self.compFormat.encode('utf-8') if sys.version_info[0] == 2 else self.compFormat)
+            oprot.writeFieldEnd()
+        if self.uncompSize is not None:
+            oprot.writeFieldBegin('uncompSize', TType.I64, 9)
+            oprot.writeI64(self.uncompSize)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -600,6 +622,8 @@ Metadata.thrift_spec = (
     (5, TType.I64, 'timestamp', None, None, ),  # 5
     (6, TType.STRING, 'checksum', 'UTF8', None, ),  # 6
     (7, TType.STRING, 'properties', 'UTF8', None, ),  # 7
+    (8, TType.STRING, 'compFormat', 'UTF8', None, ),  # 8
+    (9, TType.I64, 'uncompSize', None, None, ),  # 9
 )
 all_structs.append(EdgeInfoData)
 EdgeInfoData.thrift_spec = (

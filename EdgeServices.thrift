@@ -63,7 +63,7 @@ struct ParentFog {
 	3: required i32 port,
 }
 
-/*	
+/*
 struct Metadata {
 	1: required string mbId,
 	2: required string streamId,
@@ -80,13 +80,15 @@ struct Metadata {
 	3: required string streamId;
 	4: required i64 mbId;
 	5: required i64 timestamp;
-	6: required string videocliplocation;
 	//this is optional since if write is not routed through
 	//the Fog but directly to the Edge, then insertMetadata
 	//will supply the checksum else it will be computed at
 	//the Fog as the data is present for that case
+	6: optional string checksum;
 	//this is similar to key value pairs as received for the stream
 	7: optional string properties;
+  	8: optional string compFormat;
+  	9: optional i64 uncompSize;
 }
 
 struct EdgeInfoData {
@@ -134,16 +136,16 @@ service EdgeService {
    i32 add(1:i32 num1, 2:i32 num2),
 
    //byte write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
-   
+
    //WriteResponse write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData),
    WriteResponse write(1:i64 mbId, 2:Metadata mbMetadata, 3:binary mbData),
 
    //this will overwrite the existing metadata
    WriteResponse update(1:i64 mbId, 2:Metadata mbMetadata, 3:binary mbData),
 
-   //ReadReplica read(1:string mbId, 2:byte fetchMetadata),
-   ReadReplica read(1:i64 mbId, 2:byte fetchMetadata),
-   
+   //ReadReplica read(1:string mbId, 2:byte fetchMetadata,3:string compFormat),
+   ReadReplica read(1:i64 mbId, 2:byte fetchMetadata,3:string compFormat,4:i64 uncompSize),
+
    //this only returns the metadata
    //ReadReplica getMetadata(1:string mbId),
    ReadReplica getMetadata(1:i64 mbId),

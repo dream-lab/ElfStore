@@ -52,7 +52,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  i8 insertMetadata(Metadata mbMetadata, EdgeInfoData edgeInfoData,  metaKeyValueMap)')
     print('  string findNext(string microbatchId)')
     print('   find(i64 microbatchId, bool checkNeighbors, bool checkBuddies, EdgeInfoData selfInfo)')
-    print('  ReadReplica read(i64 microbatchId, bool fetchMetadata)')
+    print('  ReadReplica read(i64 microbatchId, bool fetchMetadata, string compFormat, i64 uncompSize)')
     print('  QueryReplica findUsingQuery(string metadataKey, string metadataValue, bool checkNeighbors, bool checkBuddies)')
     print('  ReadReplica getMeta(i64 microbatchId, bool checkNeighbors, bool checkBuddies)')
     print('  i8 serializeState()')
@@ -67,6 +67,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   listLocalPartitionMbId(bool flag)')
     print('   requestAllNeighbors()')
     print('   requestEdgeMicrobatchMap()')
+    print('   requestCompFormatSize(i64 mbId)')
     print('   findBlockUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies)')
     print('')
     sys.exit(0)
@@ -316,10 +317,10 @@ elif cmd == 'find':
     pp.pprint(client.find(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]),))
 
 elif cmd == 'read':
-    if len(args) != 2:
-        print('read requires 2 args')
+    if len(args) != 4:
+        print('read requires 4 args')
         sys.exit(1)
-    pp.pprint(client.read(eval(args[0]), eval(args[1]),))
+    pp.pprint(client.read(eval(args[0]), eval(args[1]), args[2], eval(args[3]),))
 
 elif cmd == 'findUsingQuery':
     if len(args) != 4:
@@ -404,6 +405,12 @@ elif cmd == 'requestEdgeMicrobatchMap':
         print('requestEdgeMicrobatchMap requires 0 args')
         sys.exit(1)
     pp.pprint(client.requestEdgeMicrobatchMap())
+
+elif cmd == 'requestCompFormatSize':
+    if len(args) != 1:
+        print('requestCompFormatSize requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.requestCompFormatSize(eval(args[0]),))
 
 elif cmd == 'findBlockUsingQuery':
     if len(args) != 3:
