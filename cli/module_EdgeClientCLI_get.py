@@ -157,7 +157,7 @@ class EdgeClient:
         ## for obtaining compression format. required for performing read as filePath has to be formulated.
         compFormat = str()
         uncompSize = int()
-        print(compFormatSize)
+        compFormatSize = client.requestCompFormatSize(microbatchId);
         if len(compFormatSize) !=0:
             ## i.e format and uncompressed size present
             compFormat = list(compFormatSize.keys())[0];
