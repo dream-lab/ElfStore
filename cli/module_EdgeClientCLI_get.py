@@ -155,9 +155,13 @@ class EdgeClient:
 
         response = client.find(microbatchId,True,True,edgeInfoData)
         ## for obtaining compression format. required for performing read as filePath has to be formulated.
-        compFormatSize = client.requestCompFormatSize(microbatchId);
-        compFormat = list(compFormatSize.keys())[0];
-        uncompSize = compFormatSize[compFormat];
+        compFormat = str()
+        uncompSize = int()
+        print(compFormatSize)
+        if len(compFormatSize) !=0:
+            ## i.e format and uncompressed size present
+            compFormat = list(compFormatSize.keys())[0];
+            uncompSize = compFormatSize[compFormat];
 
         timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
         print("the time stamp for find request is ",timestamp_record)

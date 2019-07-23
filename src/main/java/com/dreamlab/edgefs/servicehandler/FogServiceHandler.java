@@ -2859,7 +2859,10 @@ public class FogServiceHandler implements FogService.Iface {
 	public Map<String,Long> requestCompFormatSize(long mbId){
 		Map<String,Long> response =new HashMap<String,Long>();
 		Metadata mbMetadata = fog.getBlockMetadata().get(mbId);
-		response.put(mbMetadata.getCompFormat(),mbMetadata.getUncompSize());
+		if(mbMetadata != null) {
+			response.put(mbMetadata.getCompFormat(),mbMetadata.getUncompSize());
+		}
+		
 		return response;
 	}
 
