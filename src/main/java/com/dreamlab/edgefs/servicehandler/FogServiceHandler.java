@@ -2891,11 +2891,11 @@ public class FogServiceHandler implements FogService.Iface {
 	 * 		2.1 if all the properties are satisfied only then make a connection to that particular neighbor.
 	 * 		2.2 perform 1. and 2. but here current fog is the neighbor to whom the connection is made.
 	 * 		2.3 do a union of the "current set" and the set returned by the neighbor.
-	 * 4. check for buddies
-	 * 		4.1 if all the properties are satisfied only then make a connection to that particular buddy.
-	 * 		4.2 perform 1. and 2. but here current fog is the buddy to whom the connection is made.
-	 * 		4.3 do a union of the "current set" and the set returned by the buddy
-	 * 5. return the "current set".
+	 * 3. check for buddies
+	 * 		3.1 if all the properties are satisfied only then make a connection to that particular buddy.
+	 * 		3.2 perform 1. and 2. but here current fog is the buddy to whom the connection is made.
+	 * 		3.3 do a union of the "current set" and the set returned by the buddy
+	 * 4. return the "current set".
 	 */
 	
 	@Override
