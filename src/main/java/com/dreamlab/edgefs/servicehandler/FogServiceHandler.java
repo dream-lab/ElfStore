@@ -964,6 +964,17 @@ public class FogServiceHandler implements FogService.Iface {
 				fog.getStreamMetaStreamIdMap().get("" + metadata.getMinReplica().getValue()).add(streamId);
 				LOGGER.info("ADDED MIN REPLICA " + fog.getStreamMetaStreamIdMap().toString());
 			}
+			
+			/** static property max replica**/
+			if (fog.getStreamMetaStreamIdMap().containsKey("" + metadata.getMaxReplica().getValue()) == false) {
+				HashSet<String> myStreamIdSet = new HashSet<String>();
+				myStreamIdSet.add(streamId);
+				fog.getStreamMetaStreamIdMap().put("" + metadata.getMaxReplica().getValue(), myStreamIdSet);
+				LOGGER.info("ADDED MAX REPLICA " + fog.getStreamMetaStreamIdMap().toString());
+			} else {
+				fog.getStreamMetaStreamIdMap().get("" + metadata.getMaxReplica().getValue()).add(streamId);
+				LOGGER.info("ADDED MAX REPLICA " + fog.getStreamMetaStreamIdMap().toString());
+			}
 
 			/** static property reliability **/
 			if (fog.getStreamMetaStreamIdMap().containsKey("" + metadata.getReliability().getValue()) == false) {
@@ -1084,6 +1095,12 @@ public class FogServiceHandler implements FogService.Iface {
 		BloomFilter.storeEntry(Constants.STREAM_METADATA_ID, streamId, streamBloomFilter);
 		BloomFilter.storeEntry(Constants.STREAM_METADATA_START_TIME,
 				String.valueOf(streamMetadata.getStartTime().getValue()), streamBloomFilter);
+		
+		//ISHAN: added to support findStreamUsingQuery() API ,similar to findBlockUsingQuery() API
+		// Three static metadata properties are updated. 1. minReplica, 2. maxReplica, 3. reli
+		BloomFilter.storeEntry(Constants.STREAM_MIN_REPLICA,String.valueOf(streamMetadata.getMinReplica().getValue()), streamBloomFilter);
+		BloomFilter.storeEntry(Constants.STREAM_MAX_REPLICA,String.valueOf(streamMetadata.getMaxReplica().getValue()), streamBloomFilter);
+		BloomFilter.storeEntry(Constants.STREAM_RELIABILITY,String.valueOf(streamMetadata.getReliability().getValue()), streamBloomFilter);
 		// others can also be hashed and stored in BF but since search is supported on
 		// top of
 		// streamId only to fetch the StreamMetadata, for now this will do
@@ -2865,6 +2882,169 @@ public class FogServiceHandler implements FogService.Iface {
 		
 		return response;
 	}
+	
+	/*
+	 * 
+	 * Execution trace for findStreamUsingQuery
+	 * 1. get the set of valid streamIds for the current fog (i.e the streamids that satisfy all the meta data map query entries)
+	 * 2. check for neighbors 
+	 * 		2.1 if all the properties are satisfied only then make a connection to that particular neighbor.
+	 * 		2.2 perform 1. and 2. but here current fog is the neighbor to whom the connection is made.
+	 * 		2.3 do a union of the "current set" and the set returned by the neighbor.
+	 * 4. check for buddies
+	 * 		4.1 if all the properties are satisfied only then make a connection to that particular buddy.
+	 * 		4.2 perform 1. and 2. but here current fog is the buddy to whom the connection is made.
+	 * 		4.3 do a union of the "current set" and the set returned by the buddy
+	 * 5. return the "current set".
+	 */
+	
+	@Override
+	public Set<String> findStreamUsingQuery(Map<String,String> metaKeyValueMap, boolean checkNeighbors, 
+			boolean checkBuddies){
+		
+		Set<String> validStreamIdSet = new HashSet<>();
+		boolean firstPass = true;
+		Iterator<Map.Entry<String,String>> itr = metaKeyValueMap.entrySet().iterator();
+		while(itr.hasNext()) {
+			Map.Entry<String,String> entry = itr.next();
+			// currently the user can query over 3 static properties
+			// 1. minReplica, 2. maxReplica, 3.Reliability
+			String value = entry.getValue();
+				Set<String> matchingStreamIds = fog.getStreamMetaStreamIdMap().get(value);
+				if(firstPass) {
+					if(matchingStreamIds != null)
+						validStreamIdSet.addAll(matchingStreamIds);
+					firstPass = false;
+				} else {
+					if(matchingStreamIds != null)
+						validStreamIdSet.retainAll(matchingStreamIds);
+				}
+			}
+			// all properties checked; the validStreamIdSet has been obtained
+				if (checkNeighbors) {
+					getValidStreamIdSetFromNeighbors(metaKeyValueMap, validStreamIdSet);
+				}
+				if (checkBuddies) {
+					getValidStreamIdSetFromBuddies(metaKeyValueMap, validStreamIdSet);
+				}
+				return validStreamIdSet;	
+		}
+			
+
+	private void getValidStreamIdSetFromNeighbors(Map<String,String> metaKeyValueMap, Set<String> currentStreamIdSet){
+		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
+		for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
+			FogExchangeInfo nInfo = entry.getValue();
+			if (nInfo != null) {
+				byte[] streamBloomFilter = nInfo.getStreamBFilterUpdates();
+
+				// Iteration needed; based on number of properties passed for condition checking
+				// in the map
+				boolean allSatisfiedFlag = true;
+				Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
+				while (itr.hasNext()) {
+					Map.Entry<String, String> entryMeta = itr.next();
+
+					if (BloomFilter.search(entryMeta.getKey(), entryMeta.getValue(), streamBloomFilter))
+						continue;
+					else {
+						// i.e at least one of the perperty does not match in the blocks present under
+						// this neighbor
+						allSatisfiedFlag = false;
+						break;
+					}
+				}
+				if (allSatisfiedFlag) {
+					// i.e all the metadata key value pairs are present
+					NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
+					Set<String> nValidStreamIdSet = fetchValidStreamIdSetFromOtherFog(
+							neighbor.getNode().getNodeIP(), neighbor.getNode().getPort(), metaKeyValueMap, false,
+							false);
+					// Take a union of nValidStreamIdSet and currentStreamIdSet
+					LOGGER.info("2. neighbor fog matching: "+ nValidStreamIdSet);
+					currentStreamIdSet.addAll(nValidStreamIdSet);
+				}
+
+			}
+		}
+	}
+	
+	private void getValidStreamIdSetFromBuddies(Map<String,String> metaKeyValueMap, Set<String> currentStreamIdSet) {
+		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
+		for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
+			FogExchangeInfo buddyInfo = entry.getValue();
+			if (buddyInfo != null) {
+				byte[] streamBloomFilter = buddyInfo.getStreamBFilterUpdates();
+				// Iteration needed; based on number of properties passed for condition checking
+				// in the map
+				boolean allSatisfiedFlag = true;
+				Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
+				while (itr.hasNext()) {
+					Map.Entry<String, String> entryMeta = itr.next();
+					if (BloomFilter.search(entryMeta.getKey(), entryMeta.getValue(), streamBloomFilter))
+						continue;
+					else {
+						// i.e at least one of the perperty does not match in the blocks present under
+						// this neighbor
+						allSatisfiedFlag = false;
+						break;
+					}
+				}
+				if (allSatisfiedFlag) {
+					// i.e all the metadata key value pairs are present
+					FogInfo buddy = fog.getBuddyMap().get(entry.getKey());
+					Set<String> bValidStreamIdSet = fetchValidStreamIdSetFromOtherFog(buddy.getNodeIP(),
+							buddy.getPort(), metaKeyValueMap, true, false);
+					// Take a union of nMatchingMbIdStreamIdMap and currentMbIdStreamIdMap
+					LOGGER.info("3. buddy fog matching: "+ bValidStreamIdSet);
+					currentStreamIdSet.addAll(bValidStreamIdSet);
+				}
+
+			}
+		}
+	}
+	
+	private Set<String> fetchValidStreamIdSetFromOtherFog(String ip, int port, Map<String, String> metaKeyValueMap,
+			boolean checkNeighbors, boolean checkBuddies) {
+		Set<String> otherValidStreamIdSet = new HashSet<>();
+		TTransport transport = new TFramedTransport(new TSocket(ip, port));
+		try {
+			transport.open();
+		} catch (TTransportException e) {
+			transport.close();
+			LOGGER.error("Error while connecting to Fog ip : " + ip, e);
+			e.printStackTrace();
+			return otherValidStreamIdSet;
+		}
+		TProtocol protocol = new TBinaryProtocol(transport);
+		FogService.Client fogClient = new FogService.Client(protocol);
+		try {
+			otherValidStreamIdSet = fogClient.findStreamUsingQuery(metaKeyValueMap, checkNeighbors, checkBuddies);
+		} catch (TException e) {
+			LOGGER.error("Error while querying stream data from Fog ip : " + ip, e);
+			e.printStackTrace();
+		} finally {
+			transport.close();
+		}
+		return otherValidStreamIdSet;
+	}
+	
+	
+	/*
+	 * 
+	 * Execution trace for findBlockUsingQuery
+	 * 1. get the list of valid microbatchIds for the current fog (i.e the mbids that satisfy all the meta data map query entries)
+	 * 2. formulate the response map (since we are required to return valid mbids along with the corresponding streamids)
+	 * 3. check for neighbors 
+	 * 		3.1 if all the properties are satisfied only then make a connection to that particular neighbor.
+	 * 		3.2 perform 1. and 2. but here current fog is the neighbor to whom the connection is made.
+	 * 		3.3 do a union of the "current map" and the map returned by the neighbor.
+	 * 4. check for buddies
+	 * 		4.1 if all the properties are satisfied only then make a connection to that particular buddy.
+	 * 		4.2 perform 1. and 2. but here current fog is the buddy to whom the connection is made.
+	 * 		4.3 do a union of the "current map" and the map returned by the buddy
+	 * 5. return the "current map".
+	 */
 
 	@Override
 	public Map<Long, String> findBlockUsingQuery(Map<String, String> metaKeyValueMap, boolean checkNeighbors,

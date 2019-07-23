@@ -84,6 +84,14 @@ public final class Constants {
 	
 	public static String STREAM_METADATA_ID = "streamId";
 	
+	//ISHAN: for findStreamUsingQuery
+	
+	public static String STREAM_MIN_REPLICA = "minReplica";
+	
+	public static String STREAM_MAX_REPLICA = "maxReplica";
+	
+	public static String STREAM_RELIABILITY = "reli";
+	
 	public static String STREAM_METADATA_START_TIME = "startTime";
 	
 	public static String MICROBATCH_METADATA_ID = "mbId";

@@ -509,7 +509,10 @@ service FogService {
 
 	// used to return compression format of a given microbatch/blockid
 	map<string,i64> requestCompFormatSize(1:i64 mbId);
-
+	
+	//used to facilitate the api FindStream(squery)
+	set<string> findStreamUsingQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies);
+	
 	//used to facilitate the api FindBlock(bquery)
 	map<i64,string> findBlockUsingQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies);
 }

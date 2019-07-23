@@ -68,6 +68,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   requestAllNeighbors()')
     print('   requestEdgeMicrobatchMap()')
     print('   requestCompFormatSize(i64 mbId)')
+    print('   findStreamUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies)')
     print('   findBlockUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies)')
     print('')
     sys.exit(0)
@@ -411,6 +412,12 @@ elif cmd == 'requestCompFormatSize':
         print('requestCompFormatSize requires 1 args')
         sys.exit(1)
     pp.pprint(client.requestCompFormatSize(eval(args[0]),))
+
+elif cmd == 'findStreamUsingQuery':
+    if len(args) != 3:
+        print('findStreamUsingQuery requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.findStreamUsingQuery(eval(args[0]), eval(args[1]), eval(args[2]),))
 
 elif cmd == 'findBlockUsingQuery':
     if len(args) != 3:

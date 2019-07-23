@@ -344,6 +344,15 @@ class Iface(object):
         """
         pass
 
+    def findStreamUsingQuery(self, metaKeyValueMap, checkNeighbors, checkBuddies):
+        """
+        Parameters:
+         - metaKeyValueMap
+         - checkNeighbors
+         - checkBuddies
+        """
+        pass
+
     def findBlockUsingQuery(self, metaKeyValueMap, checkNeighbors, checkBuddies):
         """
         Parameters:
@@ -1743,6 +1752,41 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "requestCompFormatSize failed: unknown result")
 
+    def findStreamUsingQuery(self, metaKeyValueMap, checkNeighbors, checkBuddies):
+        """
+        Parameters:
+         - metaKeyValueMap
+         - checkNeighbors
+         - checkBuddies
+        """
+        self.send_findStreamUsingQuery(metaKeyValueMap, checkNeighbors, checkBuddies)
+        return self.recv_findStreamUsingQuery()
+
+    def send_findStreamUsingQuery(self, metaKeyValueMap, checkNeighbors, checkBuddies):
+        self._oprot.writeMessageBegin('findStreamUsingQuery', TMessageType.CALL, self._seqid)
+        args = findStreamUsingQuery_args()
+        args.metaKeyValueMap = metaKeyValueMap
+        args.checkNeighbors = checkNeighbors
+        args.checkBuddies = checkBuddies
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_findStreamUsingQuery(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = findStreamUsingQuery_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "findStreamUsingQuery failed: unknown result")
+
     def findBlockUsingQuery(self, metaKeyValueMap, checkNeighbors, checkBuddies):
         """
         Parameters:
@@ -1827,6 +1871,7 @@ class Processor(Iface, TProcessor):
         self._processMap["requestAllNeighbors"] = Processor.process_requestAllNeighbors
         self._processMap["requestEdgeMicrobatchMap"] = Processor.process_requestEdgeMicrobatchMap
         self._processMap["requestCompFormatSize"] = Processor.process_requestCompFormatSize
+        self._processMap["findStreamUsingQuery"] = Processor.process_findStreamUsingQuery
         self._processMap["findBlockUsingQuery"] = Processor.process_findBlockUsingQuery
 
     def process(self, iprot, oprot):
@@ -2828,6 +2873,29 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("requestCompFormatSize", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_findStreamUsingQuery(self, seqid, iprot, oprot):
+        args = findStreamUsingQuery_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = findStreamUsingQuery_result()
+        try:
+            result.success = self._handler.findStreamUsingQuery(args.metaKeyValueMap, args.checkNeighbors, args.checkBuddies)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("findStreamUsingQuery", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -8616,7 +8684,7 @@ requestCompFormatSize_result.thrift_spec = (
 )
 
 
-class findBlockUsingQuery_args(object):
+class findStreamUsingQuery_args(object):
     """
     Attributes:
      - metaKeyValueMap
@@ -8669,13 +8737,176 @@ class findBlockUsingQuery_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('findBlockUsingQuery_args')
+        oprot.writeStructBegin('findStreamUsingQuery_args')
         if self.metaKeyValueMap is not None:
             oprot.writeFieldBegin('metaKeyValueMap', TType.MAP, 1)
             oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.metaKeyValueMap))
             for kiter211, viter212 in self.metaKeyValueMap.items():
                 oprot.writeString(kiter211.encode('utf-8') if sys.version_info[0] == 2 else kiter211)
                 oprot.writeString(viter212.encode('utf-8') if sys.version_info[0] == 2 else viter212)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.checkNeighbors is not None:
+            oprot.writeFieldBegin('checkNeighbors', TType.BOOL, 2)
+            oprot.writeBool(self.checkNeighbors)
+            oprot.writeFieldEnd()
+        if self.checkBuddies is not None:
+            oprot.writeFieldBegin('checkBuddies', TType.BOOL, 3)
+            oprot.writeBool(self.checkBuddies)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(findStreamUsingQuery_args)
+findStreamUsingQuery_args.thrift_spec = (
+    None,  # 0
+    (1, TType.MAP, 'metaKeyValueMap', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 1
+    (2, TType.BOOL, 'checkNeighbors', None, None, ),  # 2
+    (3, TType.BOOL, 'checkBuddies', None, None, ),  # 3
+)
+
+
+class findStreamUsingQuery_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.SET:
+                    self.success = set()
+                    (_etype216, _size213) = iprot.readSetBegin()
+                    for _i217 in range(_size213):
+                        _elem218 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.add(_elem218)
+                    iprot.readSetEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('findStreamUsingQuery_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.SET, 0)
+            oprot.writeSetBegin(TType.STRING, len(self.success))
+            for iter219 in self.success:
+                oprot.writeString(iter219.encode('utf-8') if sys.version_info[0] == 2 else iter219)
+            oprot.writeSetEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(findStreamUsingQuery_result)
+findStreamUsingQuery_result.thrift_spec = (
+    (0, TType.SET, 'success', (TType.STRING, 'UTF8', False), None, ),  # 0
+)
+
+
+class findBlockUsingQuery_args(object):
+    """
+    Attributes:
+     - metaKeyValueMap
+     - checkNeighbors
+     - checkBuddies
+    """
+
+
+    def __init__(self, metaKeyValueMap=None, checkNeighbors=None, checkBuddies=None,):
+        self.metaKeyValueMap = metaKeyValueMap
+        self.checkNeighbors = checkNeighbors
+        self.checkBuddies = checkBuddies
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.MAP:
+                    self.metaKeyValueMap = {}
+                    (_ktype221, _vtype222, _size220) = iprot.readMapBegin()
+                    for _i224 in range(_size220):
+                        _key225 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val226 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.metaKeyValueMap[_key225] = _val226
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BOOL:
+                    self.checkNeighbors = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.BOOL:
+                    self.checkBuddies = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('findBlockUsingQuery_args')
+        if self.metaKeyValueMap is not None:
+            oprot.writeFieldBegin('metaKeyValueMap', TType.MAP, 1)
+            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.metaKeyValueMap))
+            for kiter227, viter228 in self.metaKeyValueMap.items():
+                oprot.writeString(kiter227.encode('utf-8') if sys.version_info[0] == 2 else kiter227)
+                oprot.writeString(viter228.encode('utf-8') if sys.version_info[0] == 2 else viter228)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.checkNeighbors is not None:
@@ -8733,11 +8964,11 @@ class findBlockUsingQuery_result(object):
             if fid == 0:
                 if ftype == TType.MAP:
                     self.success = {}
-                    (_ktype214, _vtype215, _size213) = iprot.readMapBegin()
-                    for _i217 in range(_size213):
-                        _key218 = iprot.readI64()
-                        _val219 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success[_key218] = _val219
+                    (_ktype230, _vtype231, _size229) = iprot.readMapBegin()
+                    for _i233 in range(_size229):
+                        _key234 = iprot.readI64()
+                        _val235 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success[_key234] = _val235
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -8754,9 +8985,9 @@ class findBlockUsingQuery_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.MAP, 0)
             oprot.writeMapBegin(TType.I64, TType.STRING, len(self.success))
-            for kiter220, viter221 in self.success.items():
-                oprot.writeI64(kiter220)
-                oprot.writeString(viter221.encode('utf-8') if sys.version_info[0] == 2 else viter221)
+            for kiter236, viter237 in self.success.items():
+                oprot.writeI64(kiter236)
+                oprot.writeString(viter237.encode('utf-8') if sys.version_info[0] == 2 else viter237)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
