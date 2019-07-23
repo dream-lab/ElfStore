@@ -2996,7 +2996,6 @@ public class FogServiceHandler implements FogService.Iface {
 					Set<String> bValidStreamIdSet = fetchValidStreamIdSetFromOtherFog(buddy.getNodeIP(),
 							buddy.getPort(), metaKeyValueMap, true, false);
 					// Take a union of nMatchingMbIdStreamIdMap and currentMbIdStreamIdMap
-					LOGGER.info("3. buddy fog matching: "+ bValidStreamIdSet);
 					currentStreamIdSet.addAll(bValidStreamIdSet);
 				}
 

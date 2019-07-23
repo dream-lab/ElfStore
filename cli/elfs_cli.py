@@ -130,9 +130,9 @@ class elfsCLI(Cmd):
         tokens = find_parser.parse_args(line)
 
         if tokens.v == True:
-            module_EdgeClientCLI_find.find(tokens.mbid,tokens.metadata,tokens.fogIp,tokens.fogPort,True)
+            module_EdgeClientCLI_find.find(tokens.mbid,tokens.blockMeta,tokens.streamMeta,tokens.fogIp,tokens.fogPort,True)
         else:
-            module_EdgeClientCLI_find.find(tokens.mbid,tokens.metadata,tokens.fogIp,tokens.fogPort)
+            module_EdgeClientCLI_find.find(tokens.mbid,tokens.blockMeta,tokens.streamMeta,tokens.fogIp,tokens.fogPort)
 
 
     def do_join(self,args):
@@ -335,13 +335,15 @@ if __name__ == '__main__':
     ## Arguments :
     ## 1. --fogIp (default, based on config file)
     ## 2. --fogPort (default, based on config file)
-    ## 3. --mbid    (specify any one from 3 or 4)
-    ## 4. --metadata (specify any one from 3 or 4)
+    ## 3. --mbid    (specify any one from 3,4 or 5)
+    ## 4. --blockMeta (specify any one from 3,4 or 5)
+    ## 5. --streamMeta (specify any one from 3,4 or 5)
     find_parser = subparsers.add_parser("find")
     find_parser.add_argument("--fogIp", default = FOG_IP)
     find_parser.add_argument("--fogPort", default = FOG_PORT)
     find_parser.add_argument("--mbid", default = None)
-    find_parser.add_argument("--metadata",default = None)
+    find_parser.add_argument("--blockMeta",default = None)
+    find_parser.add_argument("--streamMeta",default = None)
     find_parser.add_argument("--v","--verbose", action = "store_true")
 
     ## Parser for join command
