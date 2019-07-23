@@ -53,13 +53,13 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 				CompressionAndDecompression compAndDecompObj = new CompressionAndDecompression();
 				Class cls = compAndDecompObj.getClass();
 				Method compressAndWriteMethod = cls.getDeclaredMethod("compressAndWrite" + mbMetadata.getCompFormat(),String.class,byte[].class);
-				compressAndWriteMethod.invoke(compAndDecompObj,filePath,mbDataInBytesArray);
+				int mbSizeWritten = (int) compressAndWriteMethod.invoke(compAndDecompObj,filePath,mbDataInBytesArray);
 
 				//File myFile = new File(edge.getDatapath() + "/" + mbId + ".data");
 				//FileUtils.writeByteArrayToFile(myFile, mbDataInBytesArray);
 
 				//ISHAN : Storage to be modified
-				int mbSize = mbDataInBytesArray.length/(1000 * 1000);
+				int mbSize = mbSizeWritten/(1000 * 1000);
 				edge.setStorage(edge.getStorage() - mbSize);
 
 				// Metadata

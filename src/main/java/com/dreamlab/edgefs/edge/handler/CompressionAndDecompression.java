@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 
+import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -24,20 +25,27 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.xerial.snappy.SnappyInputStream;
 import org.xerial.snappy.SnappyOutputStream;
 
+
 public class CompressionAndDecompression implements CompressionAndDecompressionIFace {
 	private static final Logger LOGGERCND = LoggerFactory.getLogger(EdgeServiceHandler.class);
 	
 	@Override
-	public void compressAndWriteGzip(String filePath, byte[] mbDataInBytesArray) {
+	public int compressAndWriteGzip(String filePath, byte[] mbDataInBytesArray) {
 		LOGGERCND.info("Starting compression : Gzip");
 		filePath = filePath.concat(".gz");
+		int compressedSize = -1; // if this value is returned it implies that the compression is not successful
 		GzipCompressorOutputStream gzOut = null;
 		try {
 			Path newFilePath = Paths.get(filePath);
 			OutputStream os = Files.newOutputStream(Files.createFile(newFilePath));
 			BufferedOutputStream bos = new BufferedOutputStream(os);
-			gzOut = new GzipCompressorOutputStream(bos);
+			// this is used to capture the size of the file after compression and storage.
+			// wrapping it in a counting stream saves a disk read in order to get the
+			// sized of the compressed block
+			CountingOutputStream cos = new CountingOutputStream(bos);
+			gzOut = new GzipCompressorOutputStream(cos);
 			gzOut.write(mbDataInBytesArray);
+			compressedSize = cos.getCount();
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -49,6 +57,7 @@ public class CompressionAndDecompression implements CompressionAndDecompressionI
 			}
 		}
 		LOGGERCND.info("Write Done : Gzip");
+		return compressedSize;
 	}
 
 	@Override
@@ -82,14 +91,20 @@ public class CompressionAndDecompression implements CompressionAndDecompressionI
 	//The reason being during decompression using commons compress for snappy null values 
 	//are obtained.
 	@Override
-	public void compressAndWriteSnappy(String filePath, byte[] mbDataInBytesArray) {
+	public int compressAndWriteSnappy(String filePath, byte[] mbDataInBytesArray) {
 		LOGGERCND.info("Starting compression : Snappy");
 		filePath = filePath.concat(".snappy");
+		int compressedSize = -1; // if this value is returned it implies that the compression is not successful
 		SnappyOutputStream snOut = null;
 		try {
 			Path newFilePath = Paths.get(filePath);
 			OutputStream os = Files.newOutputStream(Files.createFile(newFilePath));
 			BufferedOutputStream bos = new BufferedOutputStream(os);
+			// this is used to capture the size of the file after compression.
+			// wrapping it in a counting stream saves a disk read in order to get the
+			// sized of the compressed block
+			CountingOutputStream cos = new CountingOutputStream(bos);
+			compressedSize = cos.getCount();
 			snOut = new SnappyOutputStream(bos);
 			snOut.write(mbDataInBytesArray);
 
@@ -103,6 +118,7 @@ public class CompressionAndDecompression implements CompressionAndDecompressionI
 			}
 		}
 		LOGGERCND.info("Write Done : Snappy");
+		return compressedSize;
 	}
 
 	@Override
@@ -132,7 +148,7 @@ public class CompressionAndDecompression implements CompressionAndDecompressionI
 	}
 
 	@Override
-	public void compressAndWriteNA(String filePath, byte[] mbDataInBytesArray) {
+	public int compressAndWriteNA(String filePath, byte[] mbDataInBytesArray) {
 		LOGGERCND.info("Start write : NA");
 		try {
 			File myFile = new File(filePath);
@@ -141,6 +157,7 @@ public class CompressionAndDecompression implements CompressionAndDecompressionI
 			e.printStackTrace();
 		}
 		LOGGERCND.info("Write Done : NA");
+		return mbDataInBytesArray.length; // size of block since no compression has been done.
 	}
 
 	@Override
