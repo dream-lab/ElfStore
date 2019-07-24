@@ -112,5 +112,9 @@
     ```
 * Find block(s) using metadata
     ```
-    find --metadata additional-block-metadata/block_metadata_sample.json
+    find --blockMeta additional-metadata/block_metadata_sample.json
+    ```
+* Find stream(s) using metadata
+    ```
+    find --streamMeta additional-metadata/stream_query_sample.json
     ```
