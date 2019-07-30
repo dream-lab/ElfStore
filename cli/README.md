@@ -82,6 +82,14 @@
     ```
     put --path=D:/Lab/DataAndLogs/microbatch_single_file_test.txt --streamId=stream_id_test2 --start=500 --metadata=additional-block-metadata/block_metadata_sample.json
     ```
+* Put a single file, as single block, compressed on the edge in Snappy(case sensitive) format
+    ```
+    put --path=D:/Lab/DataAndLogs/microbatch_single_file_test.txt --streamId=stream_id_test2 --start=600 --comp Snappy
+    ```
+* Put a single file, as single block, compressed on the edge in Gzip(case sensitive) format
+    ```
+    put --path=D:/Lab/DataAndLogs/microbatch_single_file_test.txt --streamId=stream_id_test2 --start=700 --comp Gzip
+    ```
 * Get microbatches/blocks in the range [100,104] (all inclusive)
     ```
     get --start=100 --end=104
