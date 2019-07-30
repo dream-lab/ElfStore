@@ -155,6 +155,7 @@ class EdgeClient:
 
         print("the response is ",response)
         self.closeSocket(transport)
+        return response
 
 
 def regStream(streamId,streamReli,fogIp,fogPort,kmin,kmax,verbose = False):
@@ -174,12 +175,17 @@ def regStream(streamId,streamReli,fogIp,fogPort,kmin,kmax,verbose = False):
     START = 700
     myEdge = EdgeClient()
     if verbose == True:
-        myEdge.registerStream(STREAM_ID,START)
-        return myEdge.formulateJsonResponse(STREAM_ID)
+        response = myEdge.registerStream(STREAM_ID,START)
+        #return myEdge.formulateJsonResponse(STREAM_ID)
     else:
+        responseCode = 0
         with nostdout():
-            myEdge.registerStream(STREAM_ID,START)
-        jsonResponse = myEdge.formulateJsonResponse(STREAM_ID)
+            responseCode = myEdge.registerStream(STREAM_ID,START)
+        #jsonResponse = myEdge.formulateJsonResponse(STREAM_ID)
         sys.stdout = sys.__stdout__
-        print("success")
-        return jsonResponse
+        if responseCode==1:
+            print("success")
+        else:
+            print("failed")
+            print("Response code: "+str(responseCode))
+        #return jsonResponse

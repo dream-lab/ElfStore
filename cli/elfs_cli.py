@@ -53,11 +53,11 @@ class elfsCLI(Cmd):
         ## parse the tokens using the previously defined #global parser
         tokens = regstream_parser.parse_args(line)
         if tokens.v == True:
-            jsonResponse = module_EdgeClientCLI_regstream.regStream(tokens.id,tokens.reli,tokens.fogIp,tokens.fogPort,tokens.minReplica,tokens.maxReplica,True)
-            del jsonResponse
+            module_EdgeClientCLI_regstream.regStream(tokens.id,tokens.reli,tokens.fogIp,tokens.fogPort,tokens.minReplica,tokens.maxReplica,True)
+            #del jsonResponse
         else:
-            jsonResponse = module_EdgeClientCLI_regstream.regStream(tokens.id,tokens.reli,tokens.fogIp,tokens.fogPort,tokens.minReplica,tokens.maxReplica)
-            del jsonResponse
+            module_EdgeClientCLI_regstream.regStream(tokens.id,tokens.reli,tokens.fogIp,tokens.fogPort,tokens.minReplica,tokens.maxReplica)
+            #del jsonResponse
 
     def do_put(self,args):
 
@@ -116,11 +116,11 @@ class elfsCLI(Cmd):
         elif tokens.neighbors == True and tokens.buddies == True:
             choice = 14
         if tokens.v == True:
-            jsonResponse = module_EdgeClientCLI_ls.ls(tokens.fogIp,tokens.fogPort,choice,groupBy,True)
-            del jsonResponse
+            module_EdgeClientCLI_ls.ls(tokens.fogIp,tokens.fogPort,choice,groupBy,True)
+            #del jsonResponse
         else:
-            jsonResponse = module_EdgeClientCLI_ls.ls(tokens.fogIp,tokens.fogPort,choice,groupBy)
-            del jsonResponse
+            module_EdgeClientCLI_ls.ls(tokens.fogIp,tokens.fogPort,choice,groupBy)
+            #del jsonResponse
 
     def do_find(self, args):
         ## here args includes everyting after the invokation command
