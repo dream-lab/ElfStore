@@ -88,11 +88,11 @@ class elfsCLI(Cmd):
         ## parse the tokens using the previously defined #global parser
         tokens = get_parser.parse_args(line)
         if tokens.v == True:
-            jsonResponse = module_EdgeClientCLI_get.get(tokens.start, tokens.end, tokens.edgeId, tokens.edgeIp, tokens.edgePort, tokens.edgeReli, tokens.fogIp, tokens.fogPort,True)
-            del jsonResponse
+            module_EdgeClientCLI_get.get(tokens.start, tokens.end, tokens.edgeId, tokens.edgeIp, tokens.edgePort, tokens.edgeReli, tokens.fogIp, tokens.fogPort,True)
+            #del jsonResponse
         else:
-            jsonResponse = module_EdgeClientCLI_get.get(tokens.start, tokens.end, tokens.edgeId, tokens.edgeIp, tokens.edgePort, tokens.edgeReli, tokens.fogIp, tokens.fogPort)
-            del jsonResponse
+            module_EdgeClientCLI_get.get(tokens.start, tokens.end, tokens.edgeId, tokens.edgeIp, tokens.edgePort, tokens.edgeReli, tokens.fogIp, tokens.fogPort)
+            #del jsonResponse
 
     def do_ls(self,args):
         ## here args includes everyting after the invokation command

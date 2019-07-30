@@ -141,7 +141,6 @@ class EdgeClient:
 
     #find and read replicas for microbatches
     def findAndRead(self, microbatchId):
-
         edgeInfoData = EdgeInfoData()
         edgeInfoData.nodeId = EDGE_ID
         edgeInfoData.nodeIp = EDGE_IP
@@ -173,9 +172,12 @@ class EdgeClient:
         self.closeSocket(transport)
         print("Sent replicas ",response)
 
+        ## if the response contains empty list then the search is terminated here
+        if len(response) == 0:
+            print("Replica not found")
+            return 0,0
 
         for findReplica in response :
-
              edgeInfoData = findReplica.edgeInfo
 
              if(edgeInfoData!=None):
@@ -207,12 +209,16 @@ class EdgeClient:
                  print("Read status is ",response.status)
                  if response.status==0 :
                      print("File not found : cannot read file")
+                     return 0,0
 
-                 else:
-                     self.formulateJsonResponse(microbatchId,response)
+                 elif response.status==1:
+                     #self.formulateJsonResponse(microbatchId,response)
+                     bytesRead = len(response.data)
                      print("Local Read ",len(response.data)," number of bytes")
                      print("metadata also read ",response.metadata)
-                     return 1 #successful read
+                     return 1,bytesRead #successful read
+                 else:
+                     return response.code,0
 
                  transport.close()
              elif(findReplica.node!=None) :
@@ -228,15 +234,16 @@ class EdgeClient:
                  myLogs.write(timestamp_record)
                  myLogs.close()
                  if(response.status == 1):
-                     self.formulateJsonResponse(microbatchId,response)
+                     #self.formulateJsonResponse(microbatchId,response)
+                     bytesRead = len(response.data)
                      print("Fog Amount of bytes read ",len(response.data))
-                     return 1 #successful read
+                     return 1,bytesRead #successful read
                  else:
                      print("The queried fog does not have data")
+                     return response.status,0
 
                  self.closeSocket(transport)
              else:
-
                  print("The queried fog does not have data")
 
 
@@ -264,20 +271,23 @@ def get(start,end,edgeId,edgeIp,edgePort,edgeReliability,fogIp,fogPort, verbose 
     if verbose == True:
         i = START
         while i<=END:
-            myEdge.findAndRead(i)
+            responseCode,bytesRead = myEdge.findAndRead(i)
             i = i + 1
     else:
+
         i = START
         while i<=END:
+            bytesRead = 0
+            responseCode = 0;
             with nostdout():
-                myEdge.findAndRead(i)
+                responseCode,bytesRead = myEdge.findAndRead(i)
             sys.stdout = sys.__stdout__
             #print "Read response for microbatch "+str(i)+" is : \nResponse = "+str(JSON_RESPONSE[i]['status'])+" \nNo. of bytes read = "+str(len(JSON_RESPONSE[i]['data']))+"\n"
-            if i not in list(JSON_RESPONSE.keys()) : print("Read response for microbatch "+str(i)+" is : \nfailure  \nNo. of bytes read = 0\n")
-            else :  print("Read response for microbatch "+str(i)+" is : \nsuccess \nNo. of bytes read = "+str(len(JSON_RESPONSE[i]['data']))+"\n")
+            if responseCode!=1 : print("Read response for microbatch "+str(i)+" is : \nfailure  \nNo. of bytes read = 0\n"+"Response Code: "+str(responseCode))
+            else :  print("Read response for microbatch "+str(i)+" is : \nsuccess \nNo. of bytes read = "+str(bytesRead)+"\n")
             i = i + 1
 
-    jsonResponse = JSON_RESPONSE
+    #jsonResponse = JSON_RESPONSE
 
-    JSON_RESPONSE = dict()
-    return json.dumps(jsonResponse)
+    #JSON_RESPONSE = dict()
+    #return json.dumps(JSON_RESPONSE)
