@@ -173,7 +173,7 @@ class EdgeClient:
             ## NOTE: this will only return a result if the block metadata is present in the fog of the current partition (i.e the read is a local read)
             ## This operation has a little overhead since it is only performed once. Another reason is in case it is a local read
             ## then an connection to an edge is directly made. But since the edge does not maintain bock metadata map, an explicit connection to
-            ## the parent fog would have to be made once again in order to retreive the required metadata info. 
+            ## the parent fog would have to be made once again in order to retreive the required metadata info.
             ## Therefore since a connection to the parent fog is already being made here it is better to make a call and  retreive the indormation.
             ## This call is just a wild guess, it may return null. If it is supposed to be a fog read, then, anyways a connection will be made to another fog,
             ## we will fetch the format and size at that point of time.
@@ -211,7 +211,7 @@ class EdgeClient:
                  # Connect!
                  transport.open()
 
-                 timestamp_record = str(microbatchId)+", 25 , "+ str(findReplica.node.nodeId) + " , Read req,starttime = "+repr(time.time())+","
+                 timestamp_record = str(microbatchId)+", "+compFormat+", 25 , "+ str(findReplica.node.nodeId) + " , Read req,starttime = "+repr(time.time())+","
                  response = client.read(microbatchId,0,compFormat,uncompSize) #this is for recovery
                  timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
                  myLogs = open(BASE_LOG+ "logs.txt",'a')
@@ -238,7 +238,7 @@ class EdgeClient:
                  fogNode = findReplica.node
 
                  client,transport = self.openSocketConnection(fogNode.NodeIP,fogNode.port,FOG_SERVICE)
-                 timestamp_record = str(microbatchId)+", 27 ,"+str(findReplica.node.nodeId)  + ",write req,starttime = "+repr(time.time())+","
+                 timestamp_record = str(microbatchId)+", "+compFormat+", 27 ,"+str(findReplica.node.nodeId)  + ",write req,starttime = "+repr(time.time())+","
 
                  ## retreiving the compression format and the uncompressed block size for read operation from
                  ## If you have reached here it means that the block is present in another partition and the previous

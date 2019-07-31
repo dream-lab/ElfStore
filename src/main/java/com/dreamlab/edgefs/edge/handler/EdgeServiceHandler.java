@@ -42,7 +42,7 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 		if (mbMetadata != null && mbData != null) {
 			try {
 				LOGGER.info(
-						"MicrobatchId : " + mbMetadata.getMbId() + ", write, startTime=" + System.currentTimeMillis());
+						"MicrobatchId : " + mbMetadata.getMbId()+", format : "+mbMetadata.getCompFormat()+ ", write, startTime=" + System.currentTimeMillis());
 
 				// data
 				int length = mbData.remaining();
@@ -72,7 +72,7 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 				foStream.close();
 
 				LOGGER.info(
-						"MicrobatchId : " + mbMetadata.getMbId() + ", write, endTime=" + System.currentTimeMillis());
+						"MicrobatchId : " + mbMetadata.getMbId()+", format : "+mbMetadata.getCompFormat() + ", write, endTime=" + System.currentTimeMillis());
 
 				wrResponse.setStatus(Constants.SUCCESS);
 				wrResponse.setReliability(edge.getReliability());

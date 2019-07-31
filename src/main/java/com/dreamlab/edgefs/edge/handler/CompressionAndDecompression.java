@@ -27,11 +27,11 @@ import org.xerial.snappy.SnappyOutputStream;
 
 
 public class CompressionAndDecompression implements CompressionAndDecompressionIFace {
-	private static final Logger LOGGERCND = LoggerFactory.getLogger(EdgeServiceHandler.class);
+	//private static final Logger LOGGERCND = LoggerFactory.getLogger(EdgeServiceHandler.class);
 	
 	@Override
 	public int compressAndWriteGzip(String filePath, byte[] mbDataInBytesArray) {
-		LOGGERCND.info("Starting compression : Gzip");
+		//LOGGERCND.info("Starting compression : Gzip");
 		filePath = filePath.concat(".gz");
 		int compressedSize = -1; // if this value is returned it implies that the compression is not successful
 		GzipCompressorOutputStream gzOut = null;
@@ -56,13 +56,13 @@ public class CompressionAndDecompression implements CompressionAndDecompressionI
 				e.printStackTrace();
 			}
 		}
-		LOGGERCND.info("Write Done : Gzip");
+		//LOGGERCND.info("Write Done : Gzip");
 		return compressedSize;
 	}
 
 	@Override
 	public byte[] decompressAndReadGzip(String filePath,long uncompSize) {
-		LOGGERCND.info("Starting decompression : Gzip");
+		//LOGGERCND.info("Starting decompression : Gzip");
 		filePath = filePath.concat(".gz");
 		GzipCompressorInputStream gzIn = null;
 		byte[] byteArray = null;
@@ -83,7 +83,7 @@ public class CompressionAndDecompression implements CompressionAndDecompressionI
 				e.printStackTrace();
 			}
 		}
-		LOGGERCND.info("Read done : Gzip");
+		//LOGGERCND.info("Read done : Gzip");
 		return byteArray;
 	}
 
@@ -92,7 +92,7 @@ public class CompressionAndDecompression implements CompressionAndDecompressionI
 	//are obtained.
 	@Override
 	public int compressAndWriteSnappy(String filePath, byte[] mbDataInBytesArray) {
-		LOGGERCND.info("Starting compression : Snappy");
+		//LOGGERCND.info("Starting compression : Snappy");
 		filePath = filePath.concat(".snappy");
 		int compressedSize = -1; // if this value is returned it implies that the compression is not successful
 		SnappyOutputStream snOut = null;
@@ -117,13 +117,13 @@ public class CompressionAndDecompression implements CompressionAndDecompressionI
 				e.printStackTrace();
 			}
 		}
-		LOGGERCND.info("Write Done : Snappy");
+		//LOGGERCND.info("Write Done : Snappy");
 		return compressedSize;
 	}
 
 	@Override
 	public byte[] decompressAndReadSnappy(String filePath,long uncompSize) {
-		LOGGERCND.info("Starting decompression : Snappy");
+		//LOGGERCND.info("Starting decompression : Snappy");
 		filePath = filePath.concat(".snappy");
 		SnappyInputStream snIn = null;
 		byte[] byteArray = null;
@@ -143,26 +143,26 @@ public class CompressionAndDecompression implements CompressionAndDecompressionI
 				e.printStackTrace();
 			}
 		}
-		LOGGERCND.info("Read Done : Snappy");
+		//LOGGERCND.info("Read Done : Snappy");
 		return byteArray;		
 	}
 
 	@Override
 	public int compressAndWriteNA(String filePath, byte[] mbDataInBytesArray) {
-		LOGGERCND.info("Start write : NA");
+		//LOGGERCND.info("Start write : NA");
 		try {
 			File myFile = new File(filePath);
 			FileUtils.writeByteArrayToFile(myFile, mbDataInBytesArray);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		LOGGERCND.info("Write Done : NA");
+		//LOGGERCND.info("Write Done : NA");
 		return mbDataInBytesArray.length; // size of block since no compression has been done.
 	}
 
 	@Override
 	public byte[] decompressAndReadNA(String filePath,long uncompSize) {
-		LOGGERCND.info("Start read : NA");
+		//LOGGERCND.info("Start read : NA");
 		byte[] byteArray = null;
 		try {
 			File mbFile = new File(filePath);
@@ -170,7 +170,7 @@ public class CompressionAndDecompression implements CompressionAndDecompressionI
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		LOGGERCND.info("Read Done : NA");
+		//LOGGERCND.info("Read Done : NA");
 		return byteArray;
 	}
 
