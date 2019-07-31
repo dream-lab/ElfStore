@@ -116,11 +116,13 @@ class elfsCLI(Cmd):
         elif tokens.neighbors == True and tokens.buddies == True:
             choice = 14
         if tokens.v == True:
-            module_EdgeClientCLI_ls.ls(tokens.fogIp,tokens.fogPort,choice,groupBy,True)
-            #del jsonResponse
+            ## slight memory overhead; module is required to return a response since the same module is used by the find module
+            response = module_EdgeClientCLI_ls.ls(tokens.fogIp,tokens.fogPort,choice,groupBy,True)
+            del response
         else:
-            module_EdgeClientCLI_ls.ls(tokens.fogIp,tokens.fogPort,choice,groupBy)
-            #del jsonResponse
+            ## slight memory overhead; module is required to return a response since the same module is used by the find module
+            response = module_EdgeClientCLI_ls.ls(tokens.fogIp,tokens.fogPort,choice,groupBy)
+            del response
 
     def do_find(self, args):
         ## here args includes everyting after the invokation command

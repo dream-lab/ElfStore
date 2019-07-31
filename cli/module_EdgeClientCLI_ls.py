@@ -353,7 +353,7 @@ def ls(fogIp,fogPort,choice,groupBy,verbose = False):
             sys.stdout = sys.__stdout__
         print("The mbids present in the neighbors and the buddy pool of the current fog "+FOG_IP+" "+str(FOG_PORT)+" are :")
         printMbidMap(mbids,groupBy)
-        #return (mbids)
+        return (mbids)
 
     ## list mbids for owner fog's neighbors
     if(CHOICE == 15):
@@ -364,7 +364,7 @@ def ls(fogIp,fogPort,choice,groupBy,verbose = False):
             sys.stdout = sys.__stdout__
         print("The mbids present in the neighbors of the current fog "+FOG_IP+" "+str(FOG_PORT)+" are :")
         printMbidMap(mbids,groupBy)
-        #return (mbids)
+        return (mbids)
 
     ## list mbids for owner fog's buddies
     if(CHOICE == 16):
@@ -375,12 +375,12 @@ def ls(fogIp,fogPort,choice,groupBy,verbose = False):
             sys.stdout = sys.__stdout__
         print("The mbids present in the buddy pool of the current fog "+FOG_IP+" "+str(FOG_PORT)+" are :")
         printMbidMap(mbids,groupBy)
-        #return (mbids)
+        return (mbids)
 
     ## list mbids for local partition
     if(CHOICE == 18):
         mbids = myEdge.lsLocal(GROUP_BY)
-        #return (mbids)
+        return (mbids)
     ## list mbids for the whole system
     if(CHOICE == 19):
         if verbose ==True: mbids = myEdge.lsMbIdSystem(GROUP_BY)
@@ -390,7 +390,7 @@ def ls(fogIp,fogPort,choice,groupBy,verbose = False):
             sys.stdout = sys.__stdout__
         print("The mbids in the whole system are : ")
         printMbidMap(mbids,groupBy)
-        #return (mbids)
+        return (mbids)
 
     ## this will only be used by module_EdgeClientCLI_find.find()
     if(CHOICE == 20):
@@ -402,4 +402,4 @@ def ls(fogIp,fogPort,choice,groupBy,verbose = False):
                 ## map by mbids (i.e groupBy = 2)
                 mbids = myEdge.lsMbIdSystem(2)
             sys.stdout = sys.__stdout__
-        #return mbids
+        return mbids
