@@ -2643,7 +2643,6 @@ public class FogServiceHandler implements FogService.Iface {
 	private void updateMetaMbIdMbIdMap(Metadata mbMetadata, Map<String, String> metaKeyValueMap) {
 		// ISHAN:
 		// Updating the metaToMBIdListMap via setMetaMbIdMap()
-		// Testing for only one key value pair
 		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
 		while (itr.hasNext()) {
 			Map.Entry<String, String> entry = itr.next();
