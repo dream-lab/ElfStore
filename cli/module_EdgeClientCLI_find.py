@@ -52,14 +52,30 @@ class EdgeClient:
 
     # get list of mbids and corresponding streamids for blocks that match given metadata properties(specified in a json file).
     def getFindBlockUsingQuery(self,metaKeyValueMap):
+        timestamp_record = "-1, 700,"+ str(-1)  + ",find block using q,starttime = "+repr(time.time())+","
+
         client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
         mbIdStreamIdMap = client.findBlockUsingQuery(metaKeyValueMap,True,True);
+
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",1" + '\n'
+        myLogs = open(BASE_LOG+ "logs.txt",'a')
+        myLogs.write(timestamp_record)
+        myLogs.close()
+
         return mbIdStreamIdMap
 
     # get list of mbids and corresponding streamids for blocks that match given metadata properties(specified in a json file).
     def getFindStreamUsingQuery(self,metaKeyValueMap):
+        timestamp_record = "-1, 750,"+ str(-1)  + ",find stream using q,starttime = "+repr(time.time())+","
+
         client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
         streamIdSet = client.findStreamUsingQuery(metaKeyValueMap,True,True);
+
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",1" + '\n'
+        myLogs = open(BASE_LOG+ "logs.txt",'a')
+        myLogs.write(timestamp_record)
+        myLogs.close()
+
         return streamIdSet
 
     # Return the fog client instance to talk to the fog
