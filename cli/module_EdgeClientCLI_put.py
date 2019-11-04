@@ -323,6 +323,32 @@ class EdgeClient:
         print("The encoded disk_space is ",int(disk_space))
         return int(disk_space),util
 
+    '''
+    Create the metadata object for the microbatchID
+    '''
+    def createMetadataObj(self, microbatchID, streamID, blockSize):
+
+        metaData = Metadata()
+        metaData.clientId = CLIENT_ID
+        metaData.sessionSecret = SESSION_SECRET
+        metaData.mbId = microbatchID
+        metaData.streamId = streamID
+        metaData.timestamp = int(time.time() * 1000)
+        metaData.compFormat = COMP_FORMAT
+        metaData.uncompSize = blockSize
+        metaData.sizeofblock = blockSize
+
+        additional_prop = {}
+        additional_prop["Name"] = "Sheshadri"
+        metaData.properties = json.dumps(additional_prop)
+
+        keyValDict = {}
+        for i in range(5):
+            keyValDict[str(i)] = ["dream"+str(i)]
+        keyValDict["cds"] = ["iisc","has","serc"]
+        metaData.metakeyvaluepairs = keyValDict
+
+        return metaData
 
 
     def writeRequestToFog(self,microbatchID,streamId,filePath, data, fogReplicaMap, yetAnotherMap,sizeChoice,setLease,metaKeyValueMap):
@@ -368,18 +394,7 @@ class EdgeClient:
         global STREAM_ID
         global CLIENT_ID
         global SESSION_SECRET
-        metaData = Metadata()
-        metaData.clientId = CLIENT_ID
-        metaData.sessionSecret = SESSION_SECRET
-        metaData.mbId = microbatchID
-        metaData.streamId = streamId
-        metaData.timestamp = int(time.time() * 1000)
-        additional_prop = {}
-        additional_prop["Name"] = "Sheshadri"
-        metaData.properties = json.dumps(additional_prop)
-        metaData.compFormat = COMP_FORMAT
-        metaData.uncompSize = len(data)
-
+        metaData = self.createMetadataObj(microbatchID, streamId, len(data))
 
         #print EDGE_ID,EDGE_IP,EDGE_PORT,EDGE_RELIABILITY,encodedSpace
         #edgeInfo = EdgeInfoData(EDGE_ID,EDGE_IP,EDGE_PORT,EDGE_RELIABILITY,encodedSpace)
@@ -389,10 +404,11 @@ class EdgeClient:
 
         timestamp_record_getWrite = str(microbatchID)  +   ","  +   str(-100) +  ", local, "  + "getWriteLocations ,starttime = " + repr(time.time())  + ","
         #result = myClient.getWriteLocations(encodedSpace,metaData,blackListedFogs,edgeInfo) #datalength,
+        print("sizeofblock => ",metaData.sizeofblock)
         result = myClient.getWriteLocations(encodedSpace,metaData,blackListedFogs,True)
         timestamp_record_getWrite = timestamp_record_getWrite +"endtime = " + repr(time.time()) +" , " + str(sizeChoice) + '\n'
 
-    	#we are calculating replicas using getWriteLocations()
+        #we are calculating replicas using getWriteLocations()
         yetAnotherMap[microbatchID] = {}
 
         insideDict = {}
@@ -400,17 +416,17 @@ class EdgeClient:
         for w in result:
             edgeInfoData = w.edgeInfo
             if(edgeInfoData != None ):
-            	if("local" in fogReplicaMap):
-             	     fogReplicaMap["local"] =  fogReplicaMap["local"] + 1
+                if("local" in fogReplicaMap):
+                     fogReplicaMap["local"] =  fogReplicaMap["local"] + 1
 
-            	else:
-            	     fogReplicaMap["local"] = 1
+                else:
+                     fogReplicaMap["local"] = 1
 
-            	if("local" in insideDict):
+                if("local" in insideDict):
                              insideDict["local"] = insideDict["local"] + 1
 
-            	else:
-            	     insideDict["local"] = 1
+                else:
+                     insideDict["local"] = 1
 
             else:
                 if(str(w.node.nodeId) in fogReplicaMap):
@@ -419,9 +435,9 @@ class EdgeClient:
                     fogReplicaMap[str(w.node.nodeId)] = 1
 
                 if(str(w.node.nodeId) in insideDict):
-            	      insideDict[str(w.node.nodeId)] = insideDict[str(w.node.nodeId)] + 1
+                      insideDict[str(w.node.nodeId)] = insideDict[str(w.node.nodeId)] + 1
                 else:
-            	      insideDict[str(w.node.nodeId)] =  1
+                      insideDict[str(w.node.nodeId)] =  1
 
         #util map
         yetAnotherMap[microbatchID] = insideDict
@@ -459,7 +475,7 @@ class EdgeClient:
             index = index + 1
 
         for p in processes:
-    	    p.join()
+            p.join()
 
         print("all writes to replicas finished ")
         self.closeSocket(transport)
@@ -542,22 +558,6 @@ class EdgeClient:
             client,transport = self.openSocketConnection(nodeInfo.NodeIP,nodeInfo.port,FOG_SERVICE)
 
             #byte insertMetadata(1: Metadata mbMetadata, 2: EdgeInfoData edgeInfoData);
-
-            #this was valid as per previous implementation in which we assumed that a local
-            #write means that the client will be writing to itself. However as per the new
-            #implementation, it is not necessary and a local write means a write that is written
-            #to itself or any other edge managed by the same Fog i.e. a neighbor edge of the client
-            #edgeInfoData = EdgeInfoData()
-            #edgeInfoData.nodeId = EDGE_ID
-            #edgeInfoData.nodeIp = EDGE_IP
-            #edgeInfoData.port = EDGE_PORT
-            #edgeInfoData.reliability = EDGE_RELIABILITY
-            #edgeInfoData.storage = 12 #This value is not useful for computation
-
-            #update the metadata with the checksum
-            #hash_md5 = hashlib.md5()
-            #hash_md5.update(data)
-            #metaData.checksum = hash_md5.hexdigest()
 
             #metadata insert to fog -50
             timeMetadata = str(microbatchID) +","+str(-50)+",local ,metadata req,starttime = "+repr(time.time())+","

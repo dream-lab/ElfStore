@@ -5,3 +5,6 @@ gen-java/
 gen-py/
 target/
 log.dir_IS_UNDEFINED/
+cli/.idea/
+cli/DataAndLogs/
+edge_logs.txt

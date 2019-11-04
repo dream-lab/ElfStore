@@ -87,8 +87,10 @@ struct Metadata {
 	6: optional string checksum;
 	//this is similar to key value pairs as received for the stream
 	7: optional string properties;
-  	8: optional string compFormat;
-  	9: optional i64 uncompSize;
+	8: optional string compFormat;
+	9: optional i64 uncompSize;
+        10: required i64 sizeofblock;
+        11: optional map<string, list<string>> metakeyvaluepairs;
 }
 
 struct EdgeInfoData {

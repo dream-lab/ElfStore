@@ -132,19 +132,6 @@ struct NeighborCount {
 	3:optional NodeInfoData nodeInfoData;
 }
 
-/** The metadata of a stream at register time is sent as a string with key value pairs **/
-/** The metadata of a micro-batch which is sent before a write to Fog **/
-/*
-struct Metadata {
-	1: required string mbId,
-	2: required string streamId,
-	3: required i64 timestamp,
-	4: optional string checksum,
-	//this is similar to key value pairs as received for the stream
-	5: optional string properties;
-}
-*/
-
 enum WritePreference {
 	HHL,
 	HLH,

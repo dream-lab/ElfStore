@@ -1212,25 +1212,25 @@ public class Metadata implements org.apache.thrift.TBase<Metadata, Metadata._Fie
           case 11: // METAKEYVALUEPAIRS
             if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
-                org.apache.thrift.protocol.TMap _map66 = iprot.readMapBegin();
-                struct.metakeyvaluepairs = new java.util.HashMap<java.lang.String,java.util.List<java.lang.String>>(2*_map66.size);
-                java.lang.String _key67;
-                java.util.List<java.lang.String> _val68;
-                for (int _i69 = 0; _i69 < _map66.size; ++_i69)
+                org.apache.thrift.protocol.TMap _map0 = iprot.readMapBegin();
+                struct.metakeyvaluepairs = new java.util.HashMap<java.lang.String,java.util.List<java.lang.String>>(2*_map0.size);
+                java.lang.String _key1;
+                java.util.List<java.lang.String> _val2;
+                for (int _i3 = 0; _i3 < _map0.size; ++_i3)
                 {
-                  _key67 = iprot.readString();
+                  _key1 = iprot.readString();
                   {
-                    org.apache.thrift.protocol.TList _list70 = iprot.readListBegin();
-                    _val68 = new java.util.ArrayList<java.lang.String>(_list70.size);
-                    java.lang.String _elem71;
-                    for (int _i72 = 0; _i72 < _list70.size; ++_i72)
+                    org.apache.thrift.protocol.TList _list4 = iprot.readListBegin();
+                    _val2 = new java.util.ArrayList<java.lang.String>(_list4.size);
+                    java.lang.String _elem5;
+                    for (int _i6 = 0; _i6 < _list4.size; ++_i6)
                     {
-                      _elem71 = iprot.readString();
-                      _val68.add(_elem71);
+                      _elem5 = iprot.readString();
+                      _val2.add(_elem5);
                     }
                     iprot.readListEnd();
                   }
-                  struct.metakeyvaluepairs.put(_key67, _val68);
+                  struct.metakeyvaluepairs.put(_key1, _val2);
                 }
                 iprot.readMapEnd();
               }
@@ -1318,14 +1318,14 @@ public class Metadata implements org.apache.thrift.TBase<Metadata, Metadata._Fie
           oprot.writeFieldBegin(METAKEYVALUEPAIRS_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, struct.metakeyvaluepairs.size()));
-            for (java.util.Map.Entry<java.lang.String, java.util.List<java.lang.String>> _iter73 : struct.metakeyvaluepairs.entrySet())
+            for (java.util.Map.Entry<java.lang.String, java.util.List<java.lang.String>> _iter7 : struct.metakeyvaluepairs.entrySet())
             {
-              oprot.writeString(_iter73.getKey());
+              oprot.writeString(_iter7.getKey());
               {
-                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, _iter73.getValue().size()));
-                for (java.lang.String _iter74 : _iter73.getValue())
+                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, _iter7.getValue().size()));
+                for (java.lang.String _iter8 : _iter7.getValue())
                 {
-                  oprot.writeString(_iter74);
+                  oprot.writeString(_iter8);
                 }
                 oprot.writeListEnd();
               }
@@ -1390,14 +1390,14 @@ public class Metadata implements org.apache.thrift.TBase<Metadata, Metadata._Fie
       if (struct.isSetMetakeyvaluepairs()) {
         {
           oprot.writeI32(struct.metakeyvaluepairs.size());
-          for (java.util.Map.Entry<java.lang.String, java.util.List<java.lang.String>> _iter75 : struct.metakeyvaluepairs.entrySet())
+          for (java.util.Map.Entry<java.lang.String, java.util.List<java.lang.String>> _iter9 : struct.metakeyvaluepairs.entrySet())
           {
-            oprot.writeString(_iter75.getKey());
+            oprot.writeString(_iter9.getKey());
             {
-              oprot.writeI32(_iter75.getValue().size());
-              for (java.lang.String _iter76 : _iter75.getValue())
+              oprot.writeI32(_iter9.getValue().size());
+              for (java.lang.String _iter10 : _iter9.getValue())
               {
-                oprot.writeString(_iter76);
+                oprot.writeString(_iter10);
               }
             }
           }
@@ -1439,24 +1439,24 @@ public class Metadata implements org.apache.thrift.TBase<Metadata, Metadata._Fie
       }
       if (incoming.get(4)) {
         {
-          org.apache.thrift.protocol.TMap _map77 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
-          struct.metakeyvaluepairs = new java.util.HashMap<java.lang.String,java.util.List<java.lang.String>>(2*_map77.size);
-          java.lang.String _key78;
-          java.util.List<java.lang.String> _val79;
-          for (int _i80 = 0; _i80 < _map77.size; ++_i80)
+          org.apache.thrift.protocol.TMap _map11 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
+          struct.metakeyvaluepairs = new java.util.HashMap<java.lang.String,java.util.List<java.lang.String>>(2*_map11.size);
+          java.lang.String _key12;
+          java.util.List<java.lang.String> _val13;
+          for (int _i14 = 0; _i14 < _map11.size; ++_i14)
           {
-            _key78 = iprot.readString();
+            _key12 = iprot.readString();
             {
-              org.apache.thrift.protocol.TList _list81 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-              _val79 = new java.util.ArrayList<java.lang.String>(_list81.size);
-              java.lang.String _elem82;
-              for (int _i83 = 0; _i83 < _list81.size; ++_i83)
+              org.apache.thrift.protocol.TList _list15 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+              _val13 = new java.util.ArrayList<java.lang.String>(_list15.size);
+              java.lang.String _elem16;
+              for (int _i17 = 0; _i17 < _list15.size; ++_i17)
               {
-                _elem82 = iprot.readString();
-                _val79.add(_elem82);
+                _elem16 = iprot.readString();
+                _val13.add(_elem16);
               }
             }
-            struct.metakeyvaluepairs.put(_key78, _val79);
+            struct.metakeyvaluepairs.put(_key12, _val13);
           }
         }
         struct.setMetakeyvaluepairsIsSet(true);

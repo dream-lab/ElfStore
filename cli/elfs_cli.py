@@ -15,6 +15,7 @@ import module_EdgeClientCLI_get
 import module_EdgeClientCLI_put
 import module_EdgeClientCLI_ls
 import module_EdgeClientCLI_find
+import module_EdgeClientCLI_getMeta
 
 ## Global parameters
 EDGE_ID = int()
@@ -93,6 +94,20 @@ class elfsCLI(Cmd):
         else:
             module_EdgeClientCLI_get.get(tokens.start, tokens.end, tokens.edgeId, tokens.edgeIp, tokens.edgePort, tokens.edgeReli, tokens.fogIp, tokens.fogPort)
             #del jsonResponse
+
+    def do_getmeta(self, args):
+
+        print("Here in getmeta")
+        line = shlex.split(args)
+        tokens = getmeta_parser.parse_args(line)
+        print("Tokens => ",tokens)
+        blockID = tokens.mbid
+        if blockID == None:
+            print("No blockId")
+            return ""
+
+        keyList = tokens.keylist.split(",")
+        module_EdgeClientCLI_getMeta.getMeta(blockID, tokens.edgeIp, tokens.edgePort, tokens.fogIp, tokens.fogPort, keyList)
 
     def do_ls(self,args):
         ## here args includes everyting after the invokation command
@@ -347,6 +362,15 @@ if __name__ == '__main__':
     find_parser.add_argument("--blockMeta",default = None)
     find_parser.add_argument("--streamMeta",default = None)
     find_parser.add_argument("--v","--verbose", action = "store_true")
+
+    getmeta_parser = subparsers.add_parser("getmeta")
+    getmeta_parser.add_argument("--fogIp", default=FOG_IP)
+    getmeta_parser.add_argument("--fogPort", default=FOG_PORT)
+    getmeta_parser.add_argument("--edgeIp", default=EDGE_IP)
+    getmeta_parser.add_argument("--edgePort", default=EDGE_PORT)
+    getmeta_parser.add_argument("--mbid", default = None)
+    getmeta_parser.add_argument("--keylist", default=None)
+    getmeta_parser.add_argument("--v", "--verbose", action="store_true")
 
     ## Parser for join command
     ## Arguments :

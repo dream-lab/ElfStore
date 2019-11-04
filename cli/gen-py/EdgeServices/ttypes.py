@@ -112,10 +112,12 @@ class Metadata(object):
      - properties
      - compFormat
      - uncompSize
+     - sizeofblock
+     - metakeyvaluepairs
     """
 
 
-    def __init__(self, clientId=None, sessionSecret=None, streamId=None, mbId=None, timestamp=None, checksum=None, properties=None, compFormat=None, uncompSize=None,):
+    def __init__(self, clientId=None, sessionSecret=None, streamId=None, mbId=None, timestamp=None, checksum=None, properties=None, compFormat=None, uncompSize=None, sizeofblock=None, metakeyvaluepairs=None,):
         self.clientId = clientId
         self.sessionSecret = sessionSecret
         self.streamId = streamId
@@ -125,6 +127,8 @@ class Metadata(object):
         self.properties = properties
         self.compFormat = compFormat
         self.uncompSize = uncompSize
+        self.sizeofblock = sizeofblock
+        self.metakeyvaluepairs = metakeyvaluepairs
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -180,6 +184,27 @@ class Metadata(object):
                     self.uncompSize = iprot.readI64()
                 else:
                     iprot.skip(ftype)
+            elif fid == 10:
+                if ftype == TType.I64:
+                    self.sizeofblock = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 11:
+                if ftype == TType.MAP:
+                    self.metakeyvaluepairs = {}
+                    (_ktype1, _vtype2, _size0) = iprot.readMapBegin()
+                    for _i4 in range(_size0):
+                        _key5 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val6 = []
+                        (_etype10, _size7) = iprot.readListBegin()
+                        for _i11 in range(_size7):
+                            _elem12 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _val6.append(_elem12)
+                        iprot.readListEnd()
+                        self.metakeyvaluepairs[_key5] = _val6
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -226,6 +251,21 @@ class Metadata(object):
             oprot.writeFieldBegin('uncompSize', TType.I64, 9)
             oprot.writeI64(self.uncompSize)
             oprot.writeFieldEnd()
+        if self.sizeofblock is not None:
+            oprot.writeFieldBegin('sizeofblock', TType.I64, 10)
+            oprot.writeI64(self.sizeofblock)
+            oprot.writeFieldEnd()
+        if self.metakeyvaluepairs is not None:
+            oprot.writeFieldBegin('metakeyvaluepairs', TType.MAP, 11)
+            oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.metakeyvaluepairs))
+            for kiter13, viter14 in self.metakeyvaluepairs.items():
+                oprot.writeString(kiter13.encode('utf-8') if sys.version_info[0] == 2 else kiter13)
+                oprot.writeListBegin(TType.STRING, len(viter14))
+                for iter15 in viter14:
+                    oprot.writeString(iter15.encode('utf-8') if sys.version_info[0] == 2 else iter15)
+                oprot.writeListEnd()
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
 
@@ -240,6 +280,8 @@ class Metadata(object):
             raise TProtocolException(message='Required field mbId is unset!')
         if self.timestamp is None:
             raise TProtocolException(message='Required field timestamp is unset!')
+        if self.sizeofblock is None:
+            raise TProtocolException(message='Required field sizeofblock is unset!')
         return
 
     def __repr__(self):
@@ -624,6 +666,8 @@ Metadata.thrift_spec = (
     (7, TType.STRING, 'properties', 'UTF8', None, ),  # 7
     (8, TType.STRING, 'compFormat', 'UTF8', None, ),  # 8
     (9, TType.I64, 'uncompSize', None, None, ),  # 9
+    (10, TType.I64, 'sizeofblock', None, None, ),  # 10
+    (11, TType.MAP, 'metakeyvaluepairs', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 11
 )
 all_structs.append(EdgeInfoData)
 EdgeInfoData.thrift_spec = (
