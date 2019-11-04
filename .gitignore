@@ -1,0 +1,7 @@
+.classpath
+.project
+.settings/
+gen-java/
+gen-py/
+target/
+log.dir_IS_UNDEFINED/

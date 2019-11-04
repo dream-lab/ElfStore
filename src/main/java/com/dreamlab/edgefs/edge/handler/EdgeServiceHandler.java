@@ -87,12 +87,36 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 	}
 
 	@Override
+	/**
+	 * fetchmetadata => 1 represents read both data and metadata
+	 * fetchmetadata => 2 represents read only metadata
+	 */
 	public ReadReplica read(long mbId, byte fetchMetadata, String compFormat,long uncompSize) throws TException {
 		ReadReplica replica = new ReadReplica();
 		replica.setStatus(Constants.FAILURE);
 		String filePath = edge.getDatapath() + "/" + mbId + ".data";
 		//File mbFile = new File(edge.getDatapath() + "/" + mbId + ".data");
-		try {
+		try {		
+			
+			if (fetchMetadata == 2) {
+				File metaFile = new File(edge.getDatapath() + "/" + mbId + ".meta");
+				FileInputStream fiStream = new FileInputStream(metaFile);
+				ObjectInputStream objStream = new ObjectInputStream(fiStream);
+
+				try {
+					Metadata mbMetadata = (Metadata) objStream.readObject();
+					replica.setMetadata(mbMetadata);
+				} catch (ClassNotFoundException e) {
+					LOGGER.error("Microbatch metadata different from the expected format, not sending it");
+					e.printStackTrace();				
+				} finally {
+					objStream.close();
+					fiStream.close();
+				}			
+				
+				return replica;
+			}
+			
 			CompressionAndDecompression compAndDecompObj = new CompressionAndDecompression();
 			Class cls = compAndDecompObj.getClass();
 			Method decompressAndReadMethod = cls.getDeclaredMethod("decompressAndRead" + compFormat,String.class,long.class);
@@ -119,7 +143,9 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 					objStream.close();
 					fiStream.close();
 				}
-			}
+			}		
+			
+			
 		} catch (IOException e) {
 			LOGGER.error("Error while reading the microbatchId : " + mbId);
 			e.printStackTrace();

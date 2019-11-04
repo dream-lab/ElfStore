@@ -70,6 +70,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   requestCompFormatSize(i64 mbId)')
     print('   findStreamUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies)')
     print('   findBlockUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies)')
+    print('  MetadataResponse getMetadataByBlockid(i64 mbid, string fogip, i32 fogport, string edgeip, i32 edgeport,  keys)')
     print('')
     sys.exit(0)
 
@@ -424,6 +425,12 @@ elif cmd == 'findBlockUsingQuery':
         print('findBlockUsingQuery requires 3 args')
         sys.exit(1)
     pp.pprint(client.findBlockUsingQuery(eval(args[0]), eval(args[1]), eval(args[2]),))
+
+elif cmd == 'getMetadataByBlockid':
+    if len(args) != 6:
+        print('getMetadataByBlockid requires 6 args')
+        sys.exit(1)
+    pp.pprint(client.getMetadataByBlockid(eval(args[0]), args[1], eval(args[2]), args[3], eval(args[4]), eval(args[5]),))
 
 else:
     print('Unrecognized method %s' % cmd)

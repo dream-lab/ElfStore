@@ -2438,10 +2438,12 @@ class Metadata(object):
      - properties
      - compFormat
      - uncompSize
+     - sizeofblock
+     - metakeyvaluepairs
     """
 
 
-    def __init__(self, clientId=None, sessionSecret=None, streamId=None, mbId=None, timestamp=None, checksum=None, properties=None, compFormat=None, uncompSize=None,):
+    def __init__(self, clientId=None, sessionSecret=None, streamId=None, mbId=None, timestamp=None, checksum=None, properties=None, compFormat=None, uncompSize=None, sizeofblock=None, metakeyvaluepairs=None,):
         self.clientId = clientId
         self.sessionSecret = sessionSecret
         self.streamId = streamId
@@ -2451,6 +2453,8 @@ class Metadata(object):
         self.properties = properties
         self.compFormat = compFormat
         self.uncompSize = uncompSize
+        self.sizeofblock = sizeofblock
+        self.metakeyvaluepairs = metakeyvaluepairs
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -2506,6 +2510,27 @@ class Metadata(object):
                     self.uncompSize = iprot.readI64()
                 else:
                     iprot.skip(ftype)
+            elif fid == 10:
+                if ftype == TType.I64:
+                    self.sizeofblock = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 11:
+                if ftype == TType.MAP:
+                    self.metakeyvaluepairs = {}
+                    (_ktype60, _vtype61, _size59) = iprot.readMapBegin()
+                    for _i63 in range(_size59):
+                        _key64 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val65 = []
+                        (_etype69, _size66) = iprot.readListBegin()
+                        for _i70 in range(_size66):
+                            _elem71 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _val65.append(_elem71)
+                        iprot.readListEnd()
+                        self.metakeyvaluepairs[_key64] = _val65
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -2552,6 +2577,21 @@ class Metadata(object):
             oprot.writeFieldBegin('uncompSize', TType.I64, 9)
             oprot.writeI64(self.uncompSize)
             oprot.writeFieldEnd()
+        if self.sizeofblock is not None:
+            oprot.writeFieldBegin('sizeofblock', TType.I64, 10)
+            oprot.writeI64(self.sizeofblock)
+            oprot.writeFieldEnd()
+        if self.metakeyvaluepairs is not None:
+            oprot.writeFieldBegin('metakeyvaluepairs', TType.MAP, 11)
+            oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.metakeyvaluepairs))
+            for kiter72, viter73 in self.metakeyvaluepairs.items():
+                oprot.writeString(kiter72.encode('utf-8') if sys.version_info[0] == 2 else kiter72)
+                oprot.writeListBegin(TType.STRING, len(viter73))
+                for iter74 in viter73:
+                    oprot.writeString(iter74.encode('utf-8') if sys.version_info[0] == 2 else iter74)
+                oprot.writeListEnd()
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
 
@@ -2566,6 +2606,8 @@ class Metadata(object):
             raise TProtocolException(message='Required field mbId is unset!')
         if self.timestamp is None:
             raise TProtocolException(message='Required field timestamp is unset!')
+        if self.sizeofblock is None:
+            raise TProtocolException(message='Required field sizeofblock is unset!')
         return
 
     def __repr__(self):
@@ -2702,10 +2744,10 @@ class FindResponse(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.data = []
-                    (_etype62, _size59) = iprot.readListBegin()
-                    for _i63 in range(_size59):
-                        _elem64 = iprot.readBinary()
-                        self.data.append(_elem64)
+                    (_etype78, _size75) = iprot.readListBegin()
+                    for _i79 in range(_size75):
+                        _elem80 = iprot.readBinary()
+                        self.data.append(_elem80)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2726,8 +2768,8 @@ class FindResponse(object):
         if self.data is not None:
             oprot.writeFieldBegin('data', TType.LIST, 2)
             oprot.writeListBegin(TType.STRING, len(self.data))
-            for iter65 in self.data:
-                oprot.writeBinary(iter65)
+            for iter81 in self.data:
+                oprot.writeBinary(iter81)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2922,17 +2964,17 @@ class QueryReplica(object):
             if fid == 1:
                 if ftype == TType.MAP:
                     self.matchingNodes = {}
-                    (_ktype67, _vtype68, _size66) = iprot.readMapBegin()
-                    for _i70 in range(_size66):
-                        _key71 = iprot.readI64()
-                        _val72 = []
-                        (_etype76, _size73) = iprot.readListBegin()
-                        for _i77 in range(_size73):
-                            _elem78 = NodeInfoData()
-                            _elem78.read(iprot)
-                            _val72.append(_elem78)
+                    (_ktype83, _vtype84, _size82) = iprot.readMapBegin()
+                    for _i86 in range(_size82):
+                        _key87 = iprot.readI64()
+                        _val88 = []
+                        (_etype92, _size89) = iprot.readListBegin()
+                        for _i93 in range(_size89):
+                            _elem94 = NodeInfoData()
+                            _elem94.read(iprot)
+                            _val88.append(_elem94)
                         iprot.readListEnd()
-                        self.matchingNodes[_key71] = _val72
+                        self.matchingNodes[_key87] = _val88
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -2949,11 +2991,11 @@ class QueryReplica(object):
         if self.matchingNodes is not None:
             oprot.writeFieldBegin('matchingNodes', TType.MAP, 1)
             oprot.writeMapBegin(TType.I64, TType.LIST, len(self.matchingNodes))
-            for kiter79, viter80 in self.matchingNodes.items():
-                oprot.writeI64(kiter79)
-                oprot.writeListBegin(TType.STRUCT, len(viter80))
-                for iter81 in viter80:
-                    iter81.write(oprot)
+            for kiter95, viter96 in self.matchingNodes.items():
+                oprot.writeI64(kiter95)
+                oprot.writeListBegin(TType.STRUCT, len(viter96))
+                for iter97 in viter96:
+                    iter97.write(oprot)
                 oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
@@ -3312,6 +3354,106 @@ class StreamLeaseRenewalResponse(object):
         return not (self == other)
 
 
+class MetadataResponse(object):
+    """
+    Attributes:
+     - result
+     - status
+     - errorResponse
+    """
+
+
+    def __init__(self, result=None, status=None, errorResponse=None,):
+        self.result = result
+        self.status = status
+        self.errorResponse = errorResponse
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.MAP:
+                    self.result = {}
+                    (_ktype99, _vtype100, _size98) = iprot.readMapBegin()
+                    for _i102 in range(_size98):
+                        _key103 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val104 = []
+                        (_etype108, _size105) = iprot.readListBegin()
+                        for _i109 in range(_size105):
+                            _elem110 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _val104.append(_elem110)
+                        iprot.readListEnd()
+                        self.result[_key103] = _val104
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BYTE:
+                    self.status = iprot.readByte()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.errorResponse = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('MetadataResponse')
+        if self.result is not None:
+            oprot.writeFieldBegin('result', TType.MAP, 1)
+            oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.result))
+            for kiter111, viter112 in self.result.items():
+                oprot.writeString(kiter111.encode('utf-8') if sys.version_info[0] == 2 else kiter111)
+                oprot.writeListBegin(TType.STRING, len(viter112))
+                for iter113 in viter112:
+                    oprot.writeString(iter113.encode('utf-8') if sys.version_info[0] == 2 else iter113)
+                oprot.writeListEnd()
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.status is not None:
+            oprot.writeFieldBegin('status', TType.BYTE, 2)
+            oprot.writeByte(self.status)
+            oprot.writeFieldEnd()
+        if self.errorResponse is not None:
+            oprot.writeFieldBegin('errorResponse', TType.STRING, 3)
+            oprot.writeString(self.errorResponse.encode('utf-8') if sys.version_info[0] == 2 else self.errorResponse)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.result is None:
+            raise TProtocolException(message='Required field result is unset!')
+        if self.status is None:
+            raise TProtocolException(message='Required field status is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
 class BlockMetadataUpdateResponse(object):
     """
     Attributes:
@@ -3599,6 +3741,8 @@ Metadata.thrift_spec = (
     (7, TType.STRING, 'properties', 'UTF8', None, ),  # 7
     (8, TType.STRING, 'compFormat', 'UTF8', None, ),  # 8
     (9, TType.I64, 'uncompSize', None, None, ),  # 9
+    (10, TType.I64, 'sizeofblock', None, None, ),  # 10
+    (11, TType.MAP, 'metakeyvaluepairs', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 11
 )
 all_structs.append(ReadResponse)
 ReadResponse.thrift_spec = (
@@ -3660,6 +3804,13 @@ StreamLeaseRenewalResponse.thrift_spec = (
     (1, TType.BYTE, 'status', None, None, ),  # 1
     (2, TType.BYTE, 'code', None, None, ),  # 2
     (3, TType.I32, 'leaseTime', None, None, ),  # 3
+)
+all_structs.append(MetadataResponse)
+MetadataResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.MAP, 'result', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 1
+    (2, TType.BYTE, 'status', None, None, ),  # 2
+    (3, TType.STRING, 'errorResponse', 'UTF8', None, ),  # 3
 )
 all_structs.append(BlockMetadataUpdateResponse)
 BlockMetadataUpdateResponse.thrift_spec = (

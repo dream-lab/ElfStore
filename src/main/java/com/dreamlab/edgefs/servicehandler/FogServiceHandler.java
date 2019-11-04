@@ -69,6 +69,7 @@ import com.dreamlab.edgefs.thrift.FogInfoData;
 import com.dreamlab.edgefs.thrift.FogService;
 import com.dreamlab.edgefs.thrift.I32TypeStreamMetadata;
 import com.dreamlab.edgefs.thrift.Metadata;
+import com.dreamlab.edgefs.thrift.MetadataResponse;
 import com.dreamlab.edgefs.thrift.NeighborCount;
 import com.dreamlab.edgefs.thrift.NeighborInfoData;
 import com.dreamlab.edgefs.thrift.NeighborPayload;
@@ -3251,6 +3252,68 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 
 		return wrResponse;
+	}
+	
+	@Override
+	/**
+	 * mbid => The microbatch for which metadata has to be fetched
+	 * fogip, fogport => the fog partition in which the block is print
+	 * edgeip, edgeport => the edge which is present in the fog partition
+	 * keys => Keys of the metadata properties which need to be fetched
+	 */
+	public MetadataResponse getMetadataByBlockid(long mbid, String fogip, int fogport, String edgeip, int edgeport,
+			List<String> keys) throws TException {
+
+		MetadataResponse metaResponse = new MetadataResponse();
+		metaResponse.setStatus(Constants.FAILURE);
+		metaResponse.setResult(new HashMap<String, List<String>>());		
+
+		/** Check if the fogip,port being sent matches the current fog ip **/
+		if(! (fogip.equals(fog.getMyFogInfo().getNodeIP()) && fogport==fog.getMyFogInfo().getPort()) ) {
+			
+			metaResponse.setErrorResponse("fog ip did not match");
+			return metaResponse;
+		}	
+		
+		/** Check if the microbatch is present in this partition **/
+		if(! fog.getMbIDLocationMap().containsKey(mbid) ) {
+			metaResponse.setErrorResponse("block id does not exist in the partition");
+			return metaResponse;
+		}	
+				
+		/** Now read from the edge directly		   
+		 * 2 => fetches only metadata, need to change it to enum
+		 * NA => is the default parameter that needs to be passed		 
+		 * **/
+		TTransport transport = new TFramedTransport(new TSocket(edgeip, edgeport));
+		try {			
+			transport.open();
+			TProtocol protocol = new TBinaryProtocol(transport);
+			EdgeService.Client edgeClient = new EdgeService.Client(protocol);			
+			ReadReplica data = edgeClient.read(mbid, (byte) 2, "NA", (long)0); 
+			Metadata meta = data.getMetadata();
+			
+			Map<String, List<String>> metaKeyValPairs = meta.getMetakeyvaluepairs();
+			Map<String, List<String>> resultMap = new HashMap<String, List<String>>();
+			
+			for(String key : keys) {
+				if(metaKeyValPairs.containsKey(key)) {
+					resultMap.put(key, metaKeyValPairs.get(key));
+				}
+			}
+			
+			metaResponse.setResult(resultMap);
+			
+		} catch (TException e) {
+			LOGGER.info("Error while reading microbatch from edge : " + edgeip+" : "+edgeport);
+			LOGGER.error(e.toString());
+			metaResponse.status = Constants.SUCCESS;
+			e.printStackTrace();
+		} finally {
+			transport.close();
+		}
+		
+		return metaResponse;
 	}
 
 }

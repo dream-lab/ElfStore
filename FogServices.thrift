@@ -289,6 +289,8 @@ struct Metadata {
 	7: optional string properties;
 	8: optional string compFormat;
 	9: optional i64 uncompSize;
+        10: required i64 sizeofblock;
+        11: optional map<string, list<string>> metakeyvaluepairs;
 }
 
 struct ReadResponse {
@@ -350,6 +352,11 @@ struct StreamLeaseRenewalResponse {
 	3: optional i32 leaseTime;
 }
 
+struct MetadataResponse {
+	1: required map<string,list<string>> result;
+	2: required byte status;
+        3: optional string errorResponse;
+}
 
 //this kind of pattern of attaching a message as well as code
 //is good to provide client the necessary information to react
@@ -503,7 +510,6 @@ service FogService {
 	// used to get neighbours of a fog
 	list<NeighborInfoData> requestAllNeighbors();
 
-
 	//used to return edgeMicrobatchMap to the edge client
 	map<i16,set<i64>> requestEdgeMicrobatchMap();
 
@@ -515,4 +521,7 @@ service FogService {
 	
 	//used to facilitate the api FindBlock(bquery)
 	map<i64,string> findBlockUsingQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies);
+
+	// getMetadata by blockid
+        MetadataResponse getMetadataByBlockid(1: i64 mbid, 2: string fogip, 3: i32 fogport, 4: string edgeip, 5: i32 edgeport, 6: list<string> keys);
 }
