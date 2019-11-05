@@ -7,19 +7,14 @@
 package com.dreamlab.edgefs.thrift;
 
 
-public enum WritePreference implements org.apache.thrift.TEnum {
-  HHL(0),
-  HLH(1),
-  HHH(2),
-  HLL(3),
-  LHL(4),
-  LLH(5),
-  LHH(6),
-  LLL(7);
+public enum MatchPreference implements org.apache.thrift.TEnum {
+  NONE(0),
+  OR(1),
+  AND(2);
 
   private final int value;
 
-  private WritePreference(int value) {
+  private MatchPreference(int value) {
     this.value = value;
   }
 
@@ -34,24 +29,14 @@ public enum WritePreference implements org.apache.thrift.TEnum {
    * Find a the enum type by its integer value, as defined in the Thrift IDL.
    * @return null if the value is not found.
    */
-  public static WritePreference findByValue(int value) { 
+  public static MatchPreference findByValue(int value) { 
     switch (value) {
       case 0:
-        return HHL;
+        return NONE;
       case 1:
-        return HLH;
+        return OR;
       case 2:
-        return HHH;
-      case 3:
-        return HLL;
-      case 4:
-        return LHL;
-      case 5:
-        return LLH;
-      case 6:
-        return LHH;
-      case 7:
-        return LLL;
+        return AND;
       default:
         return null;
     }

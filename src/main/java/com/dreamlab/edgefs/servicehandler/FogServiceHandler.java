@@ -3,7 +3,6 @@ package com.dreamlab.edgefs.servicehandler;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -63,11 +62,14 @@ import com.dreamlab.edgefs.thrift.BuddyPayload;
 import com.dreamlab.edgefs.thrift.EdgeInfoData;
 import com.dreamlab.edgefs.thrift.EdgePayload;
 import com.dreamlab.edgefs.thrift.EdgeService;
+import com.dreamlab.edgefs.thrift.FindBlockQueryResponse;
+import com.dreamlab.edgefs.thrift.FindBlockQueryValue;
 import com.dreamlab.edgefs.thrift.FindReplica;
 //import com.dreamlab.edgefs.model.StorageUnit;
 import com.dreamlab.edgefs.thrift.FogInfoData;
 import com.dreamlab.edgefs.thrift.FogService;
 import com.dreamlab.edgefs.thrift.I32TypeStreamMetadata;
+import com.dreamlab.edgefs.thrift.MatchPreference;
 import com.dreamlab.edgefs.thrift.Metadata;
 import com.dreamlab.edgefs.thrift.MetadataResponse;
 import com.dreamlab.edgefs.thrift.NeighborCount;
@@ -79,6 +81,7 @@ import com.dreamlab.edgefs.thrift.NodeInfoPrimaryTypeStreamMetadata;
 import com.dreamlab.edgefs.thrift.OpenStreamResponse;
 import com.dreamlab.edgefs.thrift.QueryReplica;
 import com.dreamlab.edgefs.thrift.ReadReplica;
+import com.dreamlab.edgefs.thrift.ReplicaCount;
 import com.dreamlab.edgefs.thrift.SQueryRequest;
 import com.dreamlab.edgefs.thrift.SQueryResponse;
 import com.dreamlab.edgefs.thrift.StreamLeaseRenewalResponse;
@@ -1202,7 +1205,7 @@ public class FogServiceHandler implements FogService.Iface {
 							&& fog.getLocalEdgesMap().get(edgeId).getStatus().equals("A")) {
 						FindReplica localReplica = new FindReplica();
 						localReplica.setNode(nodeInfo);
-						replicas.add(localReplica);
+						
 						if (selfInfo != null && fog.getLocalEdgesMap().containsKey(selfInfo.getNodeId())) {
 							EdgeInfo edgeInfo = fog.getLocalEdgesMap().get(edgeId);
 							if (edgeInfo != null) {
@@ -1210,13 +1213,20 @@ public class FogServiceHandler implements FogService.Iface {
 								EdgeInfoData edgeInfoData = new EdgeInfoData(edgeInfo.getNodeId(), edgeInfo.getNodeIp(),
 										edgeInfo.getPort(), (byte) 0, (byte) 0);
 								localReplica.setEdgeInfo(edgeInfoData);
+								localReplica.setIsLocal(true);
 							}
 						} else {
-							// this else means that either the client is not an edge or its an edge
-							// but not reporting to this Fog, so there is no point in giving it the
-							// local edge information since the client cannot talk to the edge directly
-							break;
+							EdgeInfo edgeInfo = fog.getLocalEdgesMap().get(edgeId);
+							if (edgeInfo != null) {
+								// dummy values of reliability and storage are passed
+								EdgeInfoData edgeInfoData = new EdgeInfoData(edgeInfo.getNodeId(), edgeInfo.getNodeIp(),
+										edgeInfo.getPort(), (byte) 0, (byte) 0);
+								localReplica.setEdgeInfo(edgeInfoData);
+								localReplica.setIsLocal(false);
+							}
 						}
+						
+						replicas.add(localReplica);
 					}
 				}
 			}
@@ -3047,18 +3057,23 @@ public class FogServiceHandler implements FogService.Iface {
 
 	@Override
 	public Map<Long, String> findBlockUsingQuery(Map<String, String> metaKeyValueMap, boolean checkNeighbors,
-			boolean checkBuddies) {
+			boolean checkBuddies, MatchPreference matchPreference) {		
+		
 		Set<Long> validMbTdList = new HashSet<>();
 		Map<Long, String> mbIdStreamIdMapResponse = new ConcurrentHashMap<>();
 		boolean firstPass = true;
+		
 		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
 		while (itr.hasNext()) {
 			Map.Entry<String, String> entry = itr.next();
 			// formulate the searchKey for setMetaMbIdMap
 			String searchKey = entry.getKey() + ":" + entry.getValue();
 			List<Long> matchingMbIds = fog.getMetaToMBIdListMap().get(searchKey);
+			if(matchingMbIds==null) {
+				matchingMbIds = new ArrayList<Long>();
+			}
+			
 			if (firstPass) {
-
 				if(matchingMbIds!=null)
 					validMbTdList.addAll(matchingMbIds);
 				firstPass = false;
@@ -3072,16 +3087,16 @@ public class FogServiceHandler implements FogService.Iface {
 			mbIdStreamIdMapResponse.put(mbid, fog.getMbIdToStreamIdMap().get(mbid));
 
 		if (checkNeighbors) {
-			getMbIdStreamIdMatchMapFromNeighbors(metaKeyValueMap, mbIdStreamIdMapResponse);
+			getMbIdStreamIdMatchMapFromNeighbors(metaKeyValueMap, mbIdStreamIdMapResponse, matchPreference);
 		}
 		if (checkBuddies) {
-			getMbIdStreamIdMatchMapFromBuddies(metaKeyValueMap, mbIdStreamIdMapResponse);
+			getMbIdStreamIdMatchMapFromBuddies(metaKeyValueMap, mbIdStreamIdMapResponse, matchPreference);
 		}
 		return mbIdStreamIdMapResponse;
 	}
 
 	private void getMbIdStreamIdMatchMapFromNeighbors(Map<String, String> metaKeyValueMap,
-			Map<Long, String> currentMbIdStreamIdMap) {
+			Map<Long, String> currentMbIdStreamIdMap, MatchPreference matchpreference) {
 		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
 			FogExchangeInfo nInfo = entry.getValue();
@@ -3098,7 +3113,7 @@ public class FogServiceHandler implements FogService.Iface {
 					if (BloomFilter.search(entryMeta.getKey(), entryMeta.getValue(), bloomFilter))
 						continue;
 					else {
-						// i.e at least one of the perperty does not match in the blocks present under
+						// i.e at least one of the property does not match in the blocks present under
 						// this neighbor
 						allSatisfiedFlag = false;
 						break;
@@ -3109,7 +3124,7 @@ public class FogServiceHandler implements FogService.Iface {
 					NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
 					Map<Long, String> nMatchingMbIdStreamIdMap = fetchMbIdStreamIdMapFromOtherFog(
 							neighbor.getNode().getNodeIP(), neighbor.getNode().getPort(), metaKeyValueMap, false,
-							false);
+							false, matchpreference);
 					// Take a union of nMatchingMbIdStreamIdMap and currentMbIdStreamIdMap
 					for (Long mbid : nMatchingMbIdStreamIdMap.keySet()) {
 						if (!currentMbIdStreamIdMap.containsKey(mbid))
@@ -3122,7 +3137,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	private void getMbIdStreamIdMatchMapFromBuddies(Map<String, String> metaKeyValueMap,
-			Map<Long, String> currentMbIdStreamIdMap) {
+			Map<Long, String> currentMbIdStreamIdMap, MatchPreference matchpreference) {
 		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
 			FogExchangeInfo buddyInfo = entry.getValue();
@@ -3147,7 +3162,7 @@ public class FogServiceHandler implements FogService.Iface {
 					// i.e all the metadata key value pairs are present
 					FogInfo buddy = fog.getBuddyMap().get(entry.getKey());
 					Map<Long, String> bMatchingMbIdStreamIdMap = fetchMbIdStreamIdMapFromOtherFog(buddy.getNodeIP(),
-							buddy.getPort(), metaKeyValueMap, true, false);
+							buddy.getPort(), metaKeyValueMap, true, false, matchpreference);
 					// Take a union of nMatchingMbIdStreamIdMap and currentMbIdStreamIdMap
 					for (Long mbid : bMatchingMbIdStreamIdMap.keySet()) {
 						if (!currentMbIdStreamIdMap.containsKey(mbid))
@@ -3160,7 +3175,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	private Map<Long, String> fetchMbIdStreamIdMapFromOtherFog(String ip, int port, Map<String, String> metaKeyValueMap,
-			boolean checkNeighbors, boolean checkBuddies) {
+			boolean checkNeighbors, boolean checkBuddies, MatchPreference matchpreference) {
 		Map<Long, String> otherMbIdStreamIdMap = new ConcurrentHashMap<>();
 		TTransport transport = new TFramedTransport(new TSocket(ip, port));
 		try {
@@ -3174,7 +3189,7 @@ public class FogServiceHandler implements FogService.Iface {
 		TProtocol protocol = new TBinaryProtocol(transport);
 		FogService.Client fogClient = new FogService.Client(protocol);
 		try {
-			otherMbIdStreamIdMap = fogClient.findBlockUsingQuery(metaKeyValueMap, checkNeighbors, checkBuddies);
+			otherMbIdStreamIdMap = fogClient.findBlockUsingQuery(metaKeyValueMap, checkNeighbors, checkBuddies, matchpreference);
 		} catch (TException e) {
 			LOGGER.error("Error while querying data from Fog ip : " + ip, e);
 			e.printStackTrace();
@@ -3314,6 +3329,294 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 		
 		return metaResponse;
+	}
+	
+	@Override
+	public Map<Long,List<FindReplica>> findFast(List<Long> microbatchIdList, boolean checkNeighbors, boolean checkBuddies,
+			EdgeInfoData selfInfo) throws TException {
+		
+		ArrayList<Long> remList = new ArrayList<Long>();
+		Map<Long, List<FindReplica>> blockLocationMap = new HashMap<Long, List<FindReplica>>();
+		
+		if(microbatchIdList == null) {
+			return blockLocationMap;
+		}
+		
+		LOGGER.info("MicrobatchIdList : " + microbatchIdList.size()  + ", findFast, startTime=" + System.currentTimeMillis());
+		for(Long microbatchId: microbatchIdList) {
+			
+			List<FindReplica> replicas = new ArrayList<>();
+			if (fog.getMbIDLocationMap().containsKey(microbatchId)) {
+				
+				NodeInfoData nodeInfo = new NodeInfoData(fog.getMyFogInfo().getNodeID(), fog.getMyFogInfo().getNodeIP(),
+						fog.getMyFogInfo().getPort());
+				Map<Short, Byte> edgeMap = fog.getMbIDLocationMap().get(microbatchId);
+				if (edgeMap != null) {
+					for (Short edgeId : edgeMap.keySet()) {
+						
+						if (edgeId != null && fog.getLocalEdgesMap().containsKey(edgeId)
+								&& fog.getLocalEdgesMap().get(edgeId).getStatus().equals("A")) {
+							
+							FindReplica localReplica = new FindReplica();
+							localReplica.setNode(nodeInfo);							
+
+							if (selfInfo != null && fog.getLocalEdgesMap().containsKey(selfInfo.getNodeId())) {
+								EdgeInfo edgeInfo = fog.getLocalEdgesMap().get(edgeId);
+								if (edgeInfo != null) {
+									// dummy values of reliability and storage are passed
+									EdgeInfoData edgeInfoData = new EdgeInfoData(edgeInfo.getNodeId(), edgeInfo.getNodeIp(),
+											edgeInfo.getPort(), (byte) 0, (byte) 0);
+									localReplica.setEdgeInfo(edgeInfoData);
+									localReplica.setIsLocal(true);
+								}
+							} else {
+								EdgeInfo edgeInfo = fog.getLocalEdgesMap().get(edgeId);
+								if (edgeInfo != null) {
+									// dummy values of reliability and storage are passed
+									EdgeInfoData edgeInfoData = new EdgeInfoData(edgeInfo.getNodeId(), edgeInfo.getNodeIp(),
+											edgeInfo.getPort(), (byte) 0, (byte) 0);
+									localReplica.setEdgeInfo(edgeInfoData);
+									localReplica.setIsLocal(false);									
+									
+								}
+							}
+							
+							replicas.add(localReplica);
+						}
+					}
+				}/** End of if-edgeMap **/
+				
+			}/** End of if loop for checking if microbatch saerching **/
+			else {
+				remList.add(microbatchId);
+			}
+			
+			blockLocationMap.put(microbatchId, replicas);
+			
+		}/** End of for-loop for microbatch list**/
+		
+		if(0 == remList.size()) {
+			LOGGER.info("All blocks have been found, no more searching needed");
+			return blockLocationMap;
+		}
+
+		if ( (remList.size()>0) && checkNeighbors) {
+			Map<Long, List<FindReplica>> nBlockLocationMap = getFromNeighborsFast(Constants.MICROBATCH_METADATA_ID, remList, selfInfo);
+			if (nBlockLocationMap != null) {
+				blockLocationMap.putAll(nBlockLocationMap);
+			}
+		}
+
+		if ( (remList.size()>0) && checkBuddies) {
+			Map<Long, List<FindReplica>> bBlockLocationMap = getFromBuddiesFast(Constants.MICROBATCH_METADATA_ID, remList, selfInfo);
+			if (bBlockLocationMap != null) {
+				blockLocationMap.putAll(bBlockLocationMap);
+			}
+		}
+		LOGGER.info("MicrobatchId : " + microbatchIdList.size() + ", find, endTime=" + System.currentTimeMillis());
+		return blockLocationMap;		
+		
+	}
+
+	private Map<Long, List<FindReplica>> getFromNeighborsFast(String searchKey, ArrayList<Long> microbatchList,
+			EdgeInfoData selfInfo) {
+		
+		Map<Long, List<FindReplica>> blockLocationMap = new HashMap<Long, List<FindReplica>>();
+		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
+		ArrayList<Long> remList = microbatchList;
+		boolean allBlocksMatched = false;
+		
+		/** Iteratre over neighbors **/
+		for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
+			FogExchangeInfo nInfo = entry.getValue();
+			if (nInfo != null) {			
+				
+				byte[] bloomFilter = nInfo.getBloomFilterUpdates();
+				boolean match = false;
+				for(Long microbatchId : remList) {					
+					if (BloomFilter.search(searchKey, String.valueOf(microbatchId), bloomFilter)) {
+						match = true;
+						break;
+					}
+				}
+				
+				if(match) {
+					NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
+					Map<Long,List<FindReplica>> nBlockLocationMap = fetchDataFromOtherFogFast(neighbor.getNode().getNodeIP(),
+							neighbor.getNode().getPort(), remList, false, false, selfInfo);
+					if (nBlockLocationMap != null) {
+						blockLocationMap.putAll(nBlockLocationMap);
+					}
+					
+					ArrayList<Long> unmatchedEntriesList = new ArrayList<Long>();
+					for(Long microbatchId : remList) {
+						
+						if(false == nBlockLocationMap.containsKey(microbatchId)) {
+							unmatchedEntriesList.add(microbatchId);
+						}
+					}
+					
+					if(0 == unmatchedEntriesList.size()) {
+						allBlocksMatched = true;
+						LOGGER.info("All blocks matched in neighbor fog function");						
+						break;
+					}else {
+						remList = unmatchedEntriesList;
+					}
+				}				
+				
+			}/** End of if-condition **/
+			
+			if(allBlocksMatched)
+				break;
+			
+		}/** End of for-loop**/
+		
+		return blockLocationMap;			
+	}
+	
+	private Map<Long, List<FindReplica>> getFromBuddiesFast(String searchKey, ArrayList<Long> microbatchList,
+			EdgeInfoData selfInfo) {
+		
+		Map<Long, List<FindReplica>> blockLocationMap = new HashMap<Long, List<FindReplica>>();
+		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
+		ArrayList<Long> remList = microbatchList;
+		boolean allBlocksMatched = false;
+		
+		/** Iteratre over neighbors **/
+		for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
+			FogExchangeInfo bInfo = entry.getValue();
+			if (bInfo != null) {			
+				
+				byte[] bloomFilter = bInfo.getBloomFilterUpdates();
+				boolean match = false;
+				for(Long microbatchId : remList) {					
+					if (BloomFilter.search(searchKey, String.valueOf(microbatchId), bloomFilter)) {
+						match = true;
+						break;
+					}
+				}
+				
+				if(match) {
+					NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
+					Map<Long,List<FindReplica>> bBlockLocationMap = fetchDataFromOtherFogFast(neighbor.getNode().getNodeIP(),
+							neighbor.getNode().getPort(), remList, true, false, selfInfo);
+					if (bBlockLocationMap != null) {
+						blockLocationMap.putAll(bBlockLocationMap);
+					}
+					
+					ArrayList<Long> unmatchedEntriesList = new ArrayList<Long>();
+					for(Long microbatchId : remList) {
+						
+						if(false == bBlockLocationMap.containsKey(microbatchId)) {
+							unmatchedEntriesList.add(microbatchId);
+						}
+					}
+					
+					if(0 == unmatchedEntriesList.size()) {
+						allBlocksMatched = true;
+						LOGGER.info("All blocks matched in buddies fog function");						
+						break;
+					}else {
+						remList = unmatchedEntriesList;
+					}
+				}				
+				
+			}/** End of if-loop **/
+			
+			if(allBlocksMatched)
+				break;
+			
+		}/** End of for-loop **/
+		
+		return blockLocationMap;
+	}
+
+	private Map<Long, List<FindReplica>> fetchDataFromOtherFogFast(String nodeIP, int port, ArrayList<Long> microbatchList,
+			boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo) {
+		
+		Map<Long, List<FindReplica>> blockLocationMap = new HashMap<Long, List<FindReplica>>();
+		TTransport transport = new TFramedTransport(new TSocket(nodeIP, port));
+		try {
+			transport.open();
+		} catch (TTransportException e) {
+			transport.close();
+			LOGGER.error("Error while fetching information from other fogs");
+			e.printStackTrace();
+			return blockLocationMap;
+		}
+		TProtocol protocol = new TBinaryProtocol(transport);
+		FogService.Client fogClient = new FogService.Client(protocol);
+		try {
+			Map<Long,List<FindReplica>> rList = fogClient.findFast(microbatchList, checkNeighbors, checkBuddies, selfInfo);
+			if (rList != null)
+				blockLocationMap.putAll(rList);
+		} catch (TException e) {
+			LOGGER.error("Error in finding replicas from neighbor " + nodeIP);
+			e.printStackTrace();
+		} finally {
+			transport.close();
+		}
+		return blockLocationMap;
+	}
+
+	@Override
+	public FindBlockQueryResponse findBlocksAndLocationsWithQuery(Map<String, String> metaKeyValueMap,
+			boolean checkNeighbors, boolean checkBuddies, MatchPreference matchpreference, ReplicaCount replicacount, EdgeInfoData edgeInfo)
+			throws TException {
+		
+		FindBlockQueryResponse findQueryResponse = new FindBlockQueryResponse();
+		findQueryResponse.status = Constants.FAILURE;
+		
+		Map<Long, String> findBlockResultMap = findBlockUsingQuery(metaKeyValueMap, checkNeighbors, checkBuddies, matchpreference);
+		Map<Long, FindBlockQueryValue> findBlockQueryMap = new HashMap<Long, FindBlockQueryValue>();
+		
+		if(replicacount == ReplicaCount.NONE) {
+			
+			for(Entry<Long, String> entry : findBlockResultMap.entrySet()) {
+				FindBlockQueryValue findBlockQueryValue = new FindBlockQueryValue();
+				findBlockQueryValue.setStreamId(entry.getValue());
+				findBlockQueryMap.put(entry.getKey(),findBlockQueryValue);
+			}
+			
+			findQueryResponse.setFindBlockQueryResultMap(findBlockQueryMap);
+			findQueryResponse.status = Constants.SUCCESS;
+			
+		}else if(replicacount == ReplicaCount.ONE) {
+			
+			List<Long> microbatchList = new ArrayList<Long>();
+			microbatchList.addAll(findBlockResultMap.keySet());
+			
+			Map<Long, List<FindReplica>> blockLocationMap = findFast(microbatchList, true, true, edgeInfo);
+			
+			for(Entry<Long, String> entry : findBlockResultMap.entrySet()) {
+				FindBlockQueryValue findBlockQueryValue = new FindBlockQueryValue();
+				findBlockQueryValue.setStreamId(entry.getValue());
+				findBlockQueryValue.setLocations(blockLocationMap.get(entry.getKey()));
+				
+				findBlockQueryMap.put(entry.getKey(),findBlockQueryValue);
+			}			
+			
+			findQueryResponse.setFindBlockQueryResultMap(findBlockQueryMap);
+			findQueryResponse.status = Constants.SUCCESS;
+			
+		}else if(replicacount == ReplicaCount.ALL) {
+			
+			for(Entry<Long, String> entry : findBlockResultMap.entrySet()) {
+				FindBlockQueryValue findBlockQueryValue = new FindBlockQueryValue();	
+				findBlockQueryValue.setStreamId(entry.getValue());
+				
+				List<FindReplica> findReplicaLocations = find(entry.getKey(), true, true, edgeInfo);
+				findBlockQueryValue.setLocations(findReplicaLocations);
+				
+				findBlockQueryMap.put(entry.getKey(), findBlockQueryValue);
+			}
+			
+			findQueryResponse.setFindBlockQueryResultMap(findBlockQueryMap);
+			findQueryResponse.status = Constants.SUCCESS;
+		}
+		
+		return findQueryResponse;
 	}
 
 }

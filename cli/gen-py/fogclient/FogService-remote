@@ -52,6 +52,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  i8 insertMetadata(Metadata mbMetadata, EdgeInfoData edgeInfoData,  metaKeyValueMap)')
     print('  string findNext(string microbatchId)')
     print('   find(i64 microbatchId, bool checkNeighbors, bool checkBuddies, EdgeInfoData selfInfo)')
+    print('   findFast( microbatchIdList, bool checkNeighbors, bool checkBuddies, EdgeInfoData selfInfo)')
     print('  ReadReplica read(i64 microbatchId, bool fetchMetadata, string compFormat, i64 uncompSize)')
     print('  QueryReplica findUsingQuery(string metadataKey, string metadataValue, bool checkNeighbors, bool checkBuddies)')
     print('  ReadReplica getMeta(i64 microbatchId, bool checkNeighbors, bool checkBuddies)')
@@ -69,7 +70,8 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   requestEdgeMicrobatchMap()')
     print('   requestCompFormatSize(i64 mbId)')
     print('   findStreamUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies)')
-    print('   findBlockUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies)')
+    print('   findBlockUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies, MatchPreference matchpreference)')
+    print('  FindBlockQueryResponse findBlocksAndLocationsWithQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies, MatchPreference matchpreference, ReplicaCount replicacount, EdgeInfoData edgeInfo)')
     print('  MetadataResponse getMetadataByBlockid(i64 mbid, string fogip, i32 fogport, string edgeip, i32 edgeport,  keys)')
     print('')
     sys.exit(0)
@@ -318,6 +320,12 @@ elif cmd == 'find':
         sys.exit(1)
     pp.pprint(client.find(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]),))
 
+elif cmd == 'findFast':
+    if len(args) != 4:
+        print('findFast requires 4 args')
+        sys.exit(1)
+    pp.pprint(client.findFast(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]),))
+
 elif cmd == 'read':
     if len(args) != 4:
         print('read requires 4 args')
@@ -421,10 +429,16 @@ elif cmd == 'findStreamUsingQuery':
     pp.pprint(client.findStreamUsingQuery(eval(args[0]), eval(args[1]), eval(args[2]),))
 
 elif cmd == 'findBlockUsingQuery':
-    if len(args) != 3:
-        print('findBlockUsingQuery requires 3 args')
+    if len(args) != 4:
+        print('findBlockUsingQuery requires 4 args')
         sys.exit(1)
-    pp.pprint(client.findBlockUsingQuery(eval(args[0]), eval(args[1]), eval(args[2]),))
+    pp.pprint(client.findBlockUsingQuery(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]),))
+
+elif cmd == 'findBlocksAndLocationsWithQuery':
+    if len(args) != 6:
+        print('findBlocksAndLocationsWithQuery requires 6 args')
+        sys.exit(1)
+    pp.pprint(client.findBlocksAndLocationsWithQuery(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]), eval(args[4]), eval(args[5]),))
 
 elif cmd == 'getMetadataByBlockid':
     if len(args) != 6:

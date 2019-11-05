@@ -35,9 +35,6 @@ class MessageType(object):
 
 
 class WritePreference(object):
-    """
-    The metadata of a micro-batch which is sent before a write to Fog *
-    """
     HHL = 0
     HLH = 1
     HHH = 2
@@ -67,6 +64,42 @@ class WritePreference(object):
         "LLH": 5,
         "LHH": 6,
         "LLL": 7,
+    }
+
+
+class MatchPreference(object):
+    NONE = 0
+    OR = 1
+    AND = 2
+
+    _VALUES_TO_NAMES = {
+        0: "NONE",
+        1: "OR",
+        2: "AND",
+    }
+
+    _NAMES_TO_VALUES = {
+        "NONE": 0,
+        "OR": 1,
+        "AND": 2,
+    }
+
+
+class ReplicaCount(object):
+    NONE = 0
+    ONE = 1
+    ALL = 2
+
+    _VALUES_TO_NAMES = {
+        0: "NONE",
+        1: "ONE",
+        2: "ALL",
+    }
+
+    _NAMES_TO_VALUES = {
+        "NONE": 0,
+        "ONE": 1,
+        "ALL": 2,
     }
 
 
@@ -2797,12 +2830,14 @@ class FindReplica(object):
     Attributes:
      - node
      - edgeInfo
+     - isLocal
     """
 
 
-    def __init__(self, node=None, edgeInfo=None,):
+    def __init__(self, node=None, edgeInfo=None, isLocal=None,):
         self.node = node
         self.edgeInfo = edgeInfo
+        self.isLocal = isLocal
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -2825,6 +2860,11 @@ class FindReplica(object):
                     self.edgeInfo.read(iprot)
                 else:
                     iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.BOOL:
+                    self.isLocal = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -2842,6 +2882,10 @@ class FindReplica(object):
         if self.edgeInfo is not None:
             oprot.writeFieldBegin('edgeInfo', TType.STRUCT, 2)
             self.edgeInfo.write(oprot)
+            oprot.writeFieldEnd()
+        if self.isLocal is not None:
+            oprot.writeFieldBegin('isLocal', TType.BOOL, 3)
+            oprot.writeBool(self.isLocal)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -3536,6 +3580,177 @@ class BlockMetadataUpdateResponse(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+class FindBlockQueryValue(object):
+    """
+    Attributes:
+     - streamId
+     - locations
+    """
+
+
+    def __init__(self, streamId=None, locations=None,):
+        self.streamId = streamId
+        self.locations = locations
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.streamId = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.locations = []
+                    (_etype117, _size114) = iprot.readListBegin()
+                    for _i118 in range(_size114):
+                        _elem119 = FindReplica()
+                        _elem119.read(iprot)
+                        self.locations.append(_elem119)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('FindBlockQueryValue')
+        if self.streamId is not None:
+            oprot.writeFieldBegin('streamId', TType.STRING, 1)
+            oprot.writeString(self.streamId.encode('utf-8') if sys.version_info[0] == 2 else self.streamId)
+            oprot.writeFieldEnd()
+        if self.locations is not None:
+            oprot.writeFieldBegin('locations', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRUCT, len(self.locations))
+            for iter120 in self.locations:
+                iter120.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.streamId is None:
+            raise TProtocolException(message='Required field streamId is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class FindBlockQueryResponse(object):
+    """
+    Attributes:
+     - findBlockQueryResultMap
+     - status
+     - errorResponse
+    """
+
+
+    def __init__(self, findBlockQueryResultMap=None, status=None, errorResponse=None,):
+        self.findBlockQueryResultMap = findBlockQueryResultMap
+        self.status = status
+        self.errorResponse = errorResponse
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.MAP:
+                    self.findBlockQueryResultMap = {}
+                    (_ktype122, _vtype123, _size121) = iprot.readMapBegin()
+                    for _i125 in range(_size121):
+                        _key126 = iprot.readI64()
+                        _val127 = FindBlockQueryValue()
+                        _val127.read(iprot)
+                        self.findBlockQueryResultMap[_key126] = _val127
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BYTE:
+                    self.status = iprot.readByte()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.errorResponse = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('FindBlockQueryResponse')
+        if self.findBlockQueryResultMap is not None:
+            oprot.writeFieldBegin('findBlockQueryResultMap', TType.MAP, 1)
+            oprot.writeMapBegin(TType.I64, TType.STRUCT, len(self.findBlockQueryResultMap))
+            for kiter128, viter129 in self.findBlockQueryResultMap.items():
+                oprot.writeI64(kiter128)
+                viter129.write(oprot)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.status is not None:
+            oprot.writeFieldBegin('status', TType.BYTE, 2)
+            oprot.writeByte(self.status)
+            oprot.writeFieldEnd()
+        if self.errorResponse is not None:
+            oprot.writeFieldBegin('errorResponse', TType.STRING, 3)
+            oprot.writeString(self.errorResponse.encode('utf-8') if sys.version_info[0] == 2 else self.errorResponse)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.findBlockQueryResultMap is None:
+            raise TProtocolException(message='Required field findBlockQueryResultMap is unset!')
+        if self.status is None:
+            raise TProtocolException(message='Required field status is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 all_structs.append(NodeInfoPrimary)
 NodeInfoPrimary.thrift_spec = (
     None,  # 0
@@ -3763,6 +3978,7 @@ FindReplica.thrift_spec = (
     None,  # 0
     (1, TType.STRUCT, 'node', [NodeInfoData, None], None, ),  # 1
     (2, TType.STRUCT, 'edgeInfo', [EdgeInfoData, None], None, ),  # 2
+    (3, TType.BOOL, 'isLocal', None, None, ),  # 3
 )
 all_structs.append(ReadReplica)
 ReadReplica.thrift_spec = (
@@ -3818,6 +4034,19 @@ BlockMetadataUpdateResponse.thrift_spec = (
     (1, TType.BYTE, 'status', None, None, ),  # 1
     (2, TType.STRING, 'message', 'UTF8', None, ),  # 2
     (3, TType.BYTE, 'code', None, None, ),  # 3
+)
+all_structs.append(FindBlockQueryValue)
+FindBlockQueryValue.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'streamId', 'UTF8', None, ),  # 1
+    (2, TType.LIST, 'locations', (TType.STRUCT, [FindReplica, None], False), None, ),  # 2
+)
+all_structs.append(FindBlockQueryResponse)
+FindBlockQueryResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.MAP, 'findBlockQueryResultMap', (TType.I64, None, TType.STRUCT, [FindBlockQueryValue, None], False), None, ),  # 1
+    (2, TType.BYTE, 'status', None, None, ),  # 2
+    (3, TType.STRING, 'errorResponse', 'UTF8', None, ),  # 3
 )
 fix_spec(all_structs)
 del all_structs

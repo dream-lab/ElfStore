@@ -16,6 +16,13 @@ import module_EdgeClientCLI_put
 import module_EdgeClientCLI_ls
 import module_EdgeClientCLI_find
 import module_EdgeClientCLI_getMeta
+import module_EdgeClientCLI_findBlockQueryWithLocations
+
+'''
+helper imports
+'''
+from Helper import GetPref
+from Helper import PrepareMetaKeyVal
 
 ## Global parameters
 EDGE_ID = int()
@@ -151,6 +158,17 @@ class elfsCLI(Cmd):
         else:
             module_EdgeClientCLI_find.find(tokens.mbid,tokens.blockMeta,tokens.streamMeta,tokens.fogIp,tokens.fogPort)
 
+    def do_findwithloc(self, args):
+        line = shlex.split(args)
+
+        tokens = findwithloc_parser.parse_args(line)
+        metaKeyValMap = PrepareMetaKeyVal.getMetaKeyVal()
+
+        matchPref = GetPref.getMatchPref(tokens.matchpref)
+        findloccount = GetPref.getReplicaCount(tokens.findloccount)
+
+        module_EdgeClientCLI_findBlockQueryWithLocations.findBlockQueryWithLocations(EDGE_ID, EDGE_IP, EDGE_PORT, EDGE_RELI, tokens.fogIp,
+                                                                  tokens.fogPort,metaKeyValMap, matchPref, findloccount)
 
     def do_join(self,args):
         ## here args includes everyting after the invokation command
@@ -371,6 +389,19 @@ if __name__ == '__main__':
     getmeta_parser.add_argument("--mbid", default = None)
     getmeta_parser.add_argument("--keylist", default=None)
     getmeta_parser.add_argument("--v", "--verbose", action="store_true")
+
+    ## Parser for findwithloc command
+    ## Arguments :
+    ## 1. --fogIp (default, based on config file)
+    ## 2. --fogPort (default, based on config file)
+    ## 3. --meta the meta that you want to search with
+    findwithloc_parser = subparsers.add_parser("findwithloc")
+    findwithloc_parser.add_argument("--fogIp", default=FOG_IP)
+    findwithloc_parser.add_argument("--fogPort", default=FOG_PORT)
+    findwithloc_parser.add_argument("--meta", default=None)
+    findwithloc_parser.add_argument("--matchpref", default="2")
+    findwithloc_parser.add_argument("--findloccount", default="1")
+    findwithloc_parser.add_argument("--v", "--verbose", action="store_true")
 
     ## Parser for join command
     ## Arguments :

@@ -59,7 +59,6 @@ def nostdout():
 ## contains instances for ReadReplica structure (defined in the EdgeServices.thrift file)
 
 
-
 class EdgeClient:
     def __init__(self):
         self.log = {}
@@ -86,9 +85,6 @@ class EdgeClient:
 
         # Connect!
         transport.open()
-
-        print("came here")
-
         return client, transport
 
     # Close connection
@@ -97,18 +93,33 @@ class EdgeClient:
         print("closing connection")
         transport.close()
 
-    def getMetadata(self, blockID, edgeIP, edgePort, fogIP, fogPort, keyList):
+    def createEdgeInfoDataObject(self, edgeID, edgeIP, edgePort, reliability):
+
+        edgeInfoData = EdgeInfoData()
+        edgeInfoData.nodeId = int(edgeID)
+        edgeInfoData.nodeIp = edgeIP
+        edgeInfoData.port = int(edgePort)
+        edgeInfoData.reliability = int(reliability)
+        edgeInfoData.storage = 12
+
+        return edgeInfoData
+
+    def findBlockQueryWithLocation(self, edgeID,edgeIP,edgePort,edgeReliability,fogIP,fogPort, metakeyvalMap, matchPref, replicaCount):
 
         client, transport = self.openSocketConnection(fogIP, fogPort, FOG_SERVICE)
-        metadataResponse = client.getMetadataByBlockid(int(blockID), fogIP, int(fogPort), edgeIP, int(edgePort), keyList)
-        print("The result is => ", metadataResponse.result)
-        self.closeSocket(transport)
+        edgeInfoData = self.createEdgeInfoDataObject(edgeID, edgeIP, edgePort, edgeReliability)
+        # print("matchPref ",MatchPreference._NAMES_TO_VALUES[matchPref])
+        # print("replicaCount ", ReplicaCount._NAMES_TO_VALUES[replicaCount])
+        matchPref = MatchPreference._NAMES_TO_VALUES[matchPref]
+        replicaCount = ReplicaCount._NAMES_TO_VALUES[replicaCount]
+        print("Metakeyvalue map ",metakeyvalMap)
+        result = client.findBlocksAndLocationsWithQuery(metakeyvalMap, True, True, matchPref, replicaCount,edgeInfoData)
+        print("The result => ",result)
 
 '''
 getmetadata for a microbatch
 '''
-def getMeta(blockID,edgeIP,edgePort,fogIP,fogPort, keyList):
+def findBlockQueryWithLocations(edgeID,edgeIP,edgePort,edgeReliability,fogIP,fogPort, metakeyvalMap, matchPref, replicaCount):
 
     myEdge = EdgeClient()
-    print("The keylist => ",keyList)
-    myEdge.getMetadata(blockID,edgeIP, edgePort, fogIP, fogPort, keyList)
+    myEdge.findBlockQueryWithLocation(edgeID, edgeIP, edgePort, edgeReliability,fogIP,fogPort, metakeyvalMap, matchPref, replicaCount)

@@ -626,6 +626,12 @@ def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,split
     if metadataLocation != None:
         metaKeyValueMap = json.load(open(metadataLocation,'r'))
 
+    metaKeyValueMap = {}
+    metaKeyValueMap["1"] = "dream"
+    metaKeyValueMap["2"] = "lab"
+    metaKeyValueMap["3"] = "iisc"
+    metaKeyValueMap["4"] = "bgl"
+
     if setLease == "1":
         setLease = True
     elif setLease == "0":

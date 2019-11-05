@@ -143,6 +143,18 @@ enum WritePreference {
 	LLL
 }
 
+enum MatchPreference {
+	NONE = 0,
+	OR = 1,
+	AND = 2
+}
+
+enum ReplicaCount {
+	NONE = 0,
+	ONE = 1,
+	ALL = 2
+}
+
 struct WritableFogData {
 	1:required NodeInfoData node;
 	2:required WritePreference preference;
@@ -295,6 +307,7 @@ struct FindResponse {
 struct FindReplica {
 	1: optional NodeInfoData node;
 	2: optional EdgeInfoData edgeInfo;
+        3: optional bool isLocal;
 }
 
 struct ReadReplica {
@@ -356,6 +369,17 @@ struct BlockMetadataUpdateResponse {
 	//the server side. If there are any failures, what type of failure
 	//it is, Fog is down or version mismatch
 	3: required byte code;
+}
+
+struct FindBlockQueryValue {
+	1: required string streamId;
+	2: optional list<FindReplica> locations;
+}
+
+struct FindBlockQueryResponse {
+	1: required map<i64, FindBlockQueryValue> findBlockQueryResultMap;
+	2: required byte status;
+	3: optional string errorResponse;
 }
 
 // the interfaces belonging to Fog Interface
@@ -429,7 +453,7 @@ service FogService {
 											3: list<i16> blackListedFogs, 4:bool isEdge);
 
 	//byte write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
-	WriteResponse write(1:Metadata mbMetadata, 2:binary data, 3:WritePreference preference);
+	WriteResponse write(1:Metadata mbMetadata, 2:binary data, 3: WritePreference preference);
 
 	// does a test and set tupe of thing, returns the same set of locations as done previously
 	list<NodeInfoData> writeNext(1: string sessionId, 2: Metadata mbData, 3: byte dataLength);
@@ -445,11 +469,10 @@ service FogService {
 	// Find the next micro bactch satisfying the query
 	binary findNext(1: string microbatchId);
 
-	//list<FindReplica> find(1: string microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies,
-		//					4:EdgeInfoData selfInfo);
-
 	list<FindReplica> find(1: i64 microbatchId, 2:bool checkNeighbors, 3:bool checkBuddies,
-							4:EdgeInfoData selfInfo);
+							4: EdgeInfoData selfInfo);
+
+	map<i64, list<FindReplica>> findFast(1: list<i64> microbatchIdList, 2: bool checkNeighbors, 3: bool checkBuddies,4: EdgeInfoData selfInfo);
 
 	//ReadReplica read(1: string microbatchId, 2:bool fetchMetadata);
 	ReadReplica read(1: i64 microbatchId, 2:bool fetchMetadata,3:string compFormat,4:i64 uncompSize);
@@ -507,7 +530,10 @@ service FogService {
 	set<string> findStreamUsingQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies);
 	
 	//used to facilitate the api FindBlock(bquery)
-	map<i64,string> findBlockUsingQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies);
+	map<i64,string> findBlockUsingQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies, 4: MatchPreference matchpreference);
+
+	//this query returns blocks with stream and findreplica
+	FindBlockQueryResponse findBlocksAndLocationsWithQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies, 4: MatchPreference matchpreference, 5: ReplicaCount replicacount, 6: EdgeInfoData edgeInfo);
 
 	// getMetadata by blockid
         MetadataResponse getMetadataByBlockid(1: i64 mbid, 2: string fogip, 3: i32 fogport, 4: string edgeip, 5: i32 edgeport, 6: list<string> keys);
