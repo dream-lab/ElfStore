@@ -48,3 +48,10 @@ python EdgeClient.py 2 127.0.0.1 7000 82 127.0.0.1 9090 stream_id_1 1 6 /home/sw
 # cli command
 
 put --path=/home/swamiji/phd/EdgeFS/ElfStore/edgefs/microbatch_data/microbatch0.txt --streamId=stream_id_1 --start=300 --singleBlock
+
+Sample commands to test:
+
+regstream --fogIp 127.0.0.1 --fogPort 9090 --id stream_id_test_1 --reli .90 --verbose
+put --path=/home/swamiji/phd/EdgeFS/ElfStore/microbatches/microbatch0.txt --fogIp 127.0.0.1 --fogPort 9090 --streamId=stream_id_test_1 --start=11 --singleBlock --v
+getmeta --fogIp 127.0.0.1 --fogPort 9090 --edgeIp 127.0.0.1 --edgePort 7001 --mbid 11 --keylist cds
+findwithloc --fogIp 127.0.0.1 --fogPort 9090 --matchpref 1 --findloccount 0
