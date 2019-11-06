@@ -33,6 +33,7 @@ import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dreamlab.edgefs.controlplane.FindQueryComparator;
 import com.dreamlab.edgefs.controlplane.Fog;
 import com.dreamlab.edgefs.controlplane.GlobalReplicaAllocation;
 import com.dreamlab.edgefs.misc.BloomFilter;
@@ -3061,27 +3062,9 @@ public class FogServiceHandler implements FogService.Iface {
 		
 		Set<Long> validMbTdList = new HashSet<>();
 		Map<Long, String> mbIdStreamIdMapResponse = new ConcurrentHashMap<>();
-		boolean firstPass = true;
+		FindQueryComparator myComparator = new FindQueryComparator();		
+		validMbTdList = myComparator.performMatching(metaKeyValueMap, fog.getMetaToMBIdListMap(), matchPreference);
 		
-		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
-		while (itr.hasNext()) {
-			Map.Entry<String, String> entry = itr.next();
-			// formulate the searchKey for setMetaMbIdMap
-			String searchKey = entry.getKey() + ":" + entry.getValue();
-			List<Long> matchingMbIds = fog.getMetaToMBIdListMap().get(searchKey);
-			if(matchingMbIds==null) {
-				matchingMbIds = new ArrayList<Long>();
-			}
-			
-			if (firstPass) {
-				if(matchingMbIds!=null)
-					validMbTdList.addAll(matchingMbIds);
-				firstPass = false;
-			} else {
-				if(matchingMbIds!=null)
-					validMbTdList.retainAll(matchingMbIds);
-			}
-		}
 		// formulate the final mbIdStreamIdMap by fetching the streamid as well.
 		for (Long mbid : validMbTdList)
 			mbIdStreamIdMapResponse.put(mbid, fog.getMbIdToStreamIdMap().get(mbid));
@@ -3564,6 +3547,8 @@ public class FogServiceHandler implements FogService.Iface {
 	public FindBlockQueryResponse findBlocksAndLocationsWithQuery(Map<String, String> metaKeyValueMap,
 			boolean checkNeighbors, boolean checkBuddies, MatchPreference matchpreference, ReplicaCount replicacount, EdgeInfoData edgeInfo)
 			throws TException {
+		
+		LOGGER.info("findBlocksAndLocationsWithQuery() has been called ");
 		
 		FindBlockQueryResponse findQueryResponse = new FindBlockQueryResponse();
 		findQueryResponse.status = Constants.FAILURE;
