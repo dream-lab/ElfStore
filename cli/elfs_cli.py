@@ -23,6 +23,7 @@ helper imports
 '''
 from Helper import GetPref
 from Helper import PrepareMetaKeyVal
+from Helper import PrepareFindQueryCondition
 
 ## Global parameters
 EDGE_ID = int()
@@ -164,11 +165,11 @@ class elfsCLI(Cmd):
         tokens = findwithloc_parser.parse_args(line)
         metaKeyValMap = PrepareMetaKeyVal.getMetaKeyVal()
 
-        matchPref = GetPref.getMatchPref(tokens.matchpref)
+        findQueryCondition = PrepareFindQueryCondition.getFindQueryCondition()
         findloccount = GetPref.getReplicaCount(tokens.findloccount)
 
         module_EdgeClientCLI_findBlockQueryWithLocations.findBlockQueryWithLocations(EDGE_ID, EDGE_IP, EDGE_PORT, EDGE_RELI, tokens.fogIp,
-                                                                  tokens.fogPort,metaKeyValMap, matchPref, findloccount)
+                                                                  tokens.fogPort,metaKeyValMap, findQueryCondition, findloccount)
 
     def do_join(self,args):
         ## here args includes everyting after the invokation command

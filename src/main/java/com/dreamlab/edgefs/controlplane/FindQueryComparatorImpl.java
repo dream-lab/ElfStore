@@ -10,7 +10,7 @@ import java.util.Set;
 import com.dreamlab.edgefs.iface.FindQueryComparatorIFace;
 import com.dreamlab.edgefs.thrift.MatchPreference;
 
-public class FindQueryComparator implements FindQueryComparatorIFace {
+public class FindQueryComparatorImpl implements FindQueryComparatorIFace {
 
 	@Override
 	public Set<Long> performMatching(Map<String, String> metaKeyValueMap, Map<String, List<Long>> metaToMbidMap,

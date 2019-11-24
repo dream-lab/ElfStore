@@ -16,6 +16,7 @@ import com.dreamlab.edgefs.model.EdgeInfo;
 import com.dreamlab.edgefs.servicehandler.FogServiceHandler;
 import com.dreamlab.edgefs.thrift.EdgeInfoData;
 import com.dreamlab.edgefs.thrift.FindBlockQueryResponse;
+import com.dreamlab.edgefs.thrift.FindQueryCondition;
 import com.dreamlab.edgefs.thrift.FindReplica;
 import com.dreamlab.edgefs.thrift.MatchPreference;
 import com.dreamlab.edgefs.thrift.MetadataResponse;
@@ -152,6 +153,28 @@ public class FogServiceHandlerTest {
 		assertEquals(findBlockQueryResponseMap.containsKey((long)125), true);
 	}
 	
+	public List<List<FindQueryCondition>> getFindQueryObject(){
+		List<List<FindQueryCondition>> myFindQueryList = new ArrayList<List<FindQueryCondition>>();
+		
+		List<FindQueryCondition> orList1 = new ArrayList<FindQueryCondition>();
+		List<FindQueryCondition> orList2 = new ArrayList<FindQueryCondition>();
+		List<FindQueryCondition> orList3 = new ArrayList<FindQueryCondition>();
+		
+		FindQueryCondition condition1 = new FindQueryCondition("1", "cds");
+		FindQueryCondition condition2 = new FindQueryCondition("2", "cds");
+		FindQueryCondition condition3 = new FindQueryCondition("2", "dream");
+		FindQueryCondition condition4 = new FindQueryCondition("3", "cds");
+		FindQueryCondition condition5 = new FindQueryCondition("3", "dream");
+		FindQueryCondition condition6 = new FindQueryCondition("3", "iisc");
+		
+		orList1.add(condition1);
+		orList2.add(condition2);orList2.add(condition3);
+		orList3.add(condition4);orList3.add(condition5);orList3.add(condition6);
+		
+		myFindQueryList.add(orList1);myFindQueryList.add(orList2);myFindQueryList.add(orList3);
+		return myFindQueryList;
+	}
+	
 	@Test
 	public void findBlocksAndLocationsWithQueryTest() {
 		FogServiceHandler myServiceHandler =  new FogServiceHandler();
@@ -173,8 +196,8 @@ public class FogServiceHandlerTest {
 		
 		/** Prepare the metadata key value map **/
 		HashMap<String, String> metaKeyValueMap = new HashMap<String, String>();
-		metaKeyValueMap.put("1","dream");
-		metaKeyValueMap.put("2","lab");
+		metaKeyValueMap.put("1","cds");
+		metaKeyValueMap.put("2","dream");
 		metaKeyValueMap.put("3","iisc");
 		
 		List<Long> microbatchIdList1 = new ArrayList<Long>();
@@ -182,13 +205,13 @@ public class FogServiceHandlerTest {
 		microbatchIdList1.add((long) 124);
 		microbatchIdList1.add((long) 125);
 		
-		myFog.getMetaToMBIdListMap().put("1:dream", microbatchIdList1);
+		myFog.getMetaToMBIdListMap().put("1:cds", microbatchIdList1);
 		
 		List<Long> microbatchIdList2 = new ArrayList<Long>();
 		microbatchIdList2.add((long) 123);		
 		microbatchIdList2.add((long) 125);
 		
-		myFog.getMetaToMBIdListMap().put("2:lab", microbatchIdList2);
+		myFog.getMetaToMBIdListMap().put("2:dream", microbatchIdList2);
 		
 		List<Long> microbatchIdList3 = new ArrayList<Long>();				
 		microbatchIdList3.add((long) 125);
@@ -201,11 +224,14 @@ public class FogServiceHandlerTest {
 		System.out.println(findBlockQueryResponseMap);
 		assertEquals(findBlockQueryResponseMap.containsKey((long)125), true);
 		
+		/******** CASE 1 : POSITIVE CASES ********/
 		/** Test for no replica location NONE **/
+		List<List<FindQueryCondition>> queryCondition = getFindQueryObject();
 		EdgeInfoData edgeInfo = new EdgeInfoData((short)11, "127.0.0.1", 8000, (byte)80, (byte)60);
 		try {
-			FindBlockQueryResponse response = myServiceHandler.findBlocksAndLocationsWithQuery(metaKeyValueMap, false, false, MatchPreference.AND, ReplicaCount.NONE, edgeInfo);
-			assertEquals(response.getFindBlockQueryResultMapSize(), 1);
+			System.out.println("FindBlockResultMap => "+metaKeyValueMap);
+			FindBlockQueryResponse response = myServiceHandler.findBlocksAndLocationsWithQuery(metaKeyValueMap, false, false,queryCondition , ReplicaCount.NONE, edgeInfo);
+			assertEquals(3, response.getFindBlockQueryResultMapSize());
 			assertEquals(response.getFindBlockQueryResultMap().containsKey((long)125), true);
 			
 			System.out.println("The response is => "+response);
@@ -216,8 +242,8 @@ public class FogServiceHandlerTest {
 		/** Test for SINGLE replica location **/
 		edgeInfo = new EdgeInfoData((short)11, "127.0.0.1", 8000, (byte)80, (byte)60);
 		try {
-			FindBlockQueryResponse response = myServiceHandler.findBlocksAndLocationsWithQuery(metaKeyValueMap, false, false, MatchPreference.AND, ReplicaCount.ONE, edgeInfo);
-			assertEquals(response.getFindBlockQueryResultMapSize(), 1);
+			FindBlockQueryResponse response = myServiceHandler.findBlocksAndLocationsWithQuery(metaKeyValueMap, false, false,queryCondition , ReplicaCount.ONE, edgeInfo);
+			assertEquals(3, response.getFindBlockQueryResultMapSize());
 			assertEquals(response.getFindBlockQueryResultMap().containsKey((long)125), true);
 			
 			System.out.println("The response is => "+response);
@@ -225,5 +251,17 @@ public class FogServiceHandlerTest {
 			e.printStackTrace();
 		}
 		
+		/******** CASE 2 : NEGATIVE CASES ********/
+		myFog.getMetaToMBIdListMap().remove("3:iisc");
+		myFog.getMetaToMBIdListMap().put("3:cds",microbatchIdList2);
+		edgeInfo = new EdgeInfoData((short)11, "127.0.0.1", 8000, (byte)80, (byte)60);
+		try {
+			FindBlockQueryResponse response = myServiceHandler.findBlocksAndLocationsWithQuery(metaKeyValueMap, false, false,queryCondition , ReplicaCount.NONE, edgeInfo);
+			System.out.println("The response is => "+response);
+			assertEquals(0, response.getFindBlockQueryResultMapSize());
+			assertEquals(false, response.getFindBlockQueryResultMap().containsKey((long)125));			
+		} catch (TException e) {
+			e.printStackTrace();
+		}		
 	}
 }

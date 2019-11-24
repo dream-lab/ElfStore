@@ -2830,14 +2830,12 @@ class FindReplica(object):
     Attributes:
      - node
      - edgeInfo
-     - isLocal
     """
 
 
-    def __init__(self, node=None, edgeInfo=None, isLocal=None,):
+    def __init__(self, node=None, edgeInfo=None,):
         self.node = node
         self.edgeInfo = edgeInfo
-        self.isLocal = isLocal
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -2860,11 +2858,6 @@ class FindReplica(object):
                     self.edgeInfo.read(iprot)
                 else:
                     iprot.skip(ftype)
-            elif fid == 3:
-                if ftype == TType.BOOL:
-                    self.isLocal = iprot.readBool()
-                else:
-                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -2882,10 +2875,6 @@ class FindReplica(object):
         if self.edgeInfo is not None:
             oprot.writeFieldBegin('edgeInfo', TType.STRUCT, 2)
             self.edgeInfo.write(oprot)
-            oprot.writeFieldEnd()
-        if self.isLocal is not None:
-            oprot.writeFieldBegin('isLocal', TType.BOOL, 3)
-            oprot.writeBool(self.isLocal)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -3751,6 +3740,77 @@ class FindBlockQueryResponse(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+class FindQueryCondition(object):
+    """
+    Attributes:
+     - key
+     - value
+    """
+
+
+    def __init__(self, key=None, value=None,):
+        self.key = key
+        self.value = value
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.key = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.value = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('FindQueryCondition')
+        if self.key is not None:
+            oprot.writeFieldBegin('key', TType.STRING, 1)
+            oprot.writeString(self.key.encode('utf-8') if sys.version_info[0] == 2 else self.key)
+            oprot.writeFieldEnd()
+        if self.value is not None:
+            oprot.writeFieldBegin('value', TType.STRING, 2)
+            oprot.writeString(self.value.encode('utf-8') if sys.version_info[0] == 2 else self.value)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.key is None:
+            raise TProtocolException(message='Required field key is unset!')
+        if self.value is None:
+            raise TProtocolException(message='Required field value is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 all_structs.append(NodeInfoPrimary)
 NodeInfoPrimary.thrift_spec = (
     None,  # 0
@@ -3978,7 +4038,6 @@ FindReplica.thrift_spec = (
     None,  # 0
     (1, TType.STRUCT, 'node', [NodeInfoData, None], None, ),  # 1
     (2, TType.STRUCT, 'edgeInfo', [EdgeInfoData, None], None, ),  # 2
-    (3, TType.BOOL, 'isLocal', None, None, ),  # 3
 )
 all_structs.append(ReadReplica)
 ReadReplica.thrift_spec = (
@@ -4047,6 +4106,12 @@ FindBlockQueryResponse.thrift_spec = (
     (1, TType.MAP, 'findBlockQueryResultMap', (TType.I64, None, TType.STRUCT, [FindBlockQueryValue, None], False), None, ),  # 1
     (2, TType.BYTE, 'status', None, None, ),  # 2
     (3, TType.STRING, 'errorResponse', 'UTF8', None, ),  # 3
+)
+all_structs.append(FindQueryCondition)
+FindQueryCondition.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'key', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'value', 'UTF8', None, ),  # 2
 )
 fix_spec(all_structs)
 del all_structs

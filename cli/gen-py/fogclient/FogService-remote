@@ -71,7 +71,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   requestCompFormatSize(i64 mbId)')
     print('   findStreamUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies)')
     print('   findBlockUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies, MatchPreference matchpreference)')
-    print('  FindBlockQueryResponse findBlocksAndLocationsWithQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies, MatchPreference matchpreference, ReplicaCount replicacount, EdgeInfoData edgeInfo)')
+    print('  FindBlockQueryResponse findBlocksAndLocationsWithQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies,  queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo)')
     print('  MetadataResponse getMetadataByBlockid(i64 mbid, string fogip, i32 fogport, string edgeip, i32 edgeport,  keys)')
     print('')
     sys.exit(0)

@@ -218,6 +218,7 @@ struct NodeInfoPrimaryTypeStreamMetadata {
 	2: required bool updatable;
 }
 
+
 //this is to allow dynamic properties in the stream metadata.
 //this can support only the primitive types as all primitives
 //can be directly converted to their respective classes (clazz)
@@ -307,7 +308,6 @@ struct FindResponse {
 struct FindReplica {
 	1: optional NodeInfoData node;
 	2: optional EdgeInfoData edgeInfo;
-        3: optional bool isLocal;
 }
 
 struct ReadReplica {
@@ -358,16 +358,12 @@ struct MetadataResponse {
         3: optional string errorResponse;
 }
 
-//this kind of pattern of attaching a message as well as code
-//is good to provide client the necessary information to react
-//as per the code returned
+//this kind of pattern of attaching a message as well as code is good to provide client the necessary information to react as per the code returned
 struct BlockMetadataUpdateResponse {
 	1: required byte status;
 	2: required string message;
-	//adding the code field and having some handling at the client
-	//side gives the client information about what's happening at
-	//the server side. If there are any failures, what type of failure
-	//it is, Fog is down or version mismatch
+	//adding the code field and having some handling at the client side gives the client information about what's happening at
+	//the server side. If there are any failures, what type of failure it is, Fog is down or version mismatch
 	3: required byte code;
 }
 
@@ -380,6 +376,11 @@ struct FindBlockQueryResponse {
 	1: required map<i64, FindBlockQueryValue> findBlockQueryResultMap;
 	2: required byte status;
 	3: optional string errorResponse;
+}
+
+struct FindQueryCondition {
+	1: required string key;
+	2: required string value;
 }
 
 // the interfaces belonging to Fog Interface
@@ -533,7 +534,7 @@ service FogService {
 	map<i64,string> findBlockUsingQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies, 4: MatchPreference matchpreference);
 
 	//this query returns blocks with stream and findreplica
-	FindBlockQueryResponse findBlocksAndLocationsWithQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies, 4: MatchPreference matchpreference, 5: ReplicaCount replicacount, 6: EdgeInfoData edgeInfo);
+	FindBlockQueryResponse findBlocksAndLocationsWithQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies, 4: list<list<FindQueryCondition>> queryCondition, 5: ReplicaCount replicacount, 6: EdgeInfoData edgeInfo);
 
 	// getMetadata by blockid
         MetadataResponse getMetadataByBlockid(1: i64 mbid, 2: string fogip, 3: i32 fogport, 4: string edgeip, 5: i32 edgeport, 6: list<string> keys);

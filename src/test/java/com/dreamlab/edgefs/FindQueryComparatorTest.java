@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.dreamlab.edgefs.controlplane.FindQueryComparator;
+import com.dreamlab.edgefs.controlplane.FindQueryComparatorImpl;
 import com.dreamlab.edgefs.thrift.MatchPreference;
 
 public class FindQueryComparatorTest {
@@ -18,7 +18,7 @@ public class FindQueryComparatorTest {
 	@Test
 	public void performMatchingTest() {
 
-		FindQueryComparator myComp = new FindQueryComparator();
+		FindQueryComparatorImpl myComp = new FindQueryComparatorImpl();
 		Map<String, List<Long>> metaToMbidMap = new HashMap<String, List<Long>>();
 		
 		ArrayList<Long> myArrayList1 = new ArrayList<Long>();		
