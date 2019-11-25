@@ -105,7 +105,6 @@ class elfsCLI(Cmd):
 
     def do_getmeta(self, args):
 
-        print("Here in getmeta")
         line = shlex.split(args)
         tokens = getmeta_parser.parse_args(line)
         print("Tokens => ",tokens)
@@ -115,7 +114,7 @@ class elfsCLI(Cmd):
             return ""
 
         keyList = tokens.keylist.split(",")
-        module_EdgeClientCLI_getMeta.getMeta(blockID, tokens.edgeIp, tokens.edgePort, tokens.fogIp, tokens.fogPort, keyList)
+        module_EdgeClientCLI_getMeta.getMeta(blockID,tokens.edgeId, tokens.edgeIp, tokens.edgePort, tokens.fogIp, tokens.fogPort, keyList)
 
     def do_ls(self,args):
         ## here args includes everyting after the invokation command
@@ -163,13 +162,12 @@ class elfsCLI(Cmd):
         line = shlex.split(args)
 
         tokens = findwithloc_parser.parse_args(line)
-        metaKeyValMap = PrepareMetaKeyVal.getMetaKeyVal()
 
         findQueryCondition = PrepareFindQueryCondition.getFindQueryCondition()
         findloccount = GetPref.getReplicaCount(tokens.findloccount)
 
         module_EdgeClientCLI_findBlockQueryWithLocations.findBlockQueryWithLocations(EDGE_ID, EDGE_IP, EDGE_PORT, EDGE_RELI, tokens.fogIp,
-                                                                  tokens.fogPort,metaKeyValMap, findQueryCondition, findloccount)
+                                                                  tokens.fogPort, findQueryCondition, findloccount)
 
     def do_join(self,args):
         ## here args includes everyting after the invokation command
@@ -385,6 +383,7 @@ if __name__ == '__main__':
     getmeta_parser = subparsers.add_parser("getmeta")
     getmeta_parser.add_argument("--fogIp", default=FOG_IP)
     getmeta_parser.add_argument("--fogPort", default=FOG_PORT)
+    getmeta_parser.add_argument("--edgeId", default=EDGE_ID)
     getmeta_parser.add_argument("--edgeIp", default=EDGE_IP)
     getmeta_parser.add_argument("--edgePort", default=EDGE_PORT)
     getmeta_parser.add_argument("--mbid", default = None)

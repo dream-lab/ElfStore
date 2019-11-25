@@ -38,8 +38,8 @@ def getFindQueryCondition():
     condition1.key, condition1.value = "1","dream"
     condition2.key, condition2.value = "1","dream"
     condition3.key, condition3.value = "2","lab"
-    condition4.key, condition4.value = "4","dream"
-    condition5.key, condition5.value = "4","lab"
+    condition4.key, condition4.value = "1","dream"
+    condition5.key, condition5.value = "2","lab"
     condition6.key, condition6.value = "3","iisc"
  
     orList1,orList2,orList3 = [],[],[]

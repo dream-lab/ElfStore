@@ -106,9 +106,9 @@ public class FogService {
 
     public java.util.Map<java.lang.Long,java.lang.String> findBlockUsingQuery(java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap, boolean checkNeighbors, boolean checkBuddies, MatchPreference matchpreference) throws org.apache.thrift.TException;
 
-    public FindBlockQueryResponse findBlocksAndLocationsWithQuery(java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap, boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo) throws org.apache.thrift.TException;
+    public FindBlockQueryResponse findBlocksAndLocationsWithQuery(boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo) throws org.apache.thrift.TException;
 
-    public MetadataResponse getMetadataByBlockid(long mbid, java.lang.String fogip, int fogport, java.lang.String edgeip, int edgeport, java.util.List<java.lang.String> keys) throws org.apache.thrift.TException;
+    public MetadataResponse getMetadataByBlockid(long mbid, java.lang.String fogip, int fogport, EdgeInfoData edgeInfoData, java.util.List<java.lang.String> keys) throws org.apache.thrift.TException;
 
   }
 
@@ -208,9 +208,9 @@ public class FogService {
 
     public void findBlockUsingQuery(java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap, boolean checkNeighbors, boolean checkBuddies, MatchPreference matchpreference, org.apache.thrift.async.AsyncMethodCallback<java.util.Map<java.lang.Long,java.lang.String>> resultHandler) throws org.apache.thrift.TException;
 
-    public void findBlocksAndLocationsWithQuery(java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap, boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo, org.apache.thrift.async.AsyncMethodCallback<FindBlockQueryResponse> resultHandler) throws org.apache.thrift.TException;
+    public void findBlocksAndLocationsWithQuery(boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo, org.apache.thrift.async.AsyncMethodCallback<FindBlockQueryResponse> resultHandler) throws org.apache.thrift.TException;
 
-    public void getMetadataByBlockid(long mbid, java.lang.String fogip, int fogport, java.lang.String edgeip, int edgeport, java.util.List<java.lang.String> keys, org.apache.thrift.async.AsyncMethodCallback<MetadataResponse> resultHandler) throws org.apache.thrift.TException;
+    public void getMetadataByBlockid(long mbid, java.lang.String fogip, int fogport, EdgeInfoData edgeInfoData, java.util.List<java.lang.String> keys, org.apache.thrift.async.AsyncMethodCallback<MetadataResponse> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -1333,16 +1333,15 @@ public class FogService {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "findBlockUsingQuery failed: unknown result");
     }
 
-    public FindBlockQueryResponse findBlocksAndLocationsWithQuery(java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap, boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo) throws org.apache.thrift.TException
+    public FindBlockQueryResponse findBlocksAndLocationsWithQuery(boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo) throws org.apache.thrift.TException
     {
-      send_findBlocksAndLocationsWithQuery(metaKeyValueMap, checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo);
+      send_findBlocksAndLocationsWithQuery(checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo);
       return recv_findBlocksAndLocationsWithQuery();
     }
 
-    public void send_findBlocksAndLocationsWithQuery(java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap, boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo) throws org.apache.thrift.TException
+    public void send_findBlocksAndLocationsWithQuery(boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo) throws org.apache.thrift.TException
     {
       findBlocksAndLocationsWithQuery_args args = new findBlocksAndLocationsWithQuery_args();
-      args.setMetaKeyValueMap(metaKeyValueMap);
       args.setCheckNeighbors(checkNeighbors);
       args.setCheckBuddies(checkBuddies);
       args.setQueryCondition(queryCondition);
@@ -1361,20 +1360,19 @@ public class FogService {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "findBlocksAndLocationsWithQuery failed: unknown result");
     }
 
-    public MetadataResponse getMetadataByBlockid(long mbid, java.lang.String fogip, int fogport, java.lang.String edgeip, int edgeport, java.util.List<java.lang.String> keys) throws org.apache.thrift.TException
+    public MetadataResponse getMetadataByBlockid(long mbid, java.lang.String fogip, int fogport, EdgeInfoData edgeInfoData, java.util.List<java.lang.String> keys) throws org.apache.thrift.TException
     {
-      send_getMetadataByBlockid(mbid, fogip, fogport, edgeip, edgeport, keys);
+      send_getMetadataByBlockid(mbid, fogip, fogport, edgeInfoData, keys);
       return recv_getMetadataByBlockid();
     }
 
-    public void send_getMetadataByBlockid(long mbid, java.lang.String fogip, int fogport, java.lang.String edgeip, int edgeport, java.util.List<java.lang.String> keys) throws org.apache.thrift.TException
+    public void send_getMetadataByBlockid(long mbid, java.lang.String fogip, int fogport, EdgeInfoData edgeInfoData, java.util.List<java.lang.String> keys) throws org.apache.thrift.TException
     {
       getMetadataByBlockid_args args = new getMetadataByBlockid_args();
       args.setMbid(mbid);
       args.setFogip(fogip);
       args.setFogport(fogport);
-      args.setEdgeip(edgeip);
-      args.setEdgeport(edgeport);
+      args.setEdgeInfoData(edgeInfoData);
       args.setKeys(keys);
       sendBase("getMetadataByBlockid", args);
     }
@@ -3040,23 +3038,21 @@ public class FogService {
       }
     }
 
-    public void findBlocksAndLocationsWithQuery(java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap, boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo, org.apache.thrift.async.AsyncMethodCallback<FindBlockQueryResponse> resultHandler) throws org.apache.thrift.TException {
+    public void findBlocksAndLocationsWithQuery(boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo, org.apache.thrift.async.AsyncMethodCallback<FindBlockQueryResponse> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      findBlocksAndLocationsWithQuery_call method_call = new findBlocksAndLocationsWithQuery_call(metaKeyValueMap, checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo, resultHandler, this, ___protocolFactory, ___transport);
+      findBlocksAndLocationsWithQuery_call method_call = new findBlocksAndLocationsWithQuery_call(checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
     public static class findBlocksAndLocationsWithQuery_call extends org.apache.thrift.async.TAsyncMethodCall<FindBlockQueryResponse> {
-      private java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap;
       private boolean checkNeighbors;
       private boolean checkBuddies;
       private java.util.List<java.util.List<FindQueryCondition>> queryCondition;
       private ReplicaCount replicacount;
       private EdgeInfoData edgeInfo;
-      public findBlocksAndLocationsWithQuery_call(java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap, boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo, org.apache.thrift.async.AsyncMethodCallback<FindBlockQueryResponse> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public findBlocksAndLocationsWithQuery_call(boolean checkNeighbors, boolean checkBuddies, java.util.List<java.util.List<FindQueryCondition>> queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo, org.apache.thrift.async.AsyncMethodCallback<FindBlockQueryResponse> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
-        this.metaKeyValueMap = metaKeyValueMap;
         this.checkNeighbors = checkNeighbors;
         this.checkBuddies = checkBuddies;
         this.queryCondition = queryCondition;
@@ -3067,7 +3063,6 @@ public class FogService {
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
         prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("findBlocksAndLocationsWithQuery", org.apache.thrift.protocol.TMessageType.CALL, 0));
         findBlocksAndLocationsWithQuery_args args = new findBlocksAndLocationsWithQuery_args();
-        args.setMetaKeyValueMap(metaKeyValueMap);
         args.setCheckNeighbors(checkNeighbors);
         args.setCheckBuddies(checkBuddies);
         args.setQueryCondition(queryCondition);
@@ -3087,9 +3082,9 @@ public class FogService {
       }
     }
 
-    public void getMetadataByBlockid(long mbid, java.lang.String fogip, int fogport, java.lang.String edgeip, int edgeport, java.util.List<java.lang.String> keys, org.apache.thrift.async.AsyncMethodCallback<MetadataResponse> resultHandler) throws org.apache.thrift.TException {
+    public void getMetadataByBlockid(long mbid, java.lang.String fogip, int fogport, EdgeInfoData edgeInfoData, java.util.List<java.lang.String> keys, org.apache.thrift.async.AsyncMethodCallback<MetadataResponse> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      getMetadataByBlockid_call method_call = new getMetadataByBlockid_call(mbid, fogip, fogport, edgeip, edgeport, keys, resultHandler, this, ___protocolFactory, ___transport);
+      getMetadataByBlockid_call method_call = new getMetadataByBlockid_call(mbid, fogip, fogport, edgeInfoData, keys, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
@@ -3098,16 +3093,14 @@ public class FogService {
       private long mbid;
       private java.lang.String fogip;
       private int fogport;
-      private java.lang.String edgeip;
-      private int edgeport;
+      private EdgeInfoData edgeInfoData;
       private java.util.List<java.lang.String> keys;
-      public getMetadataByBlockid_call(long mbid, java.lang.String fogip, int fogport, java.lang.String edgeip, int edgeport, java.util.List<java.lang.String> keys, org.apache.thrift.async.AsyncMethodCallback<MetadataResponse> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public getMetadataByBlockid_call(long mbid, java.lang.String fogip, int fogport, EdgeInfoData edgeInfoData, java.util.List<java.lang.String> keys, org.apache.thrift.async.AsyncMethodCallback<MetadataResponse> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.mbid = mbid;
         this.fogip = fogip;
         this.fogport = fogport;
-        this.edgeip = edgeip;
-        this.edgeport = edgeport;
+        this.edgeInfoData = edgeInfoData;
         this.keys = keys;
       }
 
@@ -3117,8 +3110,7 @@ public class FogService {
         args.setMbid(mbid);
         args.setFogip(fogip);
         args.setFogport(fogport);
-        args.setEdgeip(edgeip);
-        args.setEdgeport(edgeport);
+        args.setEdgeInfoData(edgeInfoData);
         args.setKeys(keys);
         args.write(prot);
         prot.writeMessageEnd();
@@ -4401,7 +4393,7 @@ public class FogService {
 
       public findBlocksAndLocationsWithQuery_result getResult(I iface, findBlocksAndLocationsWithQuery_args args) throws org.apache.thrift.TException {
         findBlocksAndLocationsWithQuery_result result = new findBlocksAndLocationsWithQuery_result();
-        result.success = iface.findBlocksAndLocationsWithQuery(args.metaKeyValueMap, args.checkNeighbors, args.checkBuddies, args.queryCondition, args.replicacount, args.edgeInfo);
+        result.success = iface.findBlocksAndLocationsWithQuery(args.checkNeighbors, args.checkBuddies, args.queryCondition, args.replicacount, args.edgeInfo);
         return result;
       }
     }
@@ -4426,7 +4418,7 @@ public class FogService {
 
       public getMetadataByBlockid_result getResult(I iface, getMetadataByBlockid_args args) throws org.apache.thrift.TException {
         getMetadataByBlockid_result result = new getMetadataByBlockid_result();
-        result.success = iface.getMetadataByBlockid(args.mbid, args.fogip, args.fogport, args.edgeip, args.edgeport, args.keys);
+        result.success = iface.getMetadataByBlockid(args.mbid, args.fogip, args.fogport, args.edgeInfoData, args.keys);
         return result;
       }
     }
@@ -7374,7 +7366,7 @@ public class FogService {
       }
 
       public void start(I iface, findBlocksAndLocationsWithQuery_args args, org.apache.thrift.async.AsyncMethodCallback<FindBlockQueryResponse> resultHandler) throws org.apache.thrift.TException {
-        iface.findBlocksAndLocationsWithQuery(args.metaKeyValueMap, args.checkNeighbors, args.checkBuddies, args.queryCondition, args.replicacount, args.edgeInfo,resultHandler);
+        iface.findBlocksAndLocationsWithQuery(args.checkNeighbors, args.checkBuddies, args.queryCondition, args.replicacount, args.edgeInfo,resultHandler);
       }
     }
 
@@ -7435,7 +7427,7 @@ public class FogService {
       }
 
       public void start(I iface, getMetadataByBlockid_args args, org.apache.thrift.async.AsyncMethodCallback<MetadataResponse> resultHandler) throws org.apache.thrift.TException {
-        iface.getMetadataByBlockid(args.mbid, args.fogip, args.fogport, args.edgeip, args.edgeport, args.keys,resultHandler);
+        iface.getMetadataByBlockid(args.mbid, args.fogip, args.fogport, args.edgeInfoData, args.keys,resultHandler);
       }
     }
 
@@ -46325,17 +46317,15 @@ public class FogService {
   public static class findBlocksAndLocationsWithQuery_args implements org.apache.thrift.TBase<findBlocksAndLocationsWithQuery_args, findBlocksAndLocationsWithQuery_args._Fields>, java.io.Serializable, Cloneable, Comparable<findBlocksAndLocationsWithQuery_args>   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("findBlocksAndLocationsWithQuery_args");
 
-    private static final org.apache.thrift.protocol.TField META_KEY_VALUE_MAP_FIELD_DESC = new org.apache.thrift.protocol.TField("metaKeyValueMap", org.apache.thrift.protocol.TType.MAP, (short)1);
-    private static final org.apache.thrift.protocol.TField CHECK_NEIGHBORS_FIELD_DESC = new org.apache.thrift.protocol.TField("checkNeighbors", org.apache.thrift.protocol.TType.BOOL, (short)2);
-    private static final org.apache.thrift.protocol.TField CHECK_BUDDIES_FIELD_DESC = new org.apache.thrift.protocol.TField("checkBuddies", org.apache.thrift.protocol.TType.BOOL, (short)3);
-    private static final org.apache.thrift.protocol.TField QUERY_CONDITION_FIELD_DESC = new org.apache.thrift.protocol.TField("queryCondition", org.apache.thrift.protocol.TType.LIST, (short)4);
-    private static final org.apache.thrift.protocol.TField REPLICACOUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("replicacount", org.apache.thrift.protocol.TType.I32, (short)5);
-    private static final org.apache.thrift.protocol.TField EDGE_INFO_FIELD_DESC = new org.apache.thrift.protocol.TField("edgeInfo", org.apache.thrift.protocol.TType.STRUCT, (short)6);
+    private static final org.apache.thrift.protocol.TField CHECK_NEIGHBORS_FIELD_DESC = new org.apache.thrift.protocol.TField("checkNeighbors", org.apache.thrift.protocol.TType.BOOL, (short)1);
+    private static final org.apache.thrift.protocol.TField CHECK_BUDDIES_FIELD_DESC = new org.apache.thrift.protocol.TField("checkBuddies", org.apache.thrift.protocol.TType.BOOL, (short)2);
+    private static final org.apache.thrift.protocol.TField QUERY_CONDITION_FIELD_DESC = new org.apache.thrift.protocol.TField("queryCondition", org.apache.thrift.protocol.TType.LIST, (short)3);
+    private static final org.apache.thrift.protocol.TField REPLICACOUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("replicacount", org.apache.thrift.protocol.TType.I32, (short)4);
+    private static final org.apache.thrift.protocol.TField EDGE_INFO_FIELD_DESC = new org.apache.thrift.protocol.TField("edgeInfo", org.apache.thrift.protocol.TType.STRUCT, (short)5);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new findBlocksAndLocationsWithQuery_argsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new findBlocksAndLocationsWithQuery_argsTupleSchemeFactory();
 
-    public java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap; // required
     public boolean checkNeighbors; // required
     public boolean checkBuddies; // required
     public java.util.List<java.util.List<FindQueryCondition>> queryCondition; // required
@@ -46348,16 +46338,15 @@ public class FogService {
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      META_KEY_VALUE_MAP((short)1, "metaKeyValueMap"),
-      CHECK_NEIGHBORS((short)2, "checkNeighbors"),
-      CHECK_BUDDIES((short)3, "checkBuddies"),
-      QUERY_CONDITION((short)4, "queryCondition"),
+      CHECK_NEIGHBORS((short)1, "checkNeighbors"),
+      CHECK_BUDDIES((short)2, "checkBuddies"),
+      QUERY_CONDITION((short)3, "queryCondition"),
       /**
        * 
        * @see ReplicaCount
        */
-      REPLICACOUNT((short)5, "replicacount"),
-      EDGE_INFO((short)6, "edgeInfo");
+      REPLICACOUNT((short)4, "replicacount"),
+      EDGE_INFO((short)5, "edgeInfo");
 
       private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -46372,17 +46361,15 @@ public class FogService {
        */
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
-          case 1: // META_KEY_VALUE_MAP
-            return META_KEY_VALUE_MAP;
-          case 2: // CHECK_NEIGHBORS
+          case 1: // CHECK_NEIGHBORS
             return CHECK_NEIGHBORS;
-          case 3: // CHECK_BUDDIES
+          case 2: // CHECK_BUDDIES
             return CHECK_BUDDIES;
-          case 4: // QUERY_CONDITION
+          case 3: // QUERY_CONDITION
             return QUERY_CONDITION;
-          case 5: // REPLICACOUNT
+          case 4: // REPLICACOUNT
             return REPLICACOUNT;
-          case 6: // EDGE_INFO
+          case 5: // EDGE_INFO
             return EDGE_INFO;
           default:
             return null;
@@ -46430,10 +46417,6 @@ public class FogService {
     public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.META_KEY_VALUE_MAP, new org.apache.thrift.meta_data.FieldMetaData("metaKeyValueMap", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
-              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
-              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
       tmpMap.put(_Fields.CHECK_NEIGHBORS, new org.apache.thrift.meta_data.FieldMetaData("checkNeighbors", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
       tmpMap.put(_Fields.CHECK_BUDDIES, new org.apache.thrift.meta_data.FieldMetaData("checkBuddies", org.apache.thrift.TFieldRequirementType.DEFAULT, 
@@ -46454,7 +46437,6 @@ public class FogService {
     }
 
     public findBlocksAndLocationsWithQuery_args(
-      java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap,
       boolean checkNeighbors,
       boolean checkBuddies,
       java.util.List<java.util.List<FindQueryCondition>> queryCondition,
@@ -46462,7 +46444,6 @@ public class FogService {
       EdgeInfoData edgeInfo)
     {
       this();
-      this.metaKeyValueMap = metaKeyValueMap;
       this.checkNeighbors = checkNeighbors;
       setCheckNeighborsIsSet(true);
       this.checkBuddies = checkBuddies;
@@ -46477,10 +46458,6 @@ public class FogService {
      */
     public findBlocksAndLocationsWithQuery_args(findBlocksAndLocationsWithQuery_args other) {
       __isset_bitfield = other.__isset_bitfield;
-      if (other.isSetMetaKeyValueMap()) {
-        java.util.Map<java.lang.String,java.lang.String> __this__metaKeyValueMap = new java.util.HashMap<java.lang.String,java.lang.String>(other.metaKeyValueMap);
-        this.metaKeyValueMap = __this__metaKeyValueMap;
-      }
       this.checkNeighbors = other.checkNeighbors;
       this.checkBuddies = other.checkBuddies;
       if (other.isSetQueryCondition()) {
@@ -46508,7 +46485,6 @@ public class FogService {
 
     @Override
     public void clear() {
-      this.metaKeyValueMap = null;
       setCheckNeighborsIsSet(false);
       this.checkNeighbors = false;
       setCheckBuddiesIsSet(false);
@@ -46516,41 +46492,6 @@ public class FogService {
       this.queryCondition = null;
       this.replicacount = null;
       this.edgeInfo = null;
-    }
-
-    public int getMetaKeyValueMapSize() {
-      return (this.metaKeyValueMap == null) ? 0 : this.metaKeyValueMap.size();
-    }
-
-    public void putToMetaKeyValueMap(java.lang.String key, java.lang.String val) {
-      if (this.metaKeyValueMap == null) {
-        this.metaKeyValueMap = new java.util.HashMap<java.lang.String,java.lang.String>();
-      }
-      this.metaKeyValueMap.put(key, val);
-    }
-
-    public java.util.Map<java.lang.String,java.lang.String> getMetaKeyValueMap() {
-      return this.metaKeyValueMap;
-    }
-
-    public findBlocksAndLocationsWithQuery_args setMetaKeyValueMap(java.util.Map<java.lang.String,java.lang.String> metaKeyValueMap) {
-      this.metaKeyValueMap = metaKeyValueMap;
-      return this;
-    }
-
-    public void unsetMetaKeyValueMap() {
-      this.metaKeyValueMap = null;
-    }
-
-    /** Returns true if field metaKeyValueMap is set (has been assigned a value) and false otherwise */
-    public boolean isSetMetaKeyValueMap() {
-      return this.metaKeyValueMap != null;
-    }
-
-    public void setMetaKeyValueMapIsSet(boolean value) {
-      if (!value) {
-        this.metaKeyValueMap = null;
-      }
     }
 
     public boolean isCheckNeighbors() {
@@ -46696,14 +46637,6 @@ public class FogService {
 
     public void setFieldValue(_Fields field, java.lang.Object value) {
       switch (field) {
-      case META_KEY_VALUE_MAP:
-        if (value == null) {
-          unsetMetaKeyValueMap();
-        } else {
-          setMetaKeyValueMap((java.util.Map<java.lang.String,java.lang.String>)value);
-        }
-        break;
-
       case CHECK_NEIGHBORS:
         if (value == null) {
           unsetCheckNeighbors();
@@ -46749,9 +46682,6 @@ public class FogService {
 
     public java.lang.Object getFieldValue(_Fields field) {
       switch (field) {
-      case META_KEY_VALUE_MAP:
-        return getMetaKeyValueMap();
-
       case CHECK_NEIGHBORS:
         return isCheckNeighbors();
 
@@ -46778,8 +46708,6 @@ public class FogService {
       }
 
       switch (field) {
-      case META_KEY_VALUE_MAP:
-        return isSetMetaKeyValueMap();
       case CHECK_NEIGHBORS:
         return isSetCheckNeighbors();
       case CHECK_BUDDIES:
@@ -46808,15 +46736,6 @@ public class FogService {
         return false;
       if (this == that)
         return true;
-
-      boolean this_present_metaKeyValueMap = true && this.isSetMetaKeyValueMap();
-      boolean that_present_metaKeyValueMap = true && that.isSetMetaKeyValueMap();
-      if (this_present_metaKeyValueMap || that_present_metaKeyValueMap) {
-        if (!(this_present_metaKeyValueMap && that_present_metaKeyValueMap))
-          return false;
-        if (!this.metaKeyValueMap.equals(that.metaKeyValueMap))
-          return false;
-      }
 
       boolean this_present_checkNeighbors = true;
       boolean that_present_checkNeighbors = true;
@@ -46870,10 +46789,6 @@ public class FogService {
     public int hashCode() {
       int hashCode = 1;
 
-      hashCode = hashCode * 8191 + ((isSetMetaKeyValueMap()) ? 131071 : 524287);
-      if (isSetMetaKeyValueMap())
-        hashCode = hashCode * 8191 + metaKeyValueMap.hashCode();
-
       hashCode = hashCode * 8191 + ((checkNeighbors) ? 131071 : 524287);
 
       hashCode = hashCode * 8191 + ((checkBuddies) ? 131071 : 524287);
@@ -46901,16 +46816,6 @@ public class FogService {
 
       int lastComparison = 0;
 
-      lastComparison = java.lang.Boolean.valueOf(isSetMetaKeyValueMap()).compareTo(other.isSetMetaKeyValueMap());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetMetaKeyValueMap()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.metaKeyValueMap, other.metaKeyValueMap);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
       lastComparison = java.lang.Boolean.valueOf(isSetCheckNeighbors()).compareTo(other.isSetCheckNeighbors());
       if (lastComparison != 0) {
         return lastComparison;
@@ -46981,14 +46886,6 @@ public class FogService {
       java.lang.StringBuilder sb = new java.lang.StringBuilder("findBlocksAndLocationsWithQuery_args(");
       boolean first = true;
 
-      sb.append("metaKeyValueMap:");
-      if (this.metaKeyValueMap == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.metaKeyValueMap);
-      }
-      first = false;
-      if (!first) sb.append(", ");
       sb.append("checkNeighbors:");
       sb.append(this.checkNeighbors);
       first = false;
@@ -47068,27 +46965,7 @@ public class FogService {
             break;
           }
           switch (schemeField.id) {
-            case 1: // META_KEY_VALUE_MAP
-              if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
-                {
-                  org.apache.thrift.protocol.TMap _map332 = iprot.readMapBegin();
-                  struct.metaKeyValueMap = new java.util.HashMap<java.lang.String,java.lang.String>(2*_map332.size);
-                  java.lang.String _key333;
-                  java.lang.String _val334;
-                  for (int _i335 = 0; _i335 < _map332.size; ++_i335)
-                  {
-                    _key333 = iprot.readString();
-                    _val334 = iprot.readString();
-                    struct.metaKeyValueMap.put(_key333, _val334);
-                  }
-                  iprot.readMapEnd();
-                }
-                struct.setMetaKeyValueMapIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            case 2: // CHECK_NEIGHBORS
+            case 1: // CHECK_NEIGHBORS
               if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
                 struct.checkNeighbors = iprot.readBool();
                 struct.setCheckNeighborsIsSet(true);
@@ -47096,7 +46973,7 @@ public class FogService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 3: // CHECK_BUDDIES
+            case 2: // CHECK_BUDDIES
               if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
                 struct.checkBuddies = iprot.readBool();
                 struct.setCheckBuddiesIsSet(true);
@@ -47104,27 +46981,27 @@ public class FogService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 4: // QUERY_CONDITION
+            case 3: // QUERY_CONDITION
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list336 = iprot.readListBegin();
-                  struct.queryCondition = new java.util.ArrayList<java.util.List<FindQueryCondition>>(_list336.size);
-                  java.util.List<FindQueryCondition> _elem337;
-                  for (int _i338 = 0; _i338 < _list336.size; ++_i338)
+                  org.apache.thrift.protocol.TList _list332 = iprot.readListBegin();
+                  struct.queryCondition = new java.util.ArrayList<java.util.List<FindQueryCondition>>(_list332.size);
+                  java.util.List<FindQueryCondition> _elem333;
+                  for (int _i334 = 0; _i334 < _list332.size; ++_i334)
                   {
                     {
-                      org.apache.thrift.protocol.TList _list339 = iprot.readListBegin();
-                      _elem337 = new java.util.ArrayList<FindQueryCondition>(_list339.size);
-                      FindQueryCondition _elem340;
-                      for (int _i341 = 0; _i341 < _list339.size; ++_i341)
+                      org.apache.thrift.protocol.TList _list335 = iprot.readListBegin();
+                      _elem333 = new java.util.ArrayList<FindQueryCondition>(_list335.size);
+                      FindQueryCondition _elem336;
+                      for (int _i337 = 0; _i337 < _list335.size; ++_i337)
                       {
-                        _elem340 = new FindQueryCondition();
-                        _elem340.read(iprot);
-                        _elem337.add(_elem340);
+                        _elem336 = new FindQueryCondition();
+                        _elem336.read(iprot);
+                        _elem333.add(_elem336);
                       }
                       iprot.readListEnd();
                     }
-                    struct.queryCondition.add(_elem337);
+                    struct.queryCondition.add(_elem333);
                   }
                   iprot.readListEnd();
                 }
@@ -47133,7 +47010,7 @@ public class FogService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 5: // REPLICACOUNT
+            case 4: // REPLICACOUNT
               if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
                 struct.replicacount = com.dreamlab.edgefs.thrift.ReplicaCount.findByValue(iprot.readI32());
                 struct.setReplicacountIsSet(true);
@@ -47141,7 +47018,7 @@ public class FogService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 6: // EDGE_INFO
+            case 5: // EDGE_INFO
               if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
                 struct.edgeInfo = new EdgeInfoData();
                 struct.edgeInfo.read(iprot);
@@ -47165,19 +47042,6 @@ public class FogService {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.metaKeyValueMap != null) {
-          oprot.writeFieldBegin(META_KEY_VALUE_MAP_FIELD_DESC);
-          {
-            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.metaKeyValueMap.size()));
-            for (java.util.Map.Entry<java.lang.String, java.lang.String> _iter342 : struct.metaKeyValueMap.entrySet())
-            {
-              oprot.writeString(_iter342.getKey());
-              oprot.writeString(_iter342.getValue());
-            }
-            oprot.writeMapEnd();
-          }
-          oprot.writeFieldEnd();
-        }
         oprot.writeFieldBegin(CHECK_NEIGHBORS_FIELD_DESC);
         oprot.writeBool(struct.checkNeighbors);
         oprot.writeFieldEnd();
@@ -47188,13 +47052,13 @@ public class FogService {
           oprot.writeFieldBegin(QUERY_CONDITION_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.LIST, struct.queryCondition.size()));
-            for (java.util.List<FindQueryCondition> _iter343 : struct.queryCondition)
+            for (java.util.List<FindQueryCondition> _iter338 : struct.queryCondition)
             {
               {
-                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, _iter343.size()));
-                for (FindQueryCondition _iter344 : _iter343)
+                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, _iter338.size()));
+                for (FindQueryCondition _iter339 : _iter338)
                 {
-                  _iter344.write(oprot);
+                  _iter339.write(oprot);
                 }
                 oprot.writeListEnd();
               }
@@ -47231,35 +47095,22 @@ public class FogService {
       public void write(org.apache.thrift.protocol.TProtocol prot, findBlocksAndLocationsWithQuery_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet optionals = new java.util.BitSet();
-        if (struct.isSetMetaKeyValueMap()) {
+        if (struct.isSetCheckNeighbors()) {
           optionals.set(0);
         }
-        if (struct.isSetCheckNeighbors()) {
+        if (struct.isSetCheckBuddies()) {
           optionals.set(1);
         }
-        if (struct.isSetCheckBuddies()) {
+        if (struct.isSetQueryCondition()) {
           optionals.set(2);
         }
-        if (struct.isSetQueryCondition()) {
+        if (struct.isSetReplicacount()) {
           optionals.set(3);
         }
-        if (struct.isSetReplicacount()) {
+        if (struct.isSetEdgeInfo()) {
           optionals.set(4);
         }
-        if (struct.isSetEdgeInfo()) {
-          optionals.set(5);
-        }
-        oprot.writeBitSet(optionals, 6);
-        if (struct.isSetMetaKeyValueMap()) {
-          {
-            oprot.writeI32(struct.metaKeyValueMap.size());
-            for (java.util.Map.Entry<java.lang.String, java.lang.String> _iter345 : struct.metaKeyValueMap.entrySet())
-            {
-              oprot.writeString(_iter345.getKey());
-              oprot.writeString(_iter345.getValue());
-            }
-          }
-        }
+        oprot.writeBitSet(optionals, 5);
         if (struct.isSetCheckNeighbors()) {
           oprot.writeBool(struct.checkNeighbors);
         }
@@ -47269,13 +47120,13 @@ public class FogService {
         if (struct.isSetQueryCondition()) {
           {
             oprot.writeI32(struct.queryCondition.size());
-            for (java.util.List<FindQueryCondition> _iter346 : struct.queryCondition)
+            for (java.util.List<FindQueryCondition> _iter340 : struct.queryCondition)
             {
               {
-                oprot.writeI32(_iter346.size());
-                for (FindQueryCondition _iter347 : _iter346)
+                oprot.writeI32(_iter340.size());
+                for (FindQueryCondition _iter341 : _iter340)
                 {
-                  _iter347.write(oprot);
+                  _iter341.write(oprot);
                 }
               }
             }
@@ -47292,58 +47143,43 @@ public class FogService {
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, findBlocksAndLocationsWithQuery_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-        java.util.BitSet incoming = iprot.readBitSet(6);
+        java.util.BitSet incoming = iprot.readBitSet(5);
         if (incoming.get(0)) {
-          {
-            org.apache.thrift.protocol.TMap _map348 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.metaKeyValueMap = new java.util.HashMap<java.lang.String,java.lang.String>(2*_map348.size);
-            java.lang.String _key349;
-            java.lang.String _val350;
-            for (int _i351 = 0; _i351 < _map348.size; ++_i351)
-            {
-              _key349 = iprot.readString();
-              _val350 = iprot.readString();
-              struct.metaKeyValueMap.put(_key349, _val350);
-            }
-          }
-          struct.setMetaKeyValueMapIsSet(true);
-        }
-        if (incoming.get(1)) {
           struct.checkNeighbors = iprot.readBool();
           struct.setCheckNeighborsIsSet(true);
         }
-        if (incoming.get(2)) {
+        if (incoming.get(1)) {
           struct.checkBuddies = iprot.readBool();
           struct.setCheckBuddiesIsSet(true);
         }
-        if (incoming.get(3)) {
+        if (incoming.get(2)) {
           {
-            org.apache.thrift.protocol.TList _list352 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.LIST, iprot.readI32());
-            struct.queryCondition = new java.util.ArrayList<java.util.List<FindQueryCondition>>(_list352.size);
-            java.util.List<FindQueryCondition> _elem353;
-            for (int _i354 = 0; _i354 < _list352.size; ++_i354)
+            org.apache.thrift.protocol.TList _list342 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.LIST, iprot.readI32());
+            struct.queryCondition = new java.util.ArrayList<java.util.List<FindQueryCondition>>(_list342.size);
+            java.util.List<FindQueryCondition> _elem343;
+            for (int _i344 = 0; _i344 < _list342.size; ++_i344)
             {
               {
-                org.apache.thrift.protocol.TList _list355 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-                _elem353 = new java.util.ArrayList<FindQueryCondition>(_list355.size);
-                FindQueryCondition _elem356;
-                for (int _i357 = 0; _i357 < _list355.size; ++_i357)
+                org.apache.thrift.protocol.TList _list345 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+                _elem343 = new java.util.ArrayList<FindQueryCondition>(_list345.size);
+                FindQueryCondition _elem346;
+                for (int _i347 = 0; _i347 < _list345.size; ++_i347)
                 {
-                  _elem356 = new FindQueryCondition();
-                  _elem356.read(iprot);
-                  _elem353.add(_elem356);
+                  _elem346 = new FindQueryCondition();
+                  _elem346.read(iprot);
+                  _elem343.add(_elem346);
                 }
               }
-              struct.queryCondition.add(_elem353);
+              struct.queryCondition.add(_elem343);
             }
           }
           struct.setQueryConditionIsSet(true);
         }
-        if (incoming.get(4)) {
+        if (incoming.get(3)) {
           struct.replicacount = com.dreamlab.edgefs.thrift.ReplicaCount.findByValue(iprot.readI32());
           struct.setReplicacountIsSet(true);
         }
-        if (incoming.get(5)) {
+        if (incoming.get(4)) {
           struct.edgeInfo = new EdgeInfoData();
           struct.edgeInfo.read(iprot);
           struct.setEdgeInfoIsSet(true);
@@ -47729,9 +47565,8 @@ public class FogService {
     private static final org.apache.thrift.protocol.TField MBID_FIELD_DESC = new org.apache.thrift.protocol.TField("mbid", org.apache.thrift.protocol.TType.I64, (short)1);
     private static final org.apache.thrift.protocol.TField FOGIP_FIELD_DESC = new org.apache.thrift.protocol.TField("fogip", org.apache.thrift.protocol.TType.STRING, (short)2);
     private static final org.apache.thrift.protocol.TField FOGPORT_FIELD_DESC = new org.apache.thrift.protocol.TField("fogport", org.apache.thrift.protocol.TType.I32, (short)3);
-    private static final org.apache.thrift.protocol.TField EDGEIP_FIELD_DESC = new org.apache.thrift.protocol.TField("edgeip", org.apache.thrift.protocol.TType.STRING, (short)4);
-    private static final org.apache.thrift.protocol.TField EDGEPORT_FIELD_DESC = new org.apache.thrift.protocol.TField("edgeport", org.apache.thrift.protocol.TType.I32, (short)5);
-    private static final org.apache.thrift.protocol.TField KEYS_FIELD_DESC = new org.apache.thrift.protocol.TField("keys", org.apache.thrift.protocol.TType.LIST, (short)6);
+    private static final org.apache.thrift.protocol.TField EDGE_INFO_DATA_FIELD_DESC = new org.apache.thrift.protocol.TField("edgeInfoData", org.apache.thrift.protocol.TType.STRUCT, (short)4);
+    private static final org.apache.thrift.protocol.TField KEYS_FIELD_DESC = new org.apache.thrift.protocol.TField("keys", org.apache.thrift.protocol.TType.LIST, (short)5);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMetadataByBlockid_argsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMetadataByBlockid_argsTupleSchemeFactory();
@@ -47739,8 +47574,7 @@ public class FogService {
     public long mbid; // required
     public java.lang.String fogip; // required
     public int fogport; // required
-    public java.lang.String edgeip; // required
-    public int edgeport; // required
+    public EdgeInfoData edgeInfoData; // required
     public java.util.List<java.lang.String> keys; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
@@ -47748,9 +47582,8 @@ public class FogService {
       MBID((short)1, "mbid"),
       FOGIP((short)2, "fogip"),
       FOGPORT((short)3, "fogport"),
-      EDGEIP((short)4, "edgeip"),
-      EDGEPORT((short)5, "edgeport"),
-      KEYS((short)6, "keys");
+      EDGE_INFO_DATA((short)4, "edgeInfoData"),
+      KEYS((short)5, "keys");
 
       private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -47771,11 +47604,9 @@ public class FogService {
             return FOGIP;
           case 3: // FOGPORT
             return FOGPORT;
-          case 4: // EDGEIP
-            return EDGEIP;
-          case 5: // EDGEPORT
-            return EDGEPORT;
-          case 6: // KEYS
+          case 4: // EDGE_INFO_DATA
+            return EDGE_INFO_DATA;
+          case 5: // KEYS
             return KEYS;
           default:
             return null;
@@ -47819,7 +47650,6 @@ public class FogService {
     // isset id assignments
     private static final int __MBID_ISSET_ID = 0;
     private static final int __FOGPORT_ISSET_ID = 1;
-    private static final int __EDGEPORT_ISSET_ID = 2;
     private byte __isset_bitfield = 0;
     public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
@@ -47830,10 +47660,8 @@ public class FogService {
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
       tmpMap.put(_Fields.FOGPORT, new org.apache.thrift.meta_data.FieldMetaData("fogport", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-      tmpMap.put(_Fields.EDGEIP, new org.apache.thrift.meta_data.FieldMetaData("edgeip", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-      tmpMap.put(_Fields.EDGEPORT, new org.apache.thrift.meta_data.FieldMetaData("edgeport", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+      tmpMap.put(_Fields.EDGE_INFO_DATA, new org.apache.thrift.meta_data.FieldMetaData("edgeInfoData", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, EdgeInfoData.class)));
       tmpMap.put(_Fields.KEYS, new org.apache.thrift.meta_data.FieldMetaData("keys", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
               new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
@@ -47848,8 +47676,7 @@ public class FogService {
       long mbid,
       java.lang.String fogip,
       int fogport,
-      java.lang.String edgeip,
-      int edgeport,
+      EdgeInfoData edgeInfoData,
       java.util.List<java.lang.String> keys)
     {
       this();
@@ -47858,9 +47685,7 @@ public class FogService {
       this.fogip = fogip;
       this.fogport = fogport;
       setFogportIsSet(true);
-      this.edgeip = edgeip;
-      this.edgeport = edgeport;
-      setEdgeportIsSet(true);
+      this.edgeInfoData = edgeInfoData;
       this.keys = keys;
     }
 
@@ -47874,10 +47699,9 @@ public class FogService {
         this.fogip = other.fogip;
       }
       this.fogport = other.fogport;
-      if (other.isSetEdgeip()) {
-        this.edgeip = other.edgeip;
+      if (other.isSetEdgeInfoData()) {
+        this.edgeInfoData = new EdgeInfoData(other.edgeInfoData);
       }
-      this.edgeport = other.edgeport;
       if (other.isSetKeys()) {
         java.util.List<java.lang.String> __this__keys = new java.util.ArrayList<java.lang.String>(other.keys);
         this.keys = __this__keys;
@@ -47895,9 +47719,7 @@ public class FogService {
       this.fogip = null;
       setFogportIsSet(false);
       this.fogport = 0;
-      this.edgeip = null;
-      setEdgeportIsSet(false);
-      this.edgeport = 0;
+      this.edgeInfoData = null;
       this.keys = null;
     }
 
@@ -47971,51 +47793,28 @@ public class FogService {
       __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __FOGPORT_ISSET_ID, value);
     }
 
-    public java.lang.String getEdgeip() {
-      return this.edgeip;
+    public EdgeInfoData getEdgeInfoData() {
+      return this.edgeInfoData;
     }
 
-    public getMetadataByBlockid_args setEdgeip(java.lang.String edgeip) {
-      this.edgeip = edgeip;
+    public getMetadataByBlockid_args setEdgeInfoData(EdgeInfoData edgeInfoData) {
+      this.edgeInfoData = edgeInfoData;
       return this;
     }
 
-    public void unsetEdgeip() {
-      this.edgeip = null;
+    public void unsetEdgeInfoData() {
+      this.edgeInfoData = null;
     }
 
-    /** Returns true if field edgeip is set (has been assigned a value) and false otherwise */
-    public boolean isSetEdgeip() {
-      return this.edgeip != null;
+    /** Returns true if field edgeInfoData is set (has been assigned a value) and false otherwise */
+    public boolean isSetEdgeInfoData() {
+      return this.edgeInfoData != null;
     }
 
-    public void setEdgeipIsSet(boolean value) {
+    public void setEdgeInfoDataIsSet(boolean value) {
       if (!value) {
-        this.edgeip = null;
+        this.edgeInfoData = null;
       }
-    }
-
-    public int getEdgeport() {
-      return this.edgeport;
-    }
-
-    public getMetadataByBlockid_args setEdgeport(int edgeport) {
-      this.edgeport = edgeport;
-      setEdgeportIsSet(true);
-      return this;
-    }
-
-    public void unsetEdgeport() {
-      __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __EDGEPORT_ISSET_ID);
-    }
-
-    /** Returns true if field edgeport is set (has been assigned a value) and false otherwise */
-    public boolean isSetEdgeport() {
-      return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __EDGEPORT_ISSET_ID);
-    }
-
-    public void setEdgeportIsSet(boolean value) {
-      __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __EDGEPORT_ISSET_ID, value);
     }
 
     public int getKeysSize() {
@@ -48083,19 +47882,11 @@ public class FogService {
         }
         break;
 
-      case EDGEIP:
+      case EDGE_INFO_DATA:
         if (value == null) {
-          unsetEdgeip();
+          unsetEdgeInfoData();
         } else {
-          setEdgeip((java.lang.String)value);
-        }
-        break;
-
-      case EDGEPORT:
-        if (value == null) {
-          unsetEdgeport();
-        } else {
-          setEdgeport((java.lang.Integer)value);
+          setEdgeInfoData((EdgeInfoData)value);
         }
         break;
 
@@ -48121,11 +47912,8 @@ public class FogService {
       case FOGPORT:
         return getFogport();
 
-      case EDGEIP:
-        return getEdgeip();
-
-      case EDGEPORT:
-        return getEdgeport();
+      case EDGE_INFO_DATA:
+        return getEdgeInfoData();
 
       case KEYS:
         return getKeys();
@@ -48147,10 +47935,8 @@ public class FogService {
         return isSetFogip();
       case FOGPORT:
         return isSetFogport();
-      case EDGEIP:
-        return isSetEdgeip();
-      case EDGEPORT:
-        return isSetEdgeport();
+      case EDGE_INFO_DATA:
+        return isSetEdgeInfoData();
       case KEYS:
         return isSetKeys();
       }
@@ -48199,21 +47985,12 @@ public class FogService {
           return false;
       }
 
-      boolean this_present_edgeip = true && this.isSetEdgeip();
-      boolean that_present_edgeip = true && that.isSetEdgeip();
-      if (this_present_edgeip || that_present_edgeip) {
-        if (!(this_present_edgeip && that_present_edgeip))
+      boolean this_present_edgeInfoData = true && this.isSetEdgeInfoData();
+      boolean that_present_edgeInfoData = true && that.isSetEdgeInfoData();
+      if (this_present_edgeInfoData || that_present_edgeInfoData) {
+        if (!(this_present_edgeInfoData && that_present_edgeInfoData))
           return false;
-        if (!this.edgeip.equals(that.edgeip))
-          return false;
-      }
-
-      boolean this_present_edgeport = true;
-      boolean that_present_edgeport = true;
-      if (this_present_edgeport || that_present_edgeport) {
-        if (!(this_present_edgeport && that_present_edgeport))
-          return false;
-        if (this.edgeport != that.edgeport)
+        if (!this.edgeInfoData.equals(that.edgeInfoData))
           return false;
       }
 
@@ -48241,11 +48018,9 @@ public class FogService {
 
       hashCode = hashCode * 8191 + fogport;
 
-      hashCode = hashCode * 8191 + ((isSetEdgeip()) ? 131071 : 524287);
-      if (isSetEdgeip())
-        hashCode = hashCode * 8191 + edgeip.hashCode();
-
-      hashCode = hashCode * 8191 + edgeport;
+      hashCode = hashCode * 8191 + ((isSetEdgeInfoData()) ? 131071 : 524287);
+      if (isSetEdgeInfoData())
+        hashCode = hashCode * 8191 + edgeInfoData.hashCode();
 
       hashCode = hashCode * 8191 + ((isSetKeys()) ? 131071 : 524287);
       if (isSetKeys())
@@ -48292,22 +48067,12 @@ public class FogService {
           return lastComparison;
         }
       }
-      lastComparison = java.lang.Boolean.valueOf(isSetEdgeip()).compareTo(other.isSetEdgeip());
+      lastComparison = java.lang.Boolean.valueOf(isSetEdgeInfoData()).compareTo(other.isSetEdgeInfoData());
       if (lastComparison != 0) {
         return lastComparison;
       }
-      if (isSetEdgeip()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.edgeip, other.edgeip);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      lastComparison = java.lang.Boolean.valueOf(isSetEdgeport()).compareTo(other.isSetEdgeport());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetEdgeport()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.edgeport, other.edgeport);
+      if (isSetEdgeInfoData()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.edgeInfoData, other.edgeInfoData);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -48358,16 +48123,12 @@ public class FogService {
       sb.append(this.fogport);
       first = false;
       if (!first) sb.append(", ");
-      sb.append("edgeip:");
-      if (this.edgeip == null) {
+      sb.append("edgeInfoData:");
+      if (this.edgeInfoData == null) {
         sb.append("null");
       } else {
-        sb.append(this.edgeip);
+        sb.append(this.edgeInfoData);
       }
-      first = false;
-      if (!first) sb.append(", ");
-      sb.append("edgeport:");
-      sb.append(this.edgeport);
       first = false;
       if (!first) sb.append(", ");
       sb.append("keys:");
@@ -48384,6 +48145,9 @@ public class FogService {
     public void validate() throws org.apache.thrift.TException {
       // check for required fields
       // check for sub-struct validity
+      if (edgeInfoData != null) {
+        edgeInfoData.validate();
+      }
     }
 
     private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
@@ -48446,32 +48210,25 @@ public class FogService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 4: // EDGEIP
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.edgeip = iprot.readString();
-                struct.setEdgeipIsSet(true);
+            case 4: // EDGE_INFO_DATA
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.edgeInfoData = new EdgeInfoData();
+                struct.edgeInfoData.read(iprot);
+                struct.setEdgeInfoDataIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 5: // EDGEPORT
-              if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-                struct.edgeport = iprot.readI32();
-                struct.setEdgeportIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            case 6: // KEYS
+            case 5: // KEYS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list358 = iprot.readListBegin();
-                  struct.keys = new java.util.ArrayList<java.lang.String>(_list358.size);
-                  java.lang.String _elem359;
-                  for (int _i360 = 0; _i360 < _list358.size; ++_i360)
+                  org.apache.thrift.protocol.TList _list348 = iprot.readListBegin();
+                  struct.keys = new java.util.ArrayList<java.lang.String>(_list348.size);
+                  java.lang.String _elem349;
+                  for (int _i350 = 0; _i350 < _list348.size; ++_i350)
                   {
-                    _elem359 = iprot.readString();
-                    struct.keys.add(_elem359);
+                    _elem349 = iprot.readString();
+                    struct.keys.add(_elem349);
                   }
                   iprot.readListEnd();
                 }
@@ -48506,21 +48263,18 @@ public class FogService {
         oprot.writeFieldBegin(FOGPORT_FIELD_DESC);
         oprot.writeI32(struct.fogport);
         oprot.writeFieldEnd();
-        if (struct.edgeip != null) {
-          oprot.writeFieldBegin(EDGEIP_FIELD_DESC);
-          oprot.writeString(struct.edgeip);
+        if (struct.edgeInfoData != null) {
+          oprot.writeFieldBegin(EDGE_INFO_DATA_FIELD_DESC);
+          struct.edgeInfoData.write(oprot);
           oprot.writeFieldEnd();
         }
-        oprot.writeFieldBegin(EDGEPORT_FIELD_DESC);
-        oprot.writeI32(struct.edgeport);
-        oprot.writeFieldEnd();
         if (struct.keys != null) {
           oprot.writeFieldBegin(KEYS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.keys.size()));
-            for (java.lang.String _iter361 : struct.keys)
+            for (java.lang.String _iter351 : struct.keys)
             {
-              oprot.writeString(_iter361);
+              oprot.writeString(_iter351);
             }
             oprot.writeListEnd();
           }
@@ -48553,16 +48307,13 @@ public class FogService {
         if (struct.isSetFogport()) {
           optionals.set(2);
         }
-        if (struct.isSetEdgeip()) {
+        if (struct.isSetEdgeInfoData()) {
           optionals.set(3);
         }
-        if (struct.isSetEdgeport()) {
+        if (struct.isSetKeys()) {
           optionals.set(4);
         }
-        if (struct.isSetKeys()) {
-          optionals.set(5);
-        }
-        oprot.writeBitSet(optionals, 6);
+        oprot.writeBitSet(optionals, 5);
         if (struct.isSetMbid()) {
           oprot.writeI64(struct.mbid);
         }
@@ -48572,18 +48323,15 @@ public class FogService {
         if (struct.isSetFogport()) {
           oprot.writeI32(struct.fogport);
         }
-        if (struct.isSetEdgeip()) {
-          oprot.writeString(struct.edgeip);
-        }
-        if (struct.isSetEdgeport()) {
-          oprot.writeI32(struct.edgeport);
+        if (struct.isSetEdgeInfoData()) {
+          struct.edgeInfoData.write(oprot);
         }
         if (struct.isSetKeys()) {
           {
             oprot.writeI32(struct.keys.size());
-            for (java.lang.String _iter362 : struct.keys)
+            for (java.lang.String _iter352 : struct.keys)
             {
-              oprot.writeString(_iter362);
+              oprot.writeString(_iter352);
             }
           }
         }
@@ -48592,7 +48340,7 @@ public class FogService {
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, getMetadataByBlockid_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-        java.util.BitSet incoming = iprot.readBitSet(6);
+        java.util.BitSet incoming = iprot.readBitSet(5);
         if (incoming.get(0)) {
           struct.mbid = iprot.readI64();
           struct.setMbidIsSet(true);
@@ -48606,22 +48354,19 @@ public class FogService {
           struct.setFogportIsSet(true);
         }
         if (incoming.get(3)) {
-          struct.edgeip = iprot.readString();
-          struct.setEdgeipIsSet(true);
+          struct.edgeInfoData = new EdgeInfoData();
+          struct.edgeInfoData.read(iprot);
+          struct.setEdgeInfoDataIsSet(true);
         }
         if (incoming.get(4)) {
-          struct.edgeport = iprot.readI32();
-          struct.setEdgeportIsSet(true);
-        }
-        if (incoming.get(5)) {
           {
-            org.apache.thrift.protocol.TList _list363 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.keys = new java.util.ArrayList<java.lang.String>(_list363.size);
-            java.lang.String _elem364;
-            for (int _i365 = 0; _i365 < _list363.size; ++_i365)
+            org.apache.thrift.protocol.TList _list353 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+            struct.keys = new java.util.ArrayList<java.lang.String>(_list353.size);
+            java.lang.String _elem354;
+            for (int _i355 = 0; _i355 < _list353.size; ++_i355)
             {
-              _elem364 = iprot.readString();
-              struct.keys.add(_elem364);
+              _elem354 = iprot.readString();
+              struct.keys.add(_elem354);
             }
           }
           struct.setKeysIsSet(true);

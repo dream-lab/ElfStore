@@ -1200,15 +1200,15 @@ public class Metadata implements org.apache.thrift.TBase<Metadata, Metadata._Fie
           case 11: // METAKEYVALUEPAIRS
             if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
-                org.apache.thrift.protocol.TMap _map0 = iprot.readMapBegin();
-                struct.metakeyvaluepairs = new java.util.HashMap<java.lang.String,java.lang.String>(2*_map0.size);
-                java.lang.String _key1;
-                java.lang.String _val2;
-                for (int _i3 = 0; _i3 < _map0.size; ++_i3)
+                org.apache.thrift.protocol.TMap _map66 = iprot.readMapBegin();
+                struct.metakeyvaluepairs = new java.util.HashMap<java.lang.String,java.lang.String>(2*_map66.size);
+                java.lang.String _key67;
+                java.lang.String _val68;
+                for (int _i69 = 0; _i69 < _map66.size; ++_i69)
                 {
-                  _key1 = iprot.readString();
-                  _val2 = iprot.readString();
-                  struct.metakeyvaluepairs.put(_key1, _val2);
+                  _key67 = iprot.readString();
+                  _val68 = iprot.readString();
+                  struct.metakeyvaluepairs.put(_key67, _val68);
                 }
                 iprot.readMapEnd();
               }
@@ -1296,10 +1296,10 @@ public class Metadata implements org.apache.thrift.TBase<Metadata, Metadata._Fie
           oprot.writeFieldBegin(METAKEYVALUEPAIRS_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.metakeyvaluepairs.size()));
-            for (java.util.Map.Entry<java.lang.String, java.lang.String> _iter4 : struct.metakeyvaluepairs.entrySet())
+            for (java.util.Map.Entry<java.lang.String, java.lang.String> _iter70 : struct.metakeyvaluepairs.entrySet())
             {
-              oprot.writeString(_iter4.getKey());
-              oprot.writeString(_iter4.getValue());
+              oprot.writeString(_iter70.getKey());
+              oprot.writeString(_iter70.getValue());
             }
             oprot.writeMapEnd();
           }
@@ -1361,10 +1361,10 @@ public class Metadata implements org.apache.thrift.TBase<Metadata, Metadata._Fie
       if (struct.isSetMetakeyvaluepairs()) {
         {
           oprot.writeI32(struct.metakeyvaluepairs.size());
-          for (java.util.Map.Entry<java.lang.String, java.lang.String> _iter5 : struct.metakeyvaluepairs.entrySet())
+          for (java.util.Map.Entry<java.lang.String, java.lang.String> _iter71 : struct.metakeyvaluepairs.entrySet())
           {
-            oprot.writeString(_iter5.getKey());
-            oprot.writeString(_iter5.getValue());
+            oprot.writeString(_iter71.getKey());
+            oprot.writeString(_iter71.getValue());
           }
         }
       }
@@ -1404,15 +1404,15 @@ public class Metadata implements org.apache.thrift.TBase<Metadata, Metadata._Fie
       }
       if (incoming.get(4)) {
         {
-          org.apache.thrift.protocol.TMap _map6 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.metakeyvaluepairs = new java.util.HashMap<java.lang.String,java.lang.String>(2*_map6.size);
-          java.lang.String _key7;
-          java.lang.String _val8;
-          for (int _i9 = 0; _i9 < _map6.size; ++_i9)
+          org.apache.thrift.protocol.TMap _map72 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.metakeyvaluepairs = new java.util.HashMap<java.lang.String,java.lang.String>(2*_map72.size);
+          java.lang.String _key73;
+          java.lang.String _val74;
+          for (int _i75 = 0; _i75 < _map72.size; ++_i75)
           {
-            _key7 = iprot.readString();
-            _val8 = iprot.readString();
-            struct.metakeyvaluepairs.put(_key7, _val8);
+            _key73 = iprot.readString();
+            _val74 = iprot.readString();
+            struct.metakeyvaluepairs.put(_key73, _val74);
           }
         }
         struct.setMetakeyvaluepairsIsSet(true);

@@ -97,18 +97,27 @@ class EdgeClient:
         print("closing connection")
         transport.close()
 
-    def getMetadata(self, blockID, edgeIP, edgePort, fogIP, fogPort, keyList):
+    def getMetadata(self, blockID, edgeID, edgeIP, edgePort, fogIP, fogPort, keyList):
+
+        edgeInfoData = EdgeInfoData()
+        edgeInfoData.nodeId = int(edgeID)
+        edgeInfoData.nodeIp = edgeIP
+        edgeInfoData.port = int(edgePort)
+        edgeInfoData.reliability = 90
+        edgeInfoData.storage = 12
+
+        print("The edgeinfodata is => ",edgeInfoData)
 
         client, transport = self.openSocketConnection(fogIP, fogPort, FOG_SERVICE)
-        metadataResponse = client.getMetadataByBlockid(int(blockID), fogIP, int(fogPort), edgeIP, int(edgePort), keyList)
+        metadataResponse = client.getMetadataByBlockid(int(blockID), fogIP, int(fogPort), edgeInfoData, keyList)
         print("The result is => ", metadataResponse.result)
         self.closeSocket(transport)
 
 '''
 getmetadata for a microbatch
 '''
-def getMeta(blockID,edgeIP,edgePort,fogIP,fogPort, keyList):
+def getMeta(blockID,edgeID, edgeIP,edgePort,fogIP,fogPort, keyList):
 
     myEdge = EdgeClient()
     print("The keylist => ",keyList)
-    myEdge.getMetadata(blockID,edgeIP, edgePort, fogIP, fogPort, keyList)
+    myEdge.getMetadata(blockID,edgeID, edgeIP, edgePort, fogIP, fogPort, keyList)

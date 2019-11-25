@@ -534,8 +534,8 @@ service FogService {
 	map<i64,string> findBlockUsingQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies, 4: MatchPreference matchpreference);
 
 	//this query returns blocks with stream and findreplica
-	FindBlockQueryResponse findBlocksAndLocationsWithQuery(1: map<string,string> metaKeyValueMap,2: bool checkNeighbors,3: bool checkBuddies, 4: list<list<FindQueryCondition>> queryCondition, 5: ReplicaCount replicacount, 6: EdgeInfoData edgeInfo);
+	FindBlockQueryResponse findBlocksAndLocationsWithQuery(1: bool checkNeighbors,2: bool checkBuddies, 3: list<list<FindQueryCondition>> queryCondition, 4: ReplicaCount replicacount, 5: EdgeInfoData edgeInfo);
 
 	// getMetadata by blockid
-        MetadataResponse getMetadataByBlockid(1: i64 mbid, 2: string fogip, 3: i32 fogport, 4: string edgeip, 5: i32 edgeport, 6: list<string> keys);
+        MetadataResponse getMetadataByBlockid(1: i64 mbid, 2: string fogip, 3: i32 fogport, 4: EdgeInfoData edgeInfoData, 5: list<string> keys);
 }

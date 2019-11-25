@@ -373,10 +373,9 @@ class Iface(object):
         """
         pass
 
-    def findBlocksAndLocationsWithQuery(self, metaKeyValueMap, checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo):
+    def findBlocksAndLocationsWithQuery(self, checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo):
         """
         Parameters:
-         - metaKeyValueMap
          - checkNeighbors
          - checkBuddies
          - queryCondition
@@ -385,14 +384,13 @@ class Iface(object):
         """
         pass
 
-    def getMetadataByBlockid(self, mbid, fogip, fogport, edgeip, edgeport, keys):
+    def getMetadataByBlockid(self, mbid, fogip, fogport, edgeInfoData, keys):
         """
         Parameters:
          - mbid
          - fogip
          - fogport
-         - edgeip
-         - edgeport
+         - edgeInfoData
          - keys
         """
         pass
@@ -1896,23 +1894,21 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "findBlockUsingQuery failed: unknown result")
 
-    def findBlocksAndLocationsWithQuery(self, metaKeyValueMap, checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo):
+    def findBlocksAndLocationsWithQuery(self, checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo):
         """
         Parameters:
-         - metaKeyValueMap
          - checkNeighbors
          - checkBuddies
          - queryCondition
          - replicacount
          - edgeInfo
         """
-        self.send_findBlocksAndLocationsWithQuery(metaKeyValueMap, checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo)
+        self.send_findBlocksAndLocationsWithQuery(checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo)
         return self.recv_findBlocksAndLocationsWithQuery()
 
-    def send_findBlocksAndLocationsWithQuery(self, metaKeyValueMap, checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo):
+    def send_findBlocksAndLocationsWithQuery(self, checkNeighbors, checkBuddies, queryCondition, replicacount, edgeInfo):
         self._oprot.writeMessageBegin('findBlocksAndLocationsWithQuery', TMessageType.CALL, self._seqid)
         args = findBlocksAndLocationsWithQuery_args()
-        args.metaKeyValueMap = metaKeyValueMap
         args.checkNeighbors = checkNeighbors
         args.checkBuddies = checkBuddies
         args.queryCondition = queryCondition
@@ -1937,27 +1933,25 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "findBlocksAndLocationsWithQuery failed: unknown result")
 
-    def getMetadataByBlockid(self, mbid, fogip, fogport, edgeip, edgeport, keys):
+    def getMetadataByBlockid(self, mbid, fogip, fogport, edgeInfoData, keys):
         """
         Parameters:
          - mbid
          - fogip
          - fogport
-         - edgeip
-         - edgeport
+         - edgeInfoData
          - keys
         """
-        self.send_getMetadataByBlockid(mbid, fogip, fogport, edgeip, edgeport, keys)
+        self.send_getMetadataByBlockid(mbid, fogip, fogport, edgeInfoData, keys)
         return self.recv_getMetadataByBlockid()
 
-    def send_getMetadataByBlockid(self, mbid, fogip, fogport, edgeip, edgeport, keys):
+    def send_getMetadataByBlockid(self, mbid, fogip, fogport, edgeInfoData, keys):
         self._oprot.writeMessageBegin('getMetadataByBlockid', TMessageType.CALL, self._seqid)
         args = getMetadataByBlockid_args()
         args.mbid = mbid
         args.fogip = fogip
         args.fogport = fogport
-        args.edgeip = edgeip
-        args.edgeport = edgeport
+        args.edgeInfoData = edgeInfoData
         args.keys = keys
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
@@ -3111,7 +3105,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = findBlocksAndLocationsWithQuery_result()
         try:
-            result.success = self._handler.findBlocksAndLocationsWithQuery(args.metaKeyValueMap, args.checkNeighbors, args.checkBuddies, args.queryCondition, args.replicacount, args.edgeInfo)
+            result.success = self._handler.findBlocksAndLocationsWithQuery(args.checkNeighbors, args.checkBuddies, args.queryCondition, args.replicacount, args.edgeInfo)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -3134,7 +3128,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getMetadataByBlockid_result()
         try:
-            result.success = self._handler.getMetadataByBlockid(args.mbid, args.fogip, args.fogport, args.edgeip, args.edgeport, args.keys)
+            result.success = self._handler.getMetadataByBlockid(args.mbid, args.fogip, args.fogport, args.edgeInfoData, args.keys)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -9440,7 +9434,6 @@ findBlockUsingQuery_result.thrift_spec = (
 class findBlocksAndLocationsWithQuery_args(object):
     """
     Attributes:
-     - metaKeyValueMap
      - checkNeighbors
      - checkBuddies
      - queryCondition
@@ -9449,8 +9442,7 @@ class findBlocksAndLocationsWithQuery_args(object):
     """
 
 
-    def __init__(self, metaKeyValueMap=None, checkNeighbors=None, checkBuddies=None, queryCondition=None, replicacount=None, edgeInfo=None,):
-        self.metaKeyValueMap = metaKeyValueMap
+    def __init__(self, checkNeighbors=None, checkBuddies=None, queryCondition=None, replicacount=None, edgeInfo=None,):
         self.checkNeighbors = checkNeighbors
         self.checkBuddies = checkBuddies
         self.queryCondition = queryCondition
@@ -9467,48 +9459,37 @@ class findBlocksAndLocationsWithQuery_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
-                if ftype == TType.MAP:
-                    self.metaKeyValueMap = {}
-                    (_ktype296, _vtype297, _size295) = iprot.readMapBegin()
-                    for _i299 in range(_size295):
-                        _key300 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val301 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.metaKeyValueMap[_key300] = _val301
-                    iprot.readMapEnd()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 2:
                 if ftype == TType.BOOL:
                     self.checkNeighbors = iprot.readBool()
                 else:
                     iprot.skip(ftype)
-            elif fid == 3:
+            elif fid == 2:
                 if ftype == TType.BOOL:
                     self.checkBuddies = iprot.readBool()
                 else:
                     iprot.skip(ftype)
-            elif fid == 4:
+            elif fid == 3:
                 if ftype == TType.LIST:
                     self.queryCondition = []
-                    (_etype305, _size302) = iprot.readListBegin()
-                    for _i306 in range(_size302):
-                        _elem307 = []
-                        (_etype311, _size308) = iprot.readListBegin()
-                        for _i312 in range(_size308):
-                            _elem313 = FindQueryCondition()
-                            _elem313.read(iprot)
-                            _elem307.append(_elem313)
+                    (_etype298, _size295) = iprot.readListBegin()
+                    for _i299 in range(_size295):
+                        _elem300 = []
+                        (_etype304, _size301) = iprot.readListBegin()
+                        for _i305 in range(_size301):
+                            _elem306 = FindQueryCondition()
+                            _elem306.read(iprot)
+                            _elem300.append(_elem306)
                         iprot.readListEnd()
-                        self.queryCondition.append(_elem307)
+                        self.queryCondition.append(_elem300)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 5:
+            elif fid == 4:
                 if ftype == TType.I32:
                     self.replicacount = iprot.readI32()
                 else:
                     iprot.skip(ftype)
-            elif fid == 6:
+            elif fid == 5:
                 if ftype == TType.STRUCT:
                     self.edgeInfo = EdgeInfoData()
                     self.edgeInfo.read(iprot)
@@ -9524,38 +9505,30 @@ class findBlocksAndLocationsWithQuery_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('findBlocksAndLocationsWithQuery_args')
-        if self.metaKeyValueMap is not None:
-            oprot.writeFieldBegin('metaKeyValueMap', TType.MAP, 1)
-            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.metaKeyValueMap))
-            for kiter314, viter315 in self.metaKeyValueMap.items():
-                oprot.writeString(kiter314.encode('utf-8') if sys.version_info[0] == 2 else kiter314)
-                oprot.writeString(viter315.encode('utf-8') if sys.version_info[0] == 2 else viter315)
-            oprot.writeMapEnd()
-            oprot.writeFieldEnd()
         if self.checkNeighbors is not None:
-            oprot.writeFieldBegin('checkNeighbors', TType.BOOL, 2)
+            oprot.writeFieldBegin('checkNeighbors', TType.BOOL, 1)
             oprot.writeBool(self.checkNeighbors)
             oprot.writeFieldEnd()
         if self.checkBuddies is not None:
-            oprot.writeFieldBegin('checkBuddies', TType.BOOL, 3)
+            oprot.writeFieldBegin('checkBuddies', TType.BOOL, 2)
             oprot.writeBool(self.checkBuddies)
             oprot.writeFieldEnd()
         if self.queryCondition is not None:
-            oprot.writeFieldBegin('queryCondition', TType.LIST, 4)
+            oprot.writeFieldBegin('queryCondition', TType.LIST, 3)
             oprot.writeListBegin(TType.LIST, len(self.queryCondition))
-            for iter316 in self.queryCondition:
-                oprot.writeListBegin(TType.STRUCT, len(iter316))
-                for iter317 in iter316:
-                    iter317.write(oprot)
+            for iter307 in self.queryCondition:
+                oprot.writeListBegin(TType.STRUCT, len(iter307))
+                for iter308 in iter307:
+                    iter308.write(oprot)
                 oprot.writeListEnd()
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.replicacount is not None:
-            oprot.writeFieldBegin('replicacount', TType.I32, 5)
+            oprot.writeFieldBegin('replicacount', TType.I32, 4)
             oprot.writeI32(self.replicacount)
             oprot.writeFieldEnd()
         if self.edgeInfo is not None:
-            oprot.writeFieldBegin('edgeInfo', TType.STRUCT, 6)
+            oprot.writeFieldBegin('edgeInfo', TType.STRUCT, 5)
             self.edgeInfo.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -9577,12 +9550,11 @@ class findBlocksAndLocationsWithQuery_args(object):
 all_structs.append(findBlocksAndLocationsWithQuery_args)
 findBlocksAndLocationsWithQuery_args.thrift_spec = (
     None,  # 0
-    (1, TType.MAP, 'metaKeyValueMap', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 1
-    (2, TType.BOOL, 'checkNeighbors', None, None, ),  # 2
-    (3, TType.BOOL, 'checkBuddies', None, None, ),  # 3
-    (4, TType.LIST, 'queryCondition', (TType.LIST, (TType.STRUCT, [FindQueryCondition, None], False), False), None, ),  # 4
-    (5, TType.I32, 'replicacount', None, None, ),  # 5
-    (6, TType.STRUCT, 'edgeInfo', [EdgeInfoData, None], None, ),  # 6
+    (1, TType.BOOL, 'checkNeighbors', None, None, ),  # 1
+    (2, TType.BOOL, 'checkBuddies', None, None, ),  # 2
+    (3, TType.LIST, 'queryCondition', (TType.LIST, (TType.STRUCT, [FindQueryCondition, None], False), False), None, ),  # 3
+    (4, TType.I32, 'replicacount', None, None, ),  # 4
+    (5, TType.STRUCT, 'edgeInfo', [EdgeInfoData, None], None, ),  # 5
 )
 
 
@@ -9653,18 +9625,16 @@ class getMetadataByBlockid_args(object):
      - mbid
      - fogip
      - fogport
-     - edgeip
-     - edgeport
+     - edgeInfoData
      - keys
     """
 
 
-    def __init__(self, mbid=None, fogip=None, fogport=None, edgeip=None, edgeport=None, keys=None,):
+    def __init__(self, mbid=None, fogip=None, fogport=None, edgeInfoData=None, keys=None,):
         self.mbid = mbid
         self.fogip = fogip
         self.fogport = fogport
-        self.edgeip = edgeip
-        self.edgeport = edgeport
+        self.edgeInfoData = edgeInfoData
         self.keys = keys
 
     def read(self, iprot):
@@ -9692,22 +9662,18 @@ class getMetadataByBlockid_args(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 4:
-                if ftype == TType.STRING:
-                    self.edgeip = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                if ftype == TType.STRUCT:
+                    self.edgeInfoData = EdgeInfoData()
+                    self.edgeInfoData.read(iprot)
                 else:
                     iprot.skip(ftype)
             elif fid == 5:
-                if ftype == TType.I32:
-                    self.edgeport = iprot.readI32()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 6:
                 if ftype == TType.LIST:
                     self.keys = []
-                    (_etype321, _size318) = iprot.readListBegin()
-                    for _i322 in range(_size318):
-                        _elem323 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.keys.append(_elem323)
+                    (_etype312, _size309) = iprot.readListBegin()
+                    for _i313 in range(_size309):
+                        _elem314 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.keys.append(_elem314)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -9733,19 +9699,15 @@ class getMetadataByBlockid_args(object):
             oprot.writeFieldBegin('fogport', TType.I32, 3)
             oprot.writeI32(self.fogport)
             oprot.writeFieldEnd()
-        if self.edgeip is not None:
-            oprot.writeFieldBegin('edgeip', TType.STRING, 4)
-            oprot.writeString(self.edgeip.encode('utf-8') if sys.version_info[0] == 2 else self.edgeip)
-            oprot.writeFieldEnd()
-        if self.edgeport is not None:
-            oprot.writeFieldBegin('edgeport', TType.I32, 5)
-            oprot.writeI32(self.edgeport)
+        if self.edgeInfoData is not None:
+            oprot.writeFieldBegin('edgeInfoData', TType.STRUCT, 4)
+            self.edgeInfoData.write(oprot)
             oprot.writeFieldEnd()
         if self.keys is not None:
-            oprot.writeFieldBegin('keys', TType.LIST, 6)
+            oprot.writeFieldBegin('keys', TType.LIST, 5)
             oprot.writeListBegin(TType.STRING, len(self.keys))
-            for iter324 in self.keys:
-                oprot.writeString(iter324.encode('utf-8') if sys.version_info[0] == 2 else iter324)
+            for iter315 in self.keys:
+                oprot.writeString(iter315.encode('utf-8') if sys.version_info[0] == 2 else iter315)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -9770,9 +9732,8 @@ getMetadataByBlockid_args.thrift_spec = (
     (1, TType.I64, 'mbid', None, None, ),  # 1
     (2, TType.STRING, 'fogip', 'UTF8', None, ),  # 2
     (3, TType.I32, 'fogport', None, None, ),  # 3
-    (4, TType.STRING, 'edgeip', 'UTF8', None, ),  # 4
-    (5, TType.I32, 'edgeport', None, None, ),  # 5
-    (6, TType.LIST, 'keys', (TType.STRING, 'UTF8', False), None, ),  # 6
+    (4, TType.STRUCT, 'edgeInfoData', [EdgeInfoData, None], None, ),  # 4
+    (5, TType.LIST, 'keys', (TType.STRING, 'UTF8', False), None, ),  # 5
 )
 
 
