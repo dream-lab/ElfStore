@@ -2554,12 +2554,7 @@ class Metadata(object):
                     (_ktype60, _vtype61, _size59) = iprot.readMapBegin()
                     for _i63 in range(_size59):
                         _key64 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val65 = []
-                        (_etype69, _size66) = iprot.readListBegin()
-                        for _i70 in range(_size66):
-                            _elem71 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                            _val65.append(_elem71)
-                        iprot.readListEnd()
+                        _val65 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                         self.metakeyvaluepairs[_key64] = _val65
                     iprot.readMapEnd()
                 else:
@@ -2616,13 +2611,10 @@ class Metadata(object):
             oprot.writeFieldEnd()
         if self.metakeyvaluepairs is not None:
             oprot.writeFieldBegin('metakeyvaluepairs', TType.MAP, 11)
-            oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.metakeyvaluepairs))
-            for kiter72, viter73 in self.metakeyvaluepairs.items():
-                oprot.writeString(kiter72.encode('utf-8') if sys.version_info[0] == 2 else kiter72)
-                oprot.writeListBegin(TType.STRING, len(viter73))
-                for iter74 in viter73:
-                    oprot.writeString(iter74.encode('utf-8') if sys.version_info[0] == 2 else iter74)
-                oprot.writeListEnd()
+            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.metakeyvaluepairs))
+            for kiter66, viter67 in self.metakeyvaluepairs.items():
+                oprot.writeString(kiter66.encode('utf-8') if sys.version_info[0] == 2 else kiter66)
+                oprot.writeString(viter67.encode('utf-8') if sys.version_info[0] == 2 else viter67)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2777,10 +2769,10 @@ class FindResponse(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.data = []
-                    (_etype78, _size75) = iprot.readListBegin()
-                    for _i79 in range(_size75):
-                        _elem80 = iprot.readBinary()
-                        self.data.append(_elem80)
+                    (_etype71, _size68) = iprot.readListBegin()
+                    for _i72 in range(_size68):
+                        _elem73 = iprot.readBinary()
+                        self.data.append(_elem73)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2801,8 +2793,8 @@ class FindResponse(object):
         if self.data is not None:
             oprot.writeFieldBegin('data', TType.LIST, 2)
             oprot.writeListBegin(TType.STRING, len(self.data))
-            for iter81 in self.data:
-                oprot.writeBinary(iter81)
+            for iter74 in self.data:
+                oprot.writeBinary(iter74)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2997,17 +2989,17 @@ class QueryReplica(object):
             if fid == 1:
                 if ftype == TType.MAP:
                     self.matchingNodes = {}
-                    (_ktype83, _vtype84, _size82) = iprot.readMapBegin()
-                    for _i86 in range(_size82):
-                        _key87 = iprot.readI64()
-                        _val88 = []
-                        (_etype92, _size89) = iprot.readListBegin()
-                        for _i93 in range(_size89):
-                            _elem94 = NodeInfoData()
-                            _elem94.read(iprot)
-                            _val88.append(_elem94)
+                    (_ktype76, _vtype77, _size75) = iprot.readMapBegin()
+                    for _i79 in range(_size75):
+                        _key80 = iprot.readI64()
+                        _val81 = []
+                        (_etype85, _size82) = iprot.readListBegin()
+                        for _i86 in range(_size82):
+                            _elem87 = NodeInfoData()
+                            _elem87.read(iprot)
+                            _val81.append(_elem87)
                         iprot.readListEnd()
-                        self.matchingNodes[_key87] = _val88
+                        self.matchingNodes[_key80] = _val81
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -3024,11 +3016,11 @@ class QueryReplica(object):
         if self.matchingNodes is not None:
             oprot.writeFieldBegin('matchingNodes', TType.MAP, 1)
             oprot.writeMapBegin(TType.I64, TType.LIST, len(self.matchingNodes))
-            for kiter95, viter96 in self.matchingNodes.items():
-                oprot.writeI64(kiter95)
-                oprot.writeListBegin(TType.STRUCT, len(viter96))
-                for iter97 in viter96:
-                    iter97.write(oprot)
+            for kiter88, viter89 in self.matchingNodes.items():
+                oprot.writeI64(kiter88)
+                oprot.writeListBegin(TType.STRUCT, len(viter89))
+                for iter90 in viter89:
+                    iter90.write(oprot)
                 oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
@@ -3413,16 +3405,11 @@ class MetadataResponse(object):
             if fid == 1:
                 if ftype == TType.MAP:
                     self.result = {}
-                    (_ktype99, _vtype100, _size98) = iprot.readMapBegin()
-                    for _i102 in range(_size98):
-                        _key103 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val104 = []
-                        (_etype108, _size105) = iprot.readListBegin()
-                        for _i109 in range(_size105):
-                            _elem110 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                            _val104.append(_elem110)
-                        iprot.readListEnd()
-                        self.result[_key103] = _val104
+                    (_ktype92, _vtype93, _size91) = iprot.readMapBegin()
+                    for _i95 in range(_size91):
+                        _key96 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val97 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.result[_key96] = _val97
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -3448,13 +3435,10 @@ class MetadataResponse(object):
         oprot.writeStructBegin('MetadataResponse')
         if self.result is not None:
             oprot.writeFieldBegin('result', TType.MAP, 1)
-            oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.result))
-            for kiter111, viter112 in self.result.items():
-                oprot.writeString(kiter111.encode('utf-8') if sys.version_info[0] == 2 else kiter111)
-                oprot.writeListBegin(TType.STRING, len(viter112))
-                for iter113 in viter112:
-                    oprot.writeString(iter113.encode('utf-8') if sys.version_info[0] == 2 else iter113)
-                oprot.writeListEnd()
+            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.result))
+            for kiter98, viter99 in self.result.items():
+                oprot.writeString(kiter98.encode('utf-8') if sys.version_info[0] == 2 else kiter98)
+                oprot.writeString(viter99.encode('utf-8') if sys.version_info[0] == 2 else viter99)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.status is not None:
@@ -3600,11 +3584,11 @@ class FindBlockQueryValue(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.locations = []
-                    (_etype117, _size114) = iprot.readListBegin()
-                    for _i118 in range(_size114):
-                        _elem119 = FindReplica()
-                        _elem119.read(iprot)
-                        self.locations.append(_elem119)
+                    (_etype103, _size100) = iprot.readListBegin()
+                    for _i104 in range(_size100):
+                        _elem105 = FindReplica()
+                        _elem105.read(iprot)
+                        self.locations.append(_elem105)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -3625,8 +3609,8 @@ class FindBlockQueryValue(object):
         if self.locations is not None:
             oprot.writeFieldBegin('locations', TType.LIST, 2)
             oprot.writeListBegin(TType.STRUCT, len(self.locations))
-            for iter120 in self.locations:
-                iter120.write(oprot)
+            for iter106 in self.locations:
+                iter106.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -3675,12 +3659,12 @@ class FindBlockQueryResponse(object):
             if fid == 1:
                 if ftype == TType.MAP:
                     self.findBlockQueryResultMap = {}
-                    (_ktype122, _vtype123, _size121) = iprot.readMapBegin()
-                    for _i125 in range(_size121):
-                        _key126 = iprot.readI64()
-                        _val127 = FindBlockQueryValue()
-                        _val127.read(iprot)
-                        self.findBlockQueryResultMap[_key126] = _val127
+                    (_ktype108, _vtype109, _size107) = iprot.readMapBegin()
+                    for _i111 in range(_size107):
+                        _key112 = iprot.readI64()
+                        _val113 = FindBlockQueryValue()
+                        _val113.read(iprot)
+                        self.findBlockQueryResultMap[_key112] = _val113
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -3707,9 +3691,9 @@ class FindBlockQueryResponse(object):
         if self.findBlockQueryResultMap is not None:
             oprot.writeFieldBegin('findBlockQueryResultMap', TType.MAP, 1)
             oprot.writeMapBegin(TType.I64, TType.STRUCT, len(self.findBlockQueryResultMap))
-            for kiter128, viter129 in self.findBlockQueryResultMap.items():
-                oprot.writeI64(kiter128)
-                viter129.write(oprot)
+            for kiter114, viter115 in self.findBlockQueryResultMap.items():
+                oprot.writeI64(kiter114)
+                viter115.write(oprot)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.status is not None:
@@ -4017,7 +4001,7 @@ Metadata.thrift_spec = (
     (8, TType.STRING, 'compFormat', 'UTF8', None, ),  # 8
     (9, TType.I64, 'uncompSize', None, None, ),  # 9
     (10, TType.I64, 'sizeofblock', None, None, ),  # 10
-    (11, TType.MAP, 'metakeyvaluepairs', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 11
+    (11, TType.MAP, 'metakeyvaluepairs', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 11
 )
 all_structs.append(ReadResponse)
 ReadResponse.thrift_spec = (
@@ -4083,7 +4067,7 @@ StreamLeaseRenewalResponse.thrift_spec = (
 all_structs.append(MetadataResponse)
 MetadataResponse.thrift_spec = (
     None,  # 0
-    (1, TType.MAP, 'result', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 1
+    (1, TType.MAP, 'result', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 1
     (2, TType.BYTE, 'status', None, None, ),  # 2
     (3, TType.STRING, 'errorResponse', 'UTF8', None, ),  # 3
 )

@@ -1139,56 +1139,6 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * This method is called by the client to write the data
-	 *
-	 * returns the List of IP addresses of Fog for the client
-	 */
-	/*
-	 * @Override public List<NodeInfoData> write(byte dataLength,byte nodeId) throws
-	 * TException {
-	 *
-	 * LOGGER.info("Got a write request "+nodeId);
-	 *
-	 * List<NodeInfoData> fogLocations = identifyReplicas(dataLength,(short)
-	 * nodeId);
-	 *
-	 * LOGGER.info("Here print "+fogLocations.toString());
-	 *
-	 * return fogLocations; }
-	 */
-
-	/**
-	 * At the finish of the write, the micro batchId and the metadata should be
-	 * updated
-	 **/
-	/*
-	 * public byte insertMetadata(Metadata mbMetadata) throws TException {
-	 *
-	 *//** For each incoming metadata, map the microbatch ID to the edge **/
-	/*
-	 * fog.getMbIDLocationMap().put(mbMetadata.getMbId(), mbMetadata.getEdgeId());
-	 * //Updated an entry for micro batch
-	 *
-	 * //to ease recovery, all microbatches stored by an edge are also
-	 *
-	 * String metaData = mbMetadata.getTimestamp(); //time stamp is the only
-	 * metadata Map<String, List<String>> metadataMicrobacthIDList =
-	 * fog.getMetaMbIdMap();
-	 *
-	 *//** For each incoming metadata, map the metadata to micro batch ID **//*
-																				 * if(fog.getMetaMbIdMap().containsKey(
-																				 * metaData)) {
-																				 * fog.getMetaMbIdMap().get(metaData).
-																				 * add(mbMetadata.getMbId()); //for each
-																				 * time stamp add the micro batche ID
-																				 * }else {
-																				 * fog.getMetaMbIdMap().get(metaData).
-																				 * add(metaData); }
-																				 *
-																				 * return Constants.SUCCESS; }
-																				 */
-
-	/**
 	 * We are not supporting this feature as of now
 	 */
 	@Override
@@ -3270,7 +3220,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 		MetadataResponse metaResponse = new MetadataResponse();
 		metaResponse.setStatus(Constants.FAILURE);
-		metaResponse.setResult(new HashMap<String, List<String>>());
+		metaResponse.setResult(new HashMap<String, String>());
 
 		/** Check if the fogip,port being sent matches the current fog ip **/
 		if (!(fogip.equals(fog.getMyFogInfo().getNodeIP()) && fogport == fog.getMyFogInfo().getPort())) {
@@ -3297,8 +3247,8 @@ public class FogServiceHandler implements FogService.Iface {
 			ReadReplica data = edgeClient.read(mbid, (byte) 2, "NA", (long) 0);
 			Metadata meta = data.getMetadata();
 
-			Map<String, List<String>> metaKeyValPairs = meta.getMetakeyvaluepairs();
-			Map<String, List<String>> resultMap = new HashMap<String, List<String>>();
+			Map<String, String> metaKeyValPairs = meta.getMetakeyvaluepairs();
+			Map<String, String> resultMap = new HashMap<String, String>();
 
 			for (String key : keys) {
 				if (metaKeyValPairs.containsKey(key)) {

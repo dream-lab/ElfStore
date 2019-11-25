@@ -343,9 +343,10 @@ class EdgeClient:
         metaData.properties = json.dumps(additional_prop)
 
         keyValDict = {}
-        for i in range(5):
-            keyValDict[str(i)] = ["dream"+str(i)]
-        keyValDict["cds"] = ["iisc","has","serc"]
+
+        keyValDict["cds"] = "iisc has serc"
+        keyValDict["dream"] = "cds has dream"
+        keyValDict["iot"] = "dream has iot subgroup"
         metaData.metakeyvaluepairs = keyValDict
 
         return metaData
