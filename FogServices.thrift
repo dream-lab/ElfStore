@@ -290,7 +290,7 @@ struct Metadata {
 	8: optional string compFormat;
 	9: optional i64 uncompSize;
         10: required i64 sizeofblock;
-        11: optional map<string, string> metakeyvaluepairs;
+        11: optional map<string, list<string>> metakeyvaluepairs;
 }
 
 struct ReadResponse {
@@ -353,7 +353,7 @@ struct StreamLeaseRenewalResponse {
 }
 
 struct MetadataResponse {
-	1: required map<string,string> result;
+	1: required map<string,list<string>> result;
 	2: required byte status;
         3: optional string errorResponse;
 }
@@ -465,7 +465,7 @@ service FogService {
 	//the attributes. If client writes via the fog, on completion of the write it
 	//will store the metadata as well, edgeInfo will set only the edgeID
 
-	byte insertMetadata(1: Metadata mbMetadata, 2: EdgeInfoData edgeInfoData,3: map<string,string> metaKeyValueMap);
+	byte insertMetadata(1: Metadata mbMetadata, 2: EdgeInfoData edgeInfoData,3: map<string,list<string>> metaKeyValueMap);
 
 	// Find the next micro bactch satisfying the query
 	binary findNext(1: string microbatchId);
@@ -493,7 +493,7 @@ service FogService {
 	OpenStreamResponse open(1: string streamId, 2: string clientId, 3: i32 expectedLease, 4: bool setLease);
 
 	//client will start writing by issuing putNext calls
-	WriteResponse putNext(1:Metadata mbMetadata, 2:binary data, 3: WritePreference preference,4: map<string,string> metaKeyValueMap);
+	WriteResponse putNext(1:Metadata mbMetadata, 2:binary data, 3: WritePreference preference,4: map<string,list<string>> metaKeyValueMap);
 
 	//once block is written, increment the block count at the owner Fog
 	BlockMetadataUpdateResponse incrementBlockCount(1:Metadata mbMetadata, 2:bool setLease);

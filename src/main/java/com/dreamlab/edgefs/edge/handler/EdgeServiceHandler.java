@@ -2,7 +2,6 @@ package com.dreamlab.edgefs.edge.handler;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -41,8 +40,8 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 		wrResponse.setStatus(Constants.FAILURE);
 		if (mbMetadata != null && mbData != null) {
 			try {
-				LOGGER.info(
-						"MicrobatchId : " + mbMetadata.getMbId()+", format : "+mbMetadata.getCompFormat()+ ", write, startTime=" + System.currentTimeMillis());
+				LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", format : " + mbMetadata.getCompFormat()
+						+ ", write, startTime=" + System.currentTimeMillis());
 
 				// data
 				int length = mbData.remaining();
@@ -52,14 +51,15 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 				String filePath = edge.getDatapath() + "/" + mbId + ".data";
 				CompressionAndDecompression compAndDecompObj = new CompressionAndDecompression();
 				Class cls = compAndDecompObj.getClass();
-				Method compressAndWriteMethod = cls.getDeclaredMethod("compressAndWrite" + mbMetadata.getCompFormat(),String.class,byte[].class);
-				int mbSizeWritten = (int) compressAndWriteMethod.invoke(compAndDecompObj,filePath,mbDataInBytesArray);
+				Method compressAndWriteMethod = cls.getDeclaredMethod("compressAndWrite" + mbMetadata.getCompFormat(),
+						String.class, byte[].class);
+				int mbSizeWritten = (int) compressAndWriteMethod.invoke(compAndDecompObj, filePath, mbDataInBytesArray);
 
-				//File myFile = new File(edge.getDatapath() + "/" + mbId + ".data");
-				//FileUtils.writeByteArrayToFile(myFile, mbDataInBytesArray);
+				// File myFile = new File(edge.getDatapath() + "/" + mbId + ".data");
+				// FileUtils.writeByteArrayToFile(myFile, mbDataInBytesArray);
 
-				//ISHAN : Storage to be modified
-				int mbSize = mbSizeWritten/(1000 * 1000);
+				// ISHAN : Storage to be modified
+				int mbSize = mbSizeWritten / (1000 * 1000);
 				edge.setStorage(edge.getStorage() - mbSize);
 
 				// Metadata
@@ -71,15 +71,15 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 				objStream.close();
 				foStream.close();
 
-				LOGGER.info(
-						"MicrobatchId : " + mbMetadata.getMbId()+", format : "+mbMetadata.getCompFormat() + ", write, endTime=" + System.currentTimeMillis());
+				LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", format : " + mbMetadata.getCompFormat()
+						+ ", write, endTime=" + System.currentTimeMillis());
 
 				wrResponse.setStatus(Constants.SUCCESS);
 				wrResponse.setReliability(edge.getReliability());
 			} catch (IOException e) {
 				LOGGER.error("Error while writing the microbatch " + e);
 				e.printStackTrace();
-			} catch(Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -88,16 +88,16 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 
 	@Override
 	/**
-	 * fetchmetadata => 1 represents read both data and metadata
-	 * fetchmetadata => 2 represents read only metadata
+	 * fetchmetadata => 1 represents read both data and metadata fetchmetadata => 2
+	 * represents read only metadata
 	 */
-	public ReadReplica read(long mbId, byte fetchMetadata, String compFormat,long uncompSize) throws TException {
+	public ReadReplica read(long mbId, byte fetchMetadata, String compFormat, long uncompSize) throws TException {
 		ReadReplica replica = new ReadReplica();
 		replica.setStatus(Constants.FAILURE);
 		String filePath = edge.getDatapath() + "/" + mbId + ".data";
-		//File mbFile = new File(edge.getDatapath() + "/" + mbId + ".data");
-		try {		
-			
+		// File mbFile = new File(edge.getDatapath() + "/" + mbId + ".data");
+		try {
+
 			if (fetchMetadata == 2) {
 				File metaFile = new File(edge.getDatapath() + "/" + mbId + ".meta");
 				FileInputStream fiStream = new FileInputStream(metaFile);
@@ -108,20 +108,21 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 					replica.setMetadata(mbMetadata);
 				} catch (ClassNotFoundException e) {
 					LOGGER.error("Microbatch metadata different from the expected format, not sending it");
-					e.printStackTrace();				
+					e.printStackTrace();
 				} finally {
 					objStream.close();
 					fiStream.close();
-				}			
-				
+				}
+
 				return replica;
 			}
-			
+
 			CompressionAndDecompression compAndDecompObj = new CompressionAndDecompression();
 			Class cls = compAndDecompObj.getClass();
-			Method decompressAndReadMethod = cls.getDeclaredMethod("decompressAndRead" + compFormat,String.class,long.class);
-			byte[] byteArray = (byte[]) decompressAndReadMethod.invoke(compAndDecompObj, filePath,uncompSize);
-			//byte[] byteArray = FileUtils.readFileToByteArray(mbFile);
+			Method decompressAndReadMethod = cls.getDeclaredMethod("decompressAndRead" + compFormat, String.class,
+					long.class);
+			byte[] byteArray = (byte[]) decompressAndReadMethod.invoke(compAndDecompObj, filePath, uncompSize);
+			// byte[] byteArray = FileUtils.readFileToByteArray(mbFile);
 			if (byteArray != null) {
 				replica.setData(byteArray);
 			} else {
@@ -143,14 +144,13 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 					objStream.close();
 					fiStream.close();
 				}
-			}		
-			
-			
+			}
+
 		} catch (IOException e) {
 			LOGGER.error("Error while reading the microbatchId : " + mbId);
 			e.printStackTrace();
 			return replica;
-		} catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		replica.setStatus(Constants.SUCCESS);
@@ -186,26 +186,6 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 	}
 
 	@Override
-	public void zip() throws TException {
-
-	}
-
-	@Override
-	public void pong() throws TException {
-
-	}
-
-	@Override
-	public byte insert(ByteBuffer data) throws TException {
-		return 0;
-	}
-
-	@Override
-	public int add(int num1, int num2) throws TException {
-		return 0;
-	}
-
-	@Override
 	public WriteResponse update(long mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
 		WriteResponse wrResponse = new WriteResponse();
 		wrResponse.setStatus(Constants.FAILURE);
@@ -218,7 +198,7 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 				File myFile = new File(edge.getDatapath() + "/" + mbId + ".data");
 				FileUtils.writeByteArrayToFile(myFile, mbData.array());
 
-				int mbSize = mbData.array().length/(1000 * 1000);
+				int mbSize = mbData.array().length / (1000 * 1000);
 				edge.setStorage(edge.getStorage() - mbSize);
 
 				// Metadata
@@ -243,4 +223,23 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 		return wrResponse;
 	}
 
+	@Override
+	public void zip() throws TException {
+
+	}
+
+	@Override
+	public void pong() throws TException {
+
+	}
+
+	@Override
+	public byte insert(ByteBuffer data) throws TException {
+		return 0;
+	}
+
+	@Override
+	public int add(int num1, int num2) throws TException {
+		return 0;
+	}
 }

@@ -26,9 +26,9 @@ We can read from file or do something else for metadata
 '''
 def getMetaKeyVal():
     metaKeyValMap = {}
-    metaKeyValMap["1"] = "dream"
-    metaKeyValMap["2"] = "lab"
-    metaKeyValMap["3"] = "iisc"
+    metaKeyValMap["1"] = ["dream"]
+    metaKeyValMap["2"] = ["lab"]
+    metaKeyValMap["3"] = ["iisc"]
     # metaKeyValMap["4"] = "bgl"
 
     return  metaKeyValMap

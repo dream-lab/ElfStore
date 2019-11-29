@@ -344,9 +344,9 @@ class EdgeClient:
 
         keyValDict = {}
 
-        keyValDict["cds"] = "iisc has serc"
-        keyValDict["dream"] = "cds has dream"
-        keyValDict["iot"] = "dream has iot subgroup"
+        keyValDict["cds"] = ["iisc", "has", "serc"]
+        keyValDict["dream"] = ["cds", "has", "dream"]
+        keyValDict["iot"] = ["dream", "has" ,"iot", "subgroup"]
         metaData.metakeyvaluepairs = keyValDict
 
         return metaData
@@ -540,7 +540,7 @@ class EdgeClient:
             # Create a client to use the protocol encoder
             client = EdgeService.Client(protocol)
 
-            # Connect!
+            # Connect!updateMetadataMap
             transport.open()
 
             #byte write(1:string mbId, 2:Metadata mbMetadata, 3:binary mbData)
@@ -628,10 +628,10 @@ def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,split
         metaKeyValueMap = json.load(open(metadataLocation,'r'))
 
     metaKeyValueMap = {}
-    metaKeyValueMap["1"] = "dream"
-    metaKeyValueMap["2"] = "lab"
-    metaKeyValueMap["3"] = "iisc"
-    metaKeyValueMap["4"] = "bgl"
+    metaKeyValueMap["1"] = ["dream"]
+    metaKeyValueMap["2"] = ["lab"]
+    metaKeyValueMap["3"] = ["iisc"]
+    metaKeyValueMap["4"] = ["bgl"]
 
     if setLease == "1":
         setLease = True

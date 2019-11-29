@@ -90,7 +90,7 @@ struct Metadata {
 	8: optional string compFormat;
 	9: optional i64 uncompSize;
         10: required i64 sizeofblock;
-        11: optional map<string, string> metakeyvaluepairs;
+        11: optional map<string, list<string>> metakeyvaluepairs;
 }
 
 struct EdgeInfoData {

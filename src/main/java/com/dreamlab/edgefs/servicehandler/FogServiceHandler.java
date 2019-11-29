@@ -1588,7 +1588,7 @@ public class FogServiceHandler implements FogService.Iface {
 	 * calculate the MD5 checksum and pass that checksum in the metadata
 	 */
 	@Override
-	public byte insertMetadata(Metadata mbMetadata, EdgeInfoData edgeInfoData, Map<String, String> metaKeyValueMap)
+	public byte insertMetadata(Metadata mbMetadata, EdgeInfoData edgeInfoData, Map<String, List<String>> metaKeyValueMap)
 			throws TException {
 		LOGGER.info(
 				"MicrobatchId : " + mbMetadata.getMbId() + ", insertMetadata, startTime=" + System.currentTimeMillis());
@@ -1930,7 +1930,7 @@ public class FogServiceHandler implements FogService.Iface {
 		} finally {
 			transport.close();
 		}
-		updateMicrobatchLocalInfo(mbMetadata, data, localEdge, new HashMap<String, String>());
+		updateMicrobatchLocalInfo(mbMetadata, data, localEdge, new HashMap<String, List<String>>());
 		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", write, endTime=" + System.currentTimeMillis());
 		// make sure that edge reliability is set correctly when the various edges
 		// are started as we are returning the WriteResponse returned directly
@@ -1939,7 +1939,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	private void updateMicrobatchLocalInfo(Metadata mbMetadata, ByteBuffer data, EdgeInfo edgeInfo,
-			Map<String, String> metaKeyValueMap) {
+			Map<String, List<String>> metaKeyValueMap) {
 		// microbatch to edgeId mapping
 		// fog.getMbIDLocationMap().put(mbMetadata.getMbId(), edgeInfo.getNodeId());
 		edgeMicrobatchLock.lock();
@@ -1986,7 +1986,7 @@ public class FogServiceHandler implements FogService.Iface {
 			edgeMBList = new HashSet<>();
 		}
 		edgeMBList.add(mbMetadata.getMbId());
-		// commented due to above CONCURRENT WRITES comment
+		// commented due to above CONCURRENT WRITES commentupdateMicrobatchLocalInfo
 		// fog.getEdgeMicrobatchMap().put(edgeInfo.getNodeId(), edgeMBList);
 
 		// metadata 'key:value' to the microbatchId map
@@ -2049,7 +2049,7 @@ public class FogServiceHandler implements FogService.Iface {
 	// personal bloomfilter is sent to subscribers and also in consolidated
 	// form to neighbors. Its aim is to purely facilitate microbatch searches
 	// based on microbatch metadata (though streamId can also be used)
-	private void updateBloomFilters(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String, String> metaKeyValueMap) {
+	private void updateBloomFilters(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String, List<String>> metaKeyValueMap) {
 		byte[] fogBFilter = fog.getPersonalBloomFilter();
 		byte[] edgeBFilter = fog.getEdgeBloomFilters().get(edgeInfo.getNodeId());
 		updateFogAndEdgeBloomFilters(Constants.MICROBATCH_METADATA_ID, String.valueOf(mbMetadata.getMbId()), fogBFilter,
@@ -2081,10 +2081,12 @@ public class FogServiceHandler implements FogService.Iface {
 		// user
 		// during runtime
 		// :ISHAN Testing for only one key value pair
-		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
+		Iterator<Map.Entry<String, List<String>>> itr = metaKeyValueMap.entrySet().iterator();
 		while (itr.hasNext()) {
-			Map.Entry<String, String> entry = itr.next();
-			updateFogAndEdgeBloomFilters(entry.getKey(), entry.getValue(), fogBFilter, edgeBFilter);
+			Map.Entry<String, List<String>> entry = itr.next();
+			for(String value : entry.getValue()) {
+				updateFogAndEdgeBloomFilters(entry.getKey(), value, fogBFilter, edgeBFilter);
+			}
 		}
 	}
 
@@ -2093,7 +2095,7 @@ public class FogServiceHandler implements FogService.Iface {
 		BloomFilter.storeEntry(key, value, edgeBFilter);
 	}
 
-	private void updateMetadataMap(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String, String> metaKeyValueMap) {
+	private void updateMetadataMap(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String, List<String>> metaKeyValueMap) {
 		// for every key:value present in the mbMetadata, we need to store that
 		// in the map to faciliate find
 		// no need to insert mbId in this map as there is a separate map for it
@@ -2142,12 +2144,15 @@ public class FogServiceHandler implements FogService.Iface {
 
 		// Updating the metaToMBIdListMap via setMetaMbIdMap()
 		// Testing for only one key value pair
-		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
+		Iterator<Map.Entry<String, List<String>>> itr = metaKeyValueMap.entrySet().iterator();
 		while (itr.hasNext()) {
-			Map.Entry<String, String> entry = itr.next();
+			Map.Entry<String, List<String>> entry = itr.next();
 			// formulate the searchKey for setMetaMbIdMap
-			String searchKeyOther = entry.getKey() + ":" + entry.getValue();
-			checkAndInsertEntry(searchKeyOther, mbMetadata.getMbId());
+			for(String value : entry.getValue()) {
+				String searchKeyOther = entry.getKey() + ":" +value;
+				checkAndInsertEntry(searchKeyOther, mbMetadata.getMbId());	
+			}
+			
 		}
 	}
 
@@ -2537,7 +2542,7 @@ public class FogServiceHandler implements FogService.Iface {
 	// THE WRITE() WILL GO AWAY VERY SOON
 	@Override
 	public WriteResponse putNext(Metadata mbMetadata, ByteBuffer data, WritePreference preference,
-			Map<String, String> metaKeyValueMap) throws TException {
+			Map<String, List<String>> metaKeyValueMap) throws TException {
 		// select a local edge based on the preference given
 		// become a client with that edge server and send the write request
 		// if successful, the persist the metadata and update the various maps
@@ -2545,9 +2550,17 @@ public class FogServiceHandler implements FogService.Iface {
 
 		WriteResponse wrResponse = new WriteResponse();
 		wrResponse.setStatus(Constants.FAILURE);
-		// it may happen that multiple copies of the same microbatch
-		// will be written to the edges within a single Fog, so we need
-		// to make sure that we should not pick the same edge again
+		
+		// the microbatchId is contained within the metadata so check for safety
+		if (mbMetadata == null) {
+			LOGGER.error("No metadata supplied while writing");
+			return wrResponse;
+		}
+		/**
+		 * it may happen that multiple copies of the same microbatch will be written to
+		 * the edges within a single Fog, so we need to make sure that we should not
+		 * pick the same edge again
+		 **/
 		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", putNext, startTime=" + System.currentTimeMillis());
 		Map<Short, Byte> duplicateHolders = fog.getMbIDLocationMap().get(mbMetadata.getMbId());
 		// we pass the duplicateHolders while identifying local replica because it might
@@ -2560,11 +2573,7 @@ public class FogServiceHandler implements FogService.Iface {
 			LOGGER.info("No suitable edge present");
 			return wrResponse;
 		}
-		// the microbatchId is contained within the metadata so check for safety
-		if (mbMetadata == null) {
-			LOGGER.error("No metadata supplied while writing");
-			return wrResponse;
-		}
+		
 		TTransport transport = new TFramedTransport(new TSocket(localEdge.getNodeIp(), localEdge.getPort()));
 		try {
 			transport.open();
@@ -2594,25 +2603,6 @@ public class FogServiceHandler implements FogService.Iface {
 		// are started as we are returning the WriteResponse returned directly
 		// from the Edge
 		return wrResponse;
-	}
-
-	// This method is used to update the metaToMBIdListMap variable present in the
-	// fog class.
-	// This updation process is required in order to facilitate finding of blocks
-	// using their
-	// static metadata.
-	// This function will be called in putNext() and insertMetadata() functions.
-	private void updateMetaMbIdMbIdMap(Metadata mbMetadata, Map<String, String> metaKeyValueMap) {
-		// ISHAN:
-		// Updating the metaToMBIdListMap via setMetaMbIdMap()
-		Iterator<Map.Entry<String, String>> itr = metaKeyValueMap.entrySet().iterator();
-		while (itr.hasNext()) {
-			Map.Entry<String, String> entry = itr.next();
-
-			// formulate the searchKey for setMetaMbIdMap
-			String searchKey = entry.getKey() + ":" + entry.getValue();
-			checkAndInsertEntry(searchKey, mbMetadata.getMbId());
-		}
 	}
 
 	/**
@@ -3110,7 +3100,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 		MetadataResponse metaResponse = new MetadataResponse();
 		metaResponse.setStatus(Constants.FAILURE);
-		metaResponse.setResult(new HashMap<String, String>());
+		metaResponse.setResult(new HashMap<String, List<String>>());
 
 		/** Check if the fogip,port being sent matches the current fog ip **/
 		if (!(fogip.equals(fog.getMyFogInfo().getNodeIP()) && fogport == fog.getMyFogInfo().getPort())) {
@@ -3142,8 +3132,8 @@ public class FogServiceHandler implements FogService.Iface {
 			ReadReplica data = edgeClient.read(mbid, (byte) 2, "NA", (long) 0);
 			Metadata meta = data.getMetadata();
 
-			Map<String, String> metaKeyValPairs = meta.getMetakeyvaluepairs();
-			Map<String, String> resultMap = new HashMap<String, String>();
+			Map<String, List<String>> metaKeyValPairs = meta.getMetakeyvaluepairs();
+			Map<String, List<String>> resultMap = new HashMap<String, List<String>>();
 
 			for (String key : keys) {
 				if (metaKeyValPairs.containsKey(key)) {

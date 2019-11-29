@@ -3256,11 +3256,11 @@ class joinCluster_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype119, _size116) = iprot.readListBegin()
-                    for _i120 in range(_size116):
-                        _elem121 = NeighborInfoData()
-                        _elem121.read(iprot)
-                        self.success.append(_elem121)
+                    (_etype133, _size130) = iprot.readListBegin()
+                    for _i134 in range(_size130):
+                        _elem135 = NeighborInfoData()
+                        _elem135.read(iprot)
+                        self.success.append(_elem135)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -3277,8 +3277,8 @@ class joinCluster_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter122 in self.success:
-                iter122.write(oprot)
+            for iter136 in self.success:
+                iter136.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -3521,11 +3521,11 @@ class getCandidatePool_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype126, _size123) = iprot.readListBegin()
-                    for _i127 in range(_size123):
-                        _elem128 = NeighborInfoData()
-                        _elem128.read(iprot)
-                        self.success.append(_elem128)
+                    (_etype140, _size137) = iprot.readListBegin()
+                    for _i141 in range(_size137):
+                        _elem142 = NeighborInfoData()
+                        _elem142.read(iprot)
+                        self.success.append(_elem142)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -3542,8 +3542,8 @@ class getCandidatePool_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter129 in self.success:
-                iter129.write(oprot)
+            for iter143 in self.success:
+                iter143.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -4247,11 +4247,11 @@ class getBuddyPoolMembers_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype133, _size130) = iprot.readListBegin()
-                    for _i134 in range(_size130):
-                        _elem135 = FogInfoData()
-                        _elem135.read(iprot)
-                        self.success.append(_elem135)
+                    (_etype147, _size144) = iprot.readListBegin()
+                    for _i148 in range(_size144):
+                        _elem149 = FogInfoData()
+                        _elem149.read(iprot)
+                        self.success.append(_elem149)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -4268,8 +4268,8 @@ class getBuddyPoolMembers_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter136 in self.success:
-                iter136.write(oprot)
+            for iter150 in self.success:
+                iter150.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -4420,11 +4420,11 @@ class requestNeighbors_args(object):
             if fid == 1:
                 if ftype == TType.MAP:
                     self.requestMap = {}
-                    (_ktype138, _vtype139, _size137) = iprot.readMapBegin()
-                    for _i141 in range(_size137):
-                        _key142 = iprot.readI16()
-                        _val143 = iprot.readI16()
-                        self.requestMap[_key142] = _val143
+                    (_ktype152, _vtype153, _size151) = iprot.readMapBegin()
+                    for _i155 in range(_size151):
+                        _key156 = iprot.readI16()
+                        _val157 = iprot.readI16()
+                        self.requestMap[_key156] = _val157
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -4441,9 +4441,9 @@ class requestNeighbors_args(object):
         if self.requestMap is not None:
             oprot.writeFieldBegin('requestMap', TType.MAP, 1)
             oprot.writeMapBegin(TType.I16, TType.I16, len(self.requestMap))
-            for kiter144, viter145 in self.requestMap.items():
-                oprot.writeI16(kiter144)
-                oprot.writeI16(viter145)
+            for kiter158, viter159 in self.requestMap.items():
+                oprot.writeI16(kiter158)
+                oprot.writeI16(viter159)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -4491,11 +4491,11 @@ class requestNeighbors_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype149, _size146) = iprot.readListBegin()
-                    for _i150 in range(_size146):
-                        _elem151 = NeighborInfoData()
-                        _elem151.read(iprot)
-                        self.success.append(_elem151)
+                    (_etype163, _size160) = iprot.readListBegin()
+                    for _i164 in range(_size160):
+                        _elem165 = NeighborInfoData()
+                        _elem165.read(iprot)
+                        self.success.append(_elem165)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -4512,8 +4512,8 @@ class requestNeighbors_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter152 in self.success:
-                iter152.write(oprot)
+            for iter166 in self.success:
+                iter166.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -5819,10 +5819,10 @@ class getWriteLocations_args(object):
             elif fid == 3:
                 if ftype == TType.LIST:
                     self.blackListedFogs = []
-                    (_etype156, _size153) = iprot.readListBegin()
-                    for _i157 in range(_size153):
-                        _elem158 = iprot.readI16()
-                        self.blackListedFogs.append(_elem158)
+                    (_etype170, _size167) = iprot.readListBegin()
+                    for _i171 in range(_size167):
+                        _elem172 = iprot.readI16()
+                        self.blackListedFogs.append(_elem172)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -5852,8 +5852,8 @@ class getWriteLocations_args(object):
         if self.blackListedFogs is not None:
             oprot.writeFieldBegin('blackListedFogs', TType.LIST, 3)
             oprot.writeListBegin(TType.I16, len(self.blackListedFogs))
-            for iter159 in self.blackListedFogs:
-                oprot.writeI16(iter159)
+            for iter173 in self.blackListedFogs:
+                oprot.writeI16(iter173)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.isEdge is not None:
@@ -5908,11 +5908,11 @@ class getWriteLocations_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype163, _size160) = iprot.readListBegin()
-                    for _i164 in range(_size160):
-                        _elem165 = WritableFogData()
-                        _elem165.read(iprot)
-                        self.success.append(_elem165)
+                    (_etype177, _size174) = iprot.readListBegin()
+                    for _i178 in range(_size174):
+                        _elem179 = WritableFogData()
+                        _elem179.read(iprot)
+                        self.success.append(_elem179)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -5929,8 +5929,8 @@ class getWriteLocations_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter166 in self.success:
-                iter166.write(oprot)
+            for iter180 in self.success:
+                iter180.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -6210,11 +6210,11 @@ class writeNext_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype170, _size167) = iprot.readListBegin()
-                    for _i171 in range(_size167):
-                        _elem172 = NodeInfoData()
-                        _elem172.read(iprot)
-                        self.success.append(_elem172)
+                    (_etype184, _size181) = iprot.readListBegin()
+                    for _i185 in range(_size181):
+                        _elem186 = NodeInfoData()
+                        _elem186.read(iprot)
+                        self.success.append(_elem186)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -6231,8 +6231,8 @@ class writeNext_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter173 in self.success:
-                iter173.write(oprot)
+            for iter187 in self.success:
+                iter187.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -6295,11 +6295,16 @@ class insertMetadata_args(object):
             elif fid == 3:
                 if ftype == TType.MAP:
                     self.metaKeyValueMap = {}
-                    (_ktype175, _vtype176, _size174) = iprot.readMapBegin()
-                    for _i178 in range(_size174):
-                        _key179 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val180 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.metaKeyValueMap[_key179] = _val180
+                    (_ktype189, _vtype190, _size188) = iprot.readMapBegin()
+                    for _i192 in range(_size188):
+                        _key193 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val194 = []
+                        (_etype198, _size195) = iprot.readListBegin()
+                        for _i199 in range(_size195):
+                            _elem200 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _val194.append(_elem200)
+                        iprot.readListEnd()
+                        self.metaKeyValueMap[_key193] = _val194
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -6323,10 +6328,13 @@ class insertMetadata_args(object):
             oprot.writeFieldEnd()
         if self.metaKeyValueMap is not None:
             oprot.writeFieldBegin('metaKeyValueMap', TType.MAP, 3)
-            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.metaKeyValueMap))
-            for kiter181, viter182 in self.metaKeyValueMap.items():
-                oprot.writeString(kiter181.encode('utf-8') if sys.version_info[0] == 2 else kiter181)
-                oprot.writeString(viter182.encode('utf-8') if sys.version_info[0] == 2 else viter182)
+            oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.metaKeyValueMap))
+            for kiter201, viter202 in self.metaKeyValueMap.items():
+                oprot.writeString(kiter201.encode('utf-8') if sys.version_info[0] == 2 else kiter201)
+                oprot.writeListBegin(TType.STRING, len(viter202))
+                for iter203 in viter202:
+                    oprot.writeString(iter203.encode('utf-8') if sys.version_info[0] == 2 else iter203)
+                oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -6350,7 +6358,7 @@ insertMetadata_args.thrift_spec = (
     None,  # 0
     (1, TType.STRUCT, 'mbMetadata', [Metadata, None], None, ),  # 1
     (2, TType.STRUCT, 'edgeInfoData', [EdgeInfoData, None], None, ),  # 2
-    (3, TType.MAP, 'metaKeyValueMap', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 3
+    (3, TType.MAP, 'metaKeyValueMap', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 3
 )
 
 
@@ -6655,11 +6663,11 @@ class find_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype186, _size183) = iprot.readListBegin()
-                    for _i187 in range(_size183):
-                        _elem188 = FindReplica()
-                        _elem188.read(iprot)
-                        self.success.append(_elem188)
+                    (_etype207, _size204) = iprot.readListBegin()
+                    for _i208 in range(_size204):
+                        _elem209 = FindReplica()
+                        _elem209.read(iprot)
+                        self.success.append(_elem209)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -6676,8 +6684,8 @@ class find_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter189 in self.success:
-                iter189.write(oprot)
+            for iter210 in self.success:
+                iter210.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -6730,10 +6738,10 @@ class findFast_args(object):
             if fid == 1:
                 if ftype == TType.LIST:
                     self.microbatchIdList = []
-                    (_etype193, _size190) = iprot.readListBegin()
-                    for _i194 in range(_size190):
-                        _elem195 = iprot.readI64()
-                        self.microbatchIdList.append(_elem195)
+                    (_etype214, _size211) = iprot.readListBegin()
+                    for _i215 in range(_size211):
+                        _elem216 = iprot.readI64()
+                        self.microbatchIdList.append(_elem216)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -6766,8 +6774,8 @@ class findFast_args(object):
         if self.microbatchIdList is not None:
             oprot.writeFieldBegin('microbatchIdList', TType.LIST, 1)
             oprot.writeListBegin(TType.I64, len(self.microbatchIdList))
-            for iter196 in self.microbatchIdList:
-                oprot.writeI64(iter196)
+            for iter217 in self.microbatchIdList:
+                oprot.writeI64(iter217)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.checkNeighbors is not None:
@@ -6830,17 +6838,17 @@ class findFast_result(object):
             if fid == 0:
                 if ftype == TType.MAP:
                     self.success = {}
-                    (_ktype198, _vtype199, _size197) = iprot.readMapBegin()
-                    for _i201 in range(_size197):
-                        _key202 = iprot.readI64()
-                        _val203 = []
-                        (_etype207, _size204) = iprot.readListBegin()
-                        for _i208 in range(_size204):
-                            _elem209 = FindReplica()
-                            _elem209.read(iprot)
-                            _val203.append(_elem209)
+                    (_ktype219, _vtype220, _size218) = iprot.readMapBegin()
+                    for _i222 in range(_size218):
+                        _key223 = iprot.readI64()
+                        _val224 = []
+                        (_etype228, _size225) = iprot.readListBegin()
+                        for _i229 in range(_size225):
+                            _elem230 = FindReplica()
+                            _elem230.read(iprot)
+                            _val224.append(_elem230)
                         iprot.readListEnd()
-                        self.success[_key202] = _val203
+                        self.success[_key223] = _val224
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -6857,11 +6865,11 @@ class findFast_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.MAP, 0)
             oprot.writeMapBegin(TType.I64, TType.LIST, len(self.success))
-            for kiter210, viter211 in self.success.items():
-                oprot.writeI64(kiter210)
-                oprot.writeListBegin(TType.STRUCT, len(viter211))
-                for iter212 in viter211:
-                    iter212.write(oprot)
+            for kiter231, viter232 in self.success.items():
+                oprot.writeI64(kiter231)
+                oprot.writeListBegin(TType.STRUCT, len(viter232))
+                for iter233 in viter232:
+                    iter233.write(oprot)
                 oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
@@ -7777,11 +7785,16 @@ class putNext_args(object):
             elif fid == 4:
                 if ftype == TType.MAP:
                     self.metaKeyValueMap = {}
-                    (_ktype214, _vtype215, _size213) = iprot.readMapBegin()
-                    for _i217 in range(_size213):
-                        _key218 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val219 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.metaKeyValueMap[_key218] = _val219
+                    (_ktype235, _vtype236, _size234) = iprot.readMapBegin()
+                    for _i238 in range(_size234):
+                        _key239 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val240 = []
+                        (_etype244, _size241) = iprot.readListBegin()
+                        for _i245 in range(_size241):
+                            _elem246 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _val240.append(_elem246)
+                        iprot.readListEnd()
+                        self.metaKeyValueMap[_key239] = _val240
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -7809,10 +7822,13 @@ class putNext_args(object):
             oprot.writeFieldEnd()
         if self.metaKeyValueMap is not None:
             oprot.writeFieldBegin('metaKeyValueMap', TType.MAP, 4)
-            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.metaKeyValueMap))
-            for kiter220, viter221 in self.metaKeyValueMap.items():
-                oprot.writeString(kiter220.encode('utf-8') if sys.version_info[0] == 2 else kiter220)
-                oprot.writeString(viter221.encode('utf-8') if sys.version_info[0] == 2 else viter221)
+            oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.metaKeyValueMap))
+            for kiter247, viter248 in self.metaKeyValueMap.items():
+                oprot.writeString(kiter247.encode('utf-8') if sys.version_info[0] == 2 else kiter247)
+                oprot.writeListBegin(TType.STRING, len(viter248))
+                for iter249 in viter248:
+                    oprot.writeString(iter249.encode('utf-8') if sys.version_info[0] == 2 else iter249)
+                oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -7837,7 +7853,7 @@ putNext_args.thrift_spec = (
     (1, TType.STRUCT, 'mbMetadata', [Metadata, None], None, ),  # 1
     (2, TType.STRING, 'data', 'BINARY', None, ),  # 2
     (3, TType.I32, 'preference', None, None, ),  # 3
-    (4, TType.MAP, 'metaKeyValueMap', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 4
+    (4, TType.MAP, 'metaKeyValueMap', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 4
 )
 
 
@@ -8681,10 +8697,10 @@ class listLocalPartitionMbId_result(object):
             if fid == 0:
                 if ftype == TType.SET:
                     self.success = set()
-                    (_etype225, _size222) = iprot.readSetBegin()
-                    for _i226 in range(_size222):
-                        _elem227 = iprot.readI64()
-                        self.success.add(_elem227)
+                    (_etype253, _size250) = iprot.readSetBegin()
+                    for _i254 in range(_size250):
+                        _elem255 = iprot.readI64()
+                        self.success.add(_elem255)
                     iprot.readSetEnd()
                 else:
                     iprot.skip(ftype)
@@ -8701,8 +8717,8 @@ class listLocalPartitionMbId_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.SET, 0)
             oprot.writeSetBegin(TType.I64, len(self.success))
-            for iter228 in self.success:
-                oprot.writeI64(iter228)
+            for iter256 in self.success:
+                oprot.writeI64(iter256)
             oprot.writeSetEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -8792,11 +8808,11 @@ class requestAllNeighbors_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype232, _size229) = iprot.readListBegin()
-                    for _i233 in range(_size229):
-                        _elem234 = NeighborInfoData()
-                        _elem234.read(iprot)
-                        self.success.append(_elem234)
+                    (_etype260, _size257) = iprot.readListBegin()
+                    for _i261 in range(_size257):
+                        _elem262 = NeighborInfoData()
+                        _elem262.read(iprot)
+                        self.success.append(_elem262)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -8813,8 +8829,8 @@ class requestAllNeighbors_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter235 in self.success:
-                iter235.write(oprot)
+            for iter263 in self.success:
+                iter263.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -8904,16 +8920,16 @@ class requestEdgeMicrobatchMap_result(object):
             if fid == 0:
                 if ftype == TType.MAP:
                     self.success = {}
-                    (_ktype237, _vtype238, _size236) = iprot.readMapBegin()
-                    for _i240 in range(_size236):
-                        _key241 = iprot.readI16()
-                        _val242 = set()
-                        (_etype246, _size243) = iprot.readSetBegin()
-                        for _i247 in range(_size243):
-                            _elem248 = iprot.readI64()
-                            _val242.add(_elem248)
+                    (_ktype265, _vtype266, _size264) = iprot.readMapBegin()
+                    for _i268 in range(_size264):
+                        _key269 = iprot.readI16()
+                        _val270 = set()
+                        (_etype274, _size271) = iprot.readSetBegin()
+                        for _i275 in range(_size271):
+                            _elem276 = iprot.readI64()
+                            _val270.add(_elem276)
                         iprot.readSetEnd()
-                        self.success[_key241] = _val242
+                        self.success[_key269] = _val270
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -8930,11 +8946,11 @@ class requestEdgeMicrobatchMap_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.MAP, 0)
             oprot.writeMapBegin(TType.I16, TType.SET, len(self.success))
-            for kiter249, viter250 in self.success.items():
-                oprot.writeI16(kiter249)
-                oprot.writeSetBegin(TType.I64, len(viter250))
-                for iter251 in viter250:
-                    oprot.writeI64(iter251)
+            for kiter277, viter278 in self.success.items():
+                oprot.writeI16(kiter277)
+                oprot.writeSetBegin(TType.I64, len(viter278))
+                for iter279 in viter278:
+                    oprot.writeI64(iter279)
                 oprot.writeSetEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
@@ -9043,11 +9059,11 @@ class requestCompFormatSize_result(object):
             if fid == 0:
                 if ftype == TType.MAP:
                     self.success = {}
-                    (_ktype253, _vtype254, _size252) = iprot.readMapBegin()
-                    for _i256 in range(_size252):
-                        _key257 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val258 = iprot.readI64()
-                        self.success[_key257] = _val258
+                    (_ktype281, _vtype282, _size280) = iprot.readMapBegin()
+                    for _i284 in range(_size280):
+                        _key285 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val286 = iprot.readI64()
+                        self.success[_key285] = _val286
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -9064,9 +9080,9 @@ class requestCompFormatSize_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.MAP, 0)
             oprot.writeMapBegin(TType.STRING, TType.I64, len(self.success))
-            for kiter259, viter260 in self.success.items():
-                oprot.writeString(kiter259.encode('utf-8') if sys.version_info[0] == 2 else kiter259)
-                oprot.writeI64(viter260)
+            for kiter287, viter288 in self.success.items():
+                oprot.writeString(kiter287.encode('utf-8') if sys.version_info[0] == 2 else kiter287)
+                oprot.writeI64(viter288)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -9117,11 +9133,11 @@ class findStreamUsingQuery_args(object):
             if fid == 1:
                 if ftype == TType.MAP:
                     self.metaKeyValueMap = {}
-                    (_ktype262, _vtype263, _size261) = iprot.readMapBegin()
-                    for _i265 in range(_size261):
-                        _key266 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val267 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.metaKeyValueMap[_key266] = _val267
+                    (_ktype290, _vtype291, _size289) = iprot.readMapBegin()
+                    for _i293 in range(_size289):
+                        _key294 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val295 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.metaKeyValueMap[_key294] = _val295
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -9148,9 +9164,9 @@ class findStreamUsingQuery_args(object):
         if self.metaKeyValueMap is not None:
             oprot.writeFieldBegin('metaKeyValueMap', TType.MAP, 1)
             oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.metaKeyValueMap))
-            for kiter268, viter269 in self.metaKeyValueMap.items():
-                oprot.writeString(kiter268.encode('utf-8') if sys.version_info[0] == 2 else kiter268)
-                oprot.writeString(viter269.encode('utf-8') if sys.version_info[0] == 2 else viter269)
+            for kiter296, viter297 in self.metaKeyValueMap.items():
+                oprot.writeString(kiter296.encode('utf-8') if sys.version_info[0] == 2 else kiter296)
+                oprot.writeString(viter297.encode('utf-8') if sys.version_info[0] == 2 else viter297)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.checkNeighbors is not None:
@@ -9208,10 +9224,10 @@ class findStreamUsingQuery_result(object):
             if fid == 0:
                 if ftype == TType.SET:
                     self.success = set()
-                    (_etype273, _size270) = iprot.readSetBegin()
-                    for _i274 in range(_size270):
-                        _elem275 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success.add(_elem275)
+                    (_etype301, _size298) = iprot.readSetBegin()
+                    for _i302 in range(_size298):
+                        _elem303 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.add(_elem303)
                     iprot.readSetEnd()
                 else:
                     iprot.skip(ftype)
@@ -9228,8 +9244,8 @@ class findStreamUsingQuery_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.SET, 0)
             oprot.writeSetBegin(TType.STRING, len(self.success))
-            for iter276 in self.success:
-                oprot.writeString(iter276.encode('utf-8') if sys.version_info[0] == 2 else iter276)
+            for iter304 in self.success:
+                oprot.writeString(iter304.encode('utf-8') if sys.version_info[0] == 2 else iter304)
             oprot.writeSetEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -9282,11 +9298,11 @@ class findBlockUsingQuery_args(object):
             if fid == 1:
                 if ftype == TType.MAP:
                     self.metaKeyValueMap = {}
-                    (_ktype278, _vtype279, _size277) = iprot.readMapBegin()
-                    for _i281 in range(_size277):
-                        _key282 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val283 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.metaKeyValueMap[_key282] = _val283
+                    (_ktype306, _vtype307, _size305) = iprot.readMapBegin()
+                    for _i309 in range(_size305):
+                        _key310 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val311 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.metaKeyValueMap[_key310] = _val311
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -9318,9 +9334,9 @@ class findBlockUsingQuery_args(object):
         if self.metaKeyValueMap is not None:
             oprot.writeFieldBegin('metaKeyValueMap', TType.MAP, 1)
             oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.metaKeyValueMap))
-            for kiter284, viter285 in self.metaKeyValueMap.items():
-                oprot.writeString(kiter284.encode('utf-8') if sys.version_info[0] == 2 else kiter284)
-                oprot.writeString(viter285.encode('utf-8') if sys.version_info[0] == 2 else viter285)
+            for kiter312, viter313 in self.metaKeyValueMap.items():
+                oprot.writeString(kiter312.encode('utf-8') if sys.version_info[0] == 2 else kiter312)
+                oprot.writeString(viter313.encode('utf-8') if sys.version_info[0] == 2 else viter313)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.checkNeighbors is not None:
@@ -9383,11 +9399,11 @@ class findBlockUsingQuery_result(object):
             if fid == 0:
                 if ftype == TType.MAP:
                     self.success = {}
-                    (_ktype287, _vtype288, _size286) = iprot.readMapBegin()
-                    for _i290 in range(_size286):
-                        _key291 = iprot.readI64()
-                        _val292 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success[_key291] = _val292
+                    (_ktype315, _vtype316, _size314) = iprot.readMapBegin()
+                    for _i318 in range(_size314):
+                        _key319 = iprot.readI64()
+                        _val320 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success[_key319] = _val320
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -9404,9 +9420,9 @@ class findBlockUsingQuery_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.MAP, 0)
             oprot.writeMapBegin(TType.I64, TType.STRING, len(self.success))
-            for kiter293, viter294 in self.success.items():
-                oprot.writeI64(kiter293)
-                oprot.writeString(viter294.encode('utf-8') if sys.version_info[0] == 2 else viter294)
+            for kiter321, viter322 in self.success.items():
+                oprot.writeI64(kiter321)
+                oprot.writeString(viter322.encode('utf-8') if sys.version_info[0] == 2 else viter322)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -9471,16 +9487,16 @@ class findBlocksAndLocationsWithQuery_args(object):
             elif fid == 3:
                 if ftype == TType.LIST:
                     self.queryCondition = []
-                    (_etype298, _size295) = iprot.readListBegin()
-                    for _i299 in range(_size295):
-                        _elem300 = []
-                        (_etype304, _size301) = iprot.readListBegin()
-                        for _i305 in range(_size301):
-                            _elem306 = FindQueryCondition()
-                            _elem306.read(iprot)
-                            _elem300.append(_elem306)
+                    (_etype326, _size323) = iprot.readListBegin()
+                    for _i327 in range(_size323):
+                        _elem328 = []
+                        (_etype332, _size329) = iprot.readListBegin()
+                        for _i333 in range(_size329):
+                            _elem334 = FindQueryCondition()
+                            _elem334.read(iprot)
+                            _elem328.append(_elem334)
                         iprot.readListEnd()
-                        self.queryCondition.append(_elem300)
+                        self.queryCondition.append(_elem328)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -9516,10 +9532,10 @@ class findBlocksAndLocationsWithQuery_args(object):
         if self.queryCondition is not None:
             oprot.writeFieldBegin('queryCondition', TType.LIST, 3)
             oprot.writeListBegin(TType.LIST, len(self.queryCondition))
-            for iter307 in self.queryCondition:
-                oprot.writeListBegin(TType.STRUCT, len(iter307))
-                for iter308 in iter307:
-                    iter308.write(oprot)
+            for iter335 in self.queryCondition:
+                oprot.writeListBegin(TType.STRUCT, len(iter335))
+                for iter336 in iter335:
+                    iter336.write(oprot)
                 oprot.writeListEnd()
             oprot.writeListEnd()
             oprot.writeFieldEnd()
@@ -9670,10 +9686,10 @@ class getMetadataByBlockid_args(object):
             elif fid == 5:
                 if ftype == TType.LIST:
                     self.keys = []
-                    (_etype312, _size309) = iprot.readListBegin()
-                    for _i313 in range(_size309):
-                        _elem314 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.keys.append(_elem314)
+                    (_etype340, _size337) = iprot.readListBegin()
+                    for _i341 in range(_size337):
+                        _elem342 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.keys.append(_elem342)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -9706,8 +9722,8 @@ class getMetadataByBlockid_args(object):
         if self.keys is not None:
             oprot.writeFieldBegin('keys', TType.LIST, 5)
             oprot.writeListBegin(TType.STRING, len(self.keys))
-            for iter315 in self.keys:
-                oprot.writeString(iter315.encode('utf-8') if sys.version_info[0] == 2 else iter315)
+            for iter343 in self.keys:
+                oprot.writeString(iter343.encode('utf-8') if sys.version_info[0] == 2 else iter343)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()

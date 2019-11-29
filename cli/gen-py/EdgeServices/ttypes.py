@@ -195,7 +195,12 @@ class Metadata(object):
                     (_ktype1, _vtype2, _size0) = iprot.readMapBegin()
                     for _i4 in range(_size0):
                         _key5 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val6 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val6 = []
+                        (_etype10, _size7) = iprot.readListBegin()
+                        for _i11 in range(_size7):
+                            _elem12 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _val6.append(_elem12)
+                        iprot.readListEnd()
                         self.metakeyvaluepairs[_key5] = _val6
                     iprot.readMapEnd()
                 else:
@@ -252,10 +257,13 @@ class Metadata(object):
             oprot.writeFieldEnd()
         if self.metakeyvaluepairs is not None:
             oprot.writeFieldBegin('metakeyvaluepairs', TType.MAP, 11)
-            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.metakeyvaluepairs))
-            for kiter7, viter8 in self.metakeyvaluepairs.items():
-                oprot.writeString(kiter7.encode('utf-8') if sys.version_info[0] == 2 else kiter7)
-                oprot.writeString(viter8.encode('utf-8') if sys.version_info[0] == 2 else viter8)
+            oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.metakeyvaluepairs))
+            for kiter13, viter14 in self.metakeyvaluepairs.items():
+                oprot.writeString(kiter13.encode('utf-8') if sys.version_info[0] == 2 else kiter13)
+                oprot.writeListBegin(TType.STRING, len(viter14))
+                for iter15 in viter14:
+                    oprot.writeString(iter15.encode('utf-8') if sys.version_info[0] == 2 else iter15)
+                oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -659,7 +667,7 @@ Metadata.thrift_spec = (
     (8, TType.STRING, 'compFormat', 'UTF8', None, ),  # 8
     (9, TType.I64, 'uncompSize', None, None, ),  # 9
     (10, TType.I64, 'sizeofblock', None, None, ),  # 10
-    (11, TType.MAP, 'metakeyvaluepairs', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 11
+    (11, TType.MAP, 'metakeyvaluepairs', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 11
 )
 all_structs.append(EdgeInfoData)
 EdgeInfoData.thrift_spec = (
