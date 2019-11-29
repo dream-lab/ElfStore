@@ -3459,6 +3459,8 @@ public class FogServiceHandler implements FogService.Iface {
 
 		Map<Long, String> finalResultMap = new HashMap<Long, String>();
 
+		int counter = 1;
+		
 		while (queryiterator.hasNext()) {
 
 			List<FindConditionTuple<String, String>> orConditionList = queryiterator.next();
@@ -3493,13 +3495,17 @@ public class FogServiceHandler implements FogService.Iface {
 			/** Check to see if any results are present 
 			 * This is important for 'AND' ing
 			 */
-			if(orResultMap.size()>0) {
-				finalResultMap.putAll(orResultMap);
+			if(counter == 1 && orResultMap.size()>0) {
+				finalResultMap.putAll(orResultMap);	
+			} else if(counter >1 && orResultMap.size()>0) {
+				finalResultMap.keySet().retainAll(orResultMap.keySet());
 			}else {
 				finalResultMap.clear();
 				System.out.println("[Query Comparison] AND condition failed");
 				break;
 			}
+			
+			counter++;
 
 		}
 
