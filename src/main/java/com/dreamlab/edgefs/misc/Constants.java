@@ -82,6 +82,8 @@ public final class Constants {
 	//using SHA1 instead of MD5
 	public static int BLOOM_FILTER_BYTES = 20;
 	
+	public static int DYNAMIC_BLOOM_FILTER_BYTES = 20000;
+	
 	public static String STREAM_METADATA_ID = "streamId";
 	
 	//ISHAN: for findStreamUsingQuery

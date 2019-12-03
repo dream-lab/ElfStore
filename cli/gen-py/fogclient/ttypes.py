@@ -1003,12 +1003,14 @@ class BuddyPayload(object):
     Attributes:
      - payload
      - mbIdToStreamIdMap
+     - dynamicBFilter
     """
 
 
-    def __init__(self, payload=None, mbIdToStreamIdMap=None,):
+    def __init__(self, payload=None, mbIdToStreamIdMap=None, dynamicBFilter=None,):
         self.payload = payload
         self.mbIdToStreamIdMap = mbIdToStreamIdMap
+        self.dynamicBFilter = dynamicBFilter
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -1035,6 +1037,11 @@ class BuddyPayload(object):
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.dynamicBFilter = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -1056,6 +1063,10 @@ class BuddyPayload(object):
                 oprot.writeI64(kiter23)
                 oprot.writeString(viter24.encode('utf-8') if sys.version_info[0] == 2 else viter24)
             oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.dynamicBFilter is not None:
+            oprot.writeFieldBegin('dynamicBFilter', TType.STRING, 3)
+            oprot.writeBinary(self.dynamicBFilter)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -1082,12 +1093,14 @@ class NeighborPayload(object):
     Attributes:
      - payload
      - mbIdToStreamIdMap
+     - dynamicBFilter
     """
 
 
-    def __init__(self, payload=None, mbIdToStreamIdMap=None,):
+    def __init__(self, payload=None, mbIdToStreamIdMap=None, dynamicBFilter=None,):
         self.payload = payload
         self.mbIdToStreamIdMap = mbIdToStreamIdMap
+        self.dynamicBFilter = dynamicBFilter
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -1114,6 +1127,11 @@ class NeighborPayload(object):
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.dynamicBFilter = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -1135,6 +1153,10 @@ class NeighborPayload(object):
                 oprot.writeI64(kiter32)
                 oprot.writeString(viter33.encode('utf-8') if sys.version_info[0] == 2 else viter33)
             oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.dynamicBFilter is not None:
+            oprot.writeFieldBegin('dynamicBFilter', TType.STRING, 3)
+            oprot.writeBinary(self.dynamicBFilter)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -3890,12 +3912,14 @@ BuddyPayload.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'payload', 'BINARY', None, ),  # 1
     (2, TType.MAP, 'mbIdToStreamIdMap', (TType.I64, None, TType.STRING, 'UTF8', False), None, ),  # 2
+    (3, TType.STRING, 'dynamicBFilter', 'BINARY', None, ),  # 3
 )
 all_structs.append(NeighborPayload)
 NeighborPayload.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'payload', 'BINARY', None, ),  # 1
     (2, TType.MAP, 'mbIdToStreamIdMap', (TType.I64, None, TType.STRING, 'UTF8', False), None, ),  # 2
+    (3, TType.STRING, 'dynamicBFilter', 'BINARY', None, ),  # 3
 )
 all_structs.append(EdgePayload)
 EdgePayload.thrift_spec = (

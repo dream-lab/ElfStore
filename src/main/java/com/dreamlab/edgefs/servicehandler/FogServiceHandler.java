@@ -2052,6 +2052,8 @@ public class FogServiceHandler implements FogService.Iface {
 	private void updateBloomFilters(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String, List<String>> metaKeyValueMap) {
 		byte[] fogBFilter = fog.getPersonalBloomFilter();
 		byte[] edgeBFilter = fog.getEdgeBloomFilters().get(edgeInfo.getNodeId());
+		byte[] fogDynamicFilter = fog.getPersonalDynamicFilter();
+		
 		updateFogAndEdgeBloomFilters(Constants.MICROBATCH_METADATA_ID, String.valueOf(mbMetadata.getMbId()), fogBFilter,
 				edgeBFilter);
 		updateFogAndEdgeBloomFilters(Constants.STREAM_METADATA_ID, mbMetadata.getStreamId(), fogBFilter, edgeBFilter);
@@ -2086,6 +2088,7 @@ public class FogServiceHandler implements FogService.Iface {
 			Map.Entry<String, List<String>> entry = itr.next();
 			for(String value : entry.getValue()) {
 				updateFogAndEdgeBloomFilters(entry.getKey(), value, fogBFilter, edgeBFilter);
+				updateDymanicBloomFilter(entry.getKey(), value, fogDynamicFilter);
 			}
 		}
 	}
@@ -2093,6 +2096,10 @@ public class FogServiceHandler implements FogService.Iface {
 	private void updateFogAndEdgeBloomFilters(String key, String value, byte[] fogBFilter, byte[] edgeBFilter) {
 		BloomFilter.storeEntry(key, value, fogBFilter);
 		BloomFilter.storeEntry(key, value, edgeBFilter);
+	}
+	
+	private void updateDymanicBloomFilter(String key, String value, byte[] fogDynamicFilter) {
+		BloomFilter.storeEntry(key, value, fogDynamicFilter);
 	}
 
 	private void updateMetadataMap(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String, List<String>> metaKeyValueMap) {
@@ -2380,6 +2387,13 @@ public class FogServiceHandler implements FogService.Iface {
 			nInfo.setStreamBFilterUpdates(data.getStreamBFilter());
 			fog.setMostRecentNeighborBFUpdate(System.currentTimeMillis());
 		}
+		
+		/** Dynamic bloomfilter update **/
+		if (payload.dynamicBFilter != null) {
+			byte[] dynamicBloomFilter = payload.getDynamicBFilter();
+			LOGGER.info("Updating the local dynamic bloom filter of a neighbor ");
+			nInfo.setDynamicBloomFilter(dynamicBloomFilter);
+		}
 
 		if (data.getNeighborStats() != null) {
 			nInfo.setLastUpdatedStatsTime(currentTime);
@@ -2440,6 +2454,13 @@ public class FogServiceHandler implements FogService.Iface {
 				fog.getFogUpdateMap().put(stats.getNodeInfo().getNodeID(), stats);
 			}
 			anyStatsUpdate = true;
+		}
+		
+		/** Dynamic bloomfilter update **/
+		if (payload.dynamicBFilter != null) {
+			byte[] dynamicBloomFilter = payload.getDynamicBFilter();
+			LOGGER.info("Updating the local dynamic bloom filter of a buddy");
+			buddyExchangeInfo.setDynamicBloomFilter(dynamicBloomFilter);
 		}
 
 		if (payload.isSetMbIdToStreamIdMap()) {

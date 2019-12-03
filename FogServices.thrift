@@ -104,11 +104,13 @@ struct MessagePayload {
 struct BuddyPayload {
 	1:required binary payload;
 	2:optional map<i64, string> mbIdToStreamIdMap;
+	3:optional binary dynamicBFilter;
 }
 
 struct NeighborPayload {
 	1:required binary payload;
 	2:optional map<i64, string> mbIdToStreamIdMap;
+	3:optional binary dynamicBFilter;
 }
 
 

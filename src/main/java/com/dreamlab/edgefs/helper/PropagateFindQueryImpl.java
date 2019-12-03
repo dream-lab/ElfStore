@@ -62,7 +62,7 @@ public class PropagateFindQueryImpl implements PropagateFindQueryIFace {
 			for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
 				FogExchangeInfo nInfo = entry.getValue();
 				if (nInfo != null) {
-					byte[] bloomFilter = nInfo.getBloomFilterUpdates();
+					byte[] bloomFilter = nInfo.getDynamicBloomFilter();
 
 					// Iteration needed; based on number of properties passed for condition checking
 					// in the map
@@ -100,7 +100,7 @@ public class PropagateFindQueryImpl implements PropagateFindQueryIFace {
 			for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
 				FogExchangeInfo nInfo = entry.getValue();
 				if (nInfo != null) {
-					byte[] bloomFilter = nInfo.getBloomFilterUpdates();
+					byte[] bloomFilter = nInfo.getDynamicBloomFilter();
 
 					// Iteration needed; based on number of properties passed for condition checking
 					// in the map
@@ -144,7 +144,7 @@ public class PropagateFindQueryImpl implements PropagateFindQueryIFace {
 			for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
 				FogExchangeInfo buddyInfo = entry.getValue();
 				if (buddyInfo != null) {
-					byte[] bloomFilter = buddyInfo.getBloomFilterUpdates();
+					byte[] bloomFilter = buddyInfo.getDynamicBloomFilter();
 					// Iteration needed; based on number of properties passed for condition checking
 					// in the map
 					boolean allSatisfiedFlag = true;
@@ -180,7 +180,7 @@ public class PropagateFindQueryImpl implements PropagateFindQueryIFace {
 			for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
 				FogExchangeInfo buddyInfo = entry.getValue();
 				if (buddyInfo != null) {
-					byte[] bloomFilter = buddyInfo.getBloomFilterUpdates();
+					byte[] bloomFilter = buddyInfo.getDynamicBloomFilter();
 					// Iteration needed; based on number of properties passed for condition checking
 					// in the map
 					boolean orSatisfiedFlag = false;

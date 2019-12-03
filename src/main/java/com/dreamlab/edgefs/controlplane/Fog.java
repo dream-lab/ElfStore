@@ -24,6 +24,7 @@ import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dreamlab.edgefs.misc.BloomFilter;
 import com.dreamlab.edgefs.misc.BuddyDataExchangeFormat;
 import com.dreamlab.edgefs.misc.Constants;
 import com.dreamlab.edgefs.misc.GlobalStatsHandler;
@@ -78,6 +79,9 @@ public class Fog implements Serializable {
 
 	// this is for the stream search
 	private byte[] personalStreamBFilter = new byte[Constants.BLOOM_FILTER_BYTES];
+	
+	/** THis is for the dynamic metadata properties **/
+	private byte[] dynamicBloomFilter = new byte[Constants.DYNAMIC_BLOOM_FILTER_BYTES];
 
 	// For now, I am keeping a single variable to check if bloomfilters are to be
 	// sent or not. There is no stream level or microbatch level most recent update
@@ -304,6 +308,8 @@ public class Fog implements Serializable {
 	// which requires us to store a different list for each metadata value
 //	private Map<String, List<String>> metaToMBIdListMap = new ConcurrentHashMap<>(); 
 	private Map<String, List<Long>> metaToMBIdListMap = new ConcurrentHashMap<>();
+	
+	private Map<String, Set<Long>> dynamicMetaToMbidSetMap = new ConcurrentHashMap<>();
 
 	// this map stores for every edge the list of microbatchIds it stores. This is
 	// useful
@@ -455,6 +461,14 @@ public class Fog implements Serializable {
 
 	public void setStreamMbIdMap(Map<String, Set<Long>> streamMbIdMap) {
 		this.streamMbIdMap = streamMbIdMap;
+	}
+	
+	public byte[] getPersonalDynamicFilter() {
+		return dynamicBloomFilter;
+	}
+
+	public void setPersonalDynamicFilter(byte[] dynamicBloomFilter) {
+		this.dynamicBloomFilter = dynamicBloomFilter;
 	}
 
 	/**
@@ -741,6 +755,14 @@ public class Fog implements Serializable {
 	public void setEdgeMicrobatchMap(Map<Short, Set<Long>> edgeMicrobatchMap) {
 		this.edgeMicrobatchMap = edgeMicrobatchMap;
 	}
+	
+	public Map<String, Set<Long>> getDynamicMetaToMbidSetMap() {
+		return dynamicMetaToMbidSetMap;
+	}
+
+	public void setDynamicMetaToMbidSetMap(Map<String, Set<Long>> dynamicMetaToMbidSetMap) {
+		this.dynamicMetaToMbidSetMap = dynamicMetaToMbidSetMap;
+	}
 
 	public Map<String, List<Long>> getMetaToMBIdListMap() {
 		return metaToMBIdListMap;
@@ -1003,10 +1025,15 @@ public class Fog implements Serializable {
 
 		BuddyPayload payload = new BuddyPayload();
 		payload.setPayload(BuddyDataExchangeFormat.encodeData(getMyFogInfo(), consolidatedBFilter, consolidatedStreamBF,
-				selfStats, updatedStats));
+				selfStats, updatedStats));		
 		
 		/** newly added by Sheshadri **/
 		payload.setMbIdToStreamIdMap(this.getMbIdToStreamIdMap());
+		
+		/** Dynamic bloomfilter **/
+		byte[] dynamicConsolidatedBF = createConsolidatedDynamicBloomFilter();
+		LOGGER.info("Dynamic bloomfilter payload set for buddies");
+		payload.setDynamicBFilter(dynamicConsolidatedBF);
 
 		for (FogInfo fInfo : buddies) {
 			LOGGER.info("Sending heartbeat to buddy : " + fInfo);
@@ -1079,6 +1106,11 @@ public class Fog implements Serializable {
 		
 		/** newly added by Sheshadri **/
 		payload.setMbIdToStreamIdMap(this.getMbIdToStreamIdMap());
+		
+		/** Dynamic bloom-filter **/
+		byte[] dynamicBFilter = getPersonalDynamicFilter();
+		/** dynamic bloom filter **/
+		payload.setDynamicBFilter(dynamicBFilter);
 
 		for (NodeInfo nInfo : values) {
 			LOGGER.info("Sending heartbeat to subscriber : " + nInfo);
@@ -1118,5 +1150,31 @@ public class Fog implements Serializable {
 		LOGGER.info("The deserialization completed at {}", System.currentTimeMillis());
 		return fogInput;
 	}
+	
+	/**
+	 * 
+	 * @return consolidated dynamic bloomfilter of all neighbors
+	 */
+	private byte[] createConsolidatedDynamicBloomFilter() {
+
+		byte[] bfArray = new byte[Constants.DYNAMIC_BLOOM_FILTER_BYTES];
+		Map<Short, FogExchangeInfo> nExchangeInfo = getNeighborExchangeInfo();
+		for (Entry<Short, FogExchangeInfo> entry : nExchangeInfo.entrySet()) {
+			if (entry.getValue() != null) {
+				byte[] neighborBF = entry.getValue().getDynamicBloomFilter();
+				for (int i = 0; i < neighborBF.length; i++) {
+					bfArray[i] = (byte) (bfArray[i] | neighborBF[i]);
+				}
+			}
+		}
+
+		/** Construct the dynamic bloomfilter **/
+		dynamicBloomFilter = getPersonalDynamicFilter();
+		/** add self info in it as well **/
+		for (int i = 0; i < dynamicBloomFilter.length; i++) {
+			bfArray[i] = (byte) (bfArray[i] | dynamicBloomFilter[i]);
+		}
+		return bfArray;
+	}	
 
 }

@@ -26,6 +26,8 @@ public class FogExchangeInfo implements Serializable {
 	//microbatch level metadata while this is for stream level metadata
 	private byte[] streamBFilterUpdates = new byte[Constants.BLOOM_FILTER_BYTES];
 	
+	private byte[] dynamicBloomFilter = new byte[Constants.DYNAMIC_BLOOM_FILTER_BYTES];	
+
 	//time of last heartbeat
 	private transient long lastHeartBeatTime;
 	//most recent bloomfilter update time
@@ -53,6 +55,14 @@ public class FogExchangeInfo implements Serializable {
 	public FogExchangeInfo(NodeInfo nodeInfo) {
 		super();
 		this.nodeInfo = nodeInfo;
+	}
+	
+	public byte[] getDynamicBloomFilter() {
+		return dynamicBloomFilter;
+	}
+
+	public void setDynamicBloomFilter(byte[] dynamicBloomFilter) {
+		this.dynamicBloomFilter = dynamicBloomFilter;
 	}
 
 	public byte[] getBloomFilterUpdates() {
