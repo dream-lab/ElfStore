@@ -3272,6 +3272,7 @@ public class FogServiceHandler implements FogService.Iface {
 							neighbor.getNode().getNodeIP(), neighbor.getNode().getPort(), remList, false, false,
 							selfInfo);
 					if (nBlockLocationMap != null) {
+						LOGGER.info("findFast neighborList "+nBlockLocationMap.toString());
 						blockLocationMap.putAll(nBlockLocationMap);
 					}
 
@@ -3285,8 +3286,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 					if (0 == unmatchedEntriesList.size()) {
 						allBlocksMatched = true;
-						LOGGER.info("All blocks matched in neighbor fog function");
-						break;
+						LOGGER.info("All blocks matched in neighbor fog function");						
 					} else {
 						remList = unmatchedEntriesList;
 					}
@@ -3299,6 +3299,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 		} /** End of for-loop **/
 
+		LOGGER.info("findFast blockLocationMap "+blockLocationMap.toString());
 		return blockLocationMap;
 	}
 
@@ -3325,10 +3326,14 @@ public class FogServiceHandler implements FogService.Iface {
 				}
 
 				if (match) {
-					NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
+					
+					FogInfo buddyInfo = fog.getBuddyMap().get(entry.getKey());
+					LOGGER.info("The nieghbor thing "+buddyInfo.toString());
+					
 					Map<Long, List<FindReplica>> bBlockLocationMap = fetchDataFromOtherFogFast(
-							neighbor.getNode().getNodeIP(), neighbor.getNode().getPort(), remList, true, false,
+							buddyInfo.getNodeIP(), buddyInfo.getPort(), remList, true, false,
 							selfInfo);
+					LOGGER.info("Place where errors were being caused "+bBlockLocationMap.toString());
 					if (bBlockLocationMap != null) {
 						blockLocationMap.putAll(bBlockLocationMap);
 					}
