@@ -7,8 +7,6 @@ import java.security.NoSuchAlgorithmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dreamlab.edgefs.constants.BloomFilter;
-import com.dreamlab.edgefs.constants.Constants;
 
 public class BloomFilter {
 
