@@ -1893,13 +1893,23 @@ public class FogServiceHandler implements FogService.Iface {
 		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", write, startTime=" + System.currentTimeMillis());
 		// Short duplicateHolderEdgeId =
 		// fog.getMbIDLocationMap().get(mbMetadata.getMbId());
+		
+		EdgeInfo localEdge = null;
+		/**
+		 * The following code-block needs to be synchronized for the following reasons
+		 * 	1. A same Fog may be chosen multiple times for replication
+		 * 	2. Synchronized block prevents picking the same edge again.
+		 */
 		Map<Short, Byte> duplicateHolders = fog.getMbIDLocationMap().get(mbMetadata.getMbId());
 		// we pass the duplicateHolders while identifying local replica because it might
 		// happen that during recovery, we may choose an edge that already has the
 		// microbatch
 		// present so we should pick a different edge to make sure there is proper
 		// replication
-		EdgeInfo localEdge = identifyLocalReplica(data.capacity(), preference, duplicateHolders, mbMetadata.getMbId());
+		localEdge = identifyLocalReplica(data.capacity(), preference, mbMetadata.getMbId());	
+		
+		LOGGER.info("[DEBUG] The local ");
+		
 		if (localEdge == null) {
 			LOGGER.info("No suitable edge present");
 			return wrResponse;
@@ -2172,8 +2182,11 @@ public class FogServiceHandler implements FogService.Iface {
 		metaToMBIdListMap.put(searchKey, list);
 	}
 
-	private EdgeInfo identifyLocalReplica(int dataLength, WritePreference preference, Map<Short, Byte> duplicateHolders,
+	private synchronized EdgeInfo identifyLocalReplica(int dataLength, WritePreference preference, 
 			long mbId) {
+		
+		Map<Short, Byte> duplicateHolders = fog.getMbIDLocationMap().get(mbId);
+		
 		FogStats selfStats = FogStats.createInstance(fog.getCoarseGrainedStats().getInfo());
 		EdgeInfo edgeInfo = null;
 		if (preference == WritePreference.HHL || preference == WritePreference.HLL || preference == WritePreference.LHL
@@ -2182,6 +2195,18 @@ public class FogServiceHandler implements FogService.Iface {
 		} else {
 			edgeInfo = getHighReliabilityEdge(selfStats, dataLength, duplicateHolders, mbId);
 		}
+		
+		/** If an edge has been chosen and this is the first choice in the fog **/
+		if(null != edgeInfo && null == duplicateHolders) {
+			if (!fog.getMbIDLocationMap().containsKey(mbId)) {
+				fog.getMbIDLocationMap().put(mbId, new ConcurrentHashMap<>());
+			}
+			
+			Map<Short, Byte> edgeMap = fog.getMbIDLocationMap().get(mbId);
+			// value in this map is some dummy value
+			edgeMap.put(edgeInfo.getNodeId(), (byte) 1);
+		}
+		
 		return edgeInfo;
 	}
 
@@ -2589,11 +2614,18 @@ public class FogServiceHandler implements FogService.Iface {
 		// microbatch
 		// present so we should pick a different edge to make sure there is proper
 		// replication
-		EdgeInfo localEdge = identifyLocalReplica(data.capacity(), preference, duplicateHolders, mbMetadata.getMbId());
+		EdgeInfo localEdge = null;
+		synchronized(this)
+		{
+			localEdge = identifyLocalReplica(data.capacity(), preference, mbMetadata.getMbId());	
+		}		
+		
 		if (localEdge == null) {
 			LOGGER.info("No suitable edge present");
 			return wrResponse;
 		}
+		
+		LOGGER.info("[DEBUG] The localEdge is "+localEdge.toString());
 		
 		TTransport transport = new TFramedTransport(new TSocket(localEdge.getNodeIp(), localEdge.getPort()));
 		try {
