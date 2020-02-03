@@ -3517,7 +3517,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 		Map<Long, String> finalResultMap = new HashMap<Long, String>();
 
-		int counter = 1;
+		int iteration = 1;
 		
 		while (queryiterator.hasNext()) {
 
@@ -3537,13 +3537,15 @@ public class FogServiceHandler implements FogService.Iface {
 					Map<Long, String> results = findBlockUsingQuery(orMetaMap, checkNeighbors, checkBuddies,
 							MatchPreference.OR);
 					System.out.println("The result of OR query "+results);
-					if (0 != results.size()) {
-						
-						/** The break here is because even if a single
+					if (0 != results.size()) {						
+						/** 
+						 * The break here is because even if a single
 						 * 'OR' condition is true we need not check any further
+						 * 
+						 * Timestamp : 3-Feb-2020 Patch by Sheshadri : All 'OR' conditions need to be evaluated.
+						 * 			   so removing the break
 						 */
-						orResultMap.putAll(results);
-						break;
+						orResultMap.putAll(results);						
 					}
 
 				}
@@ -3553,17 +3555,17 @@ public class FogServiceHandler implements FogService.Iface {
 			/** Check to see if any results are present 
 			 * This is important for 'AND' ing
 			 */
-			if(counter == 1 && orResultMap.size()>0) {
+			if(iteration == 1 && orResultMap.size()>0) {
 				finalResultMap.putAll(orResultMap);	
-			} else if(counter >1 && orResultMap.size()>0) {
+			} else if(iteration >1 && orResultMap.size()>0) {
 				finalResultMap.keySet().retainAll(orResultMap.keySet());
 			}else {
 				finalResultMap.clear();
-				System.out.println("[Query Comparison] AND condition failed");
+				LOGGER.info("[Query Comparison] AND condition failed");
 				break;
 			}
 			
-			counter++;
+			iteration++;
 
 		}
 
