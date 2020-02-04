@@ -73,6 +73,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   findBlockUsingQuery( metaKeyValueMap, bool checkNeighbors, bool checkBuddies, MatchPreference matchpreference)')
     print('  FindBlockQueryResponse findBlocksAndLocationsWithQuery(bool checkNeighbors, bool checkBuddies,  queryCondition, ReplicaCount replicacount, EdgeInfoData edgeInfo)')
     print('  MetadataResponse getMetadataByBlockid(i64 mbid, string fogip, i32 fogport, EdgeInfoData edgeInfoData,  keys)')
+    print('   getManyMetadataByBlockidList( mbidList, string fogip, i32 fogport, EdgeInfoData edgeInfoData,  keys)')
     print('')
     sys.exit(0)
 
@@ -445,6 +446,12 @@ elif cmd == 'getMetadataByBlockid':
         print('getMetadataByBlockid requires 5 args')
         sys.exit(1)
     pp.pprint(client.getMetadataByBlockid(eval(args[0]), args[1], eval(args[2]), eval(args[3]), eval(args[4]),))
+
+elif cmd == 'getManyMetadataByBlockidList':
+    if len(args) != 5:
+        print('getManyMetadataByBlockidList requires 5 args')
+        sys.exit(1)
+    pp.pprint(client.getManyMetadataByBlockidList(eval(args[0]), args[1], eval(args[2]), eval(args[3]), eval(args[4]),))
 
 else:
     print('Unrecognized method %s' % cmd)

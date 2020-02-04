@@ -31,6 +31,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  WriteResponse update(i64 mbId, Metadata mbMetadata, string mbData)')
     print('  ReadReplica read(i64 mbId, i8 fetchMetadata, string compFormat, i64 uncompSize)')
     print('  ReadReplica getMetadata(i64 mbId)')
+    print('   getMetadataBlocksByMbidList( mbId)')
     print('  void zip()')
     print('')
     sys.exit(0)
@@ -152,6 +153,12 @@ elif cmd == 'getMetadata':
         print('getMetadata requires 1 args')
         sys.exit(1)
     pp.pprint(client.getMetadata(eval(args[0]),))
+
+elif cmd == 'getMetadataBlocksByMbidList':
+    if len(args) != 1:
+        print('getMetadataBlocksByMbidList requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.getMetadataBlocksByMbidList(eval(args[0]),))
 
 elif cmd == 'zip':
     if len(args) != 0:

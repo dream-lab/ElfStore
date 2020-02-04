@@ -540,4 +540,7 @@ service FogService {
 
 	// getMetadata by blockid
         MetadataResponse getMetadataByBlockid(1: i64 mbid, 2: string fogip, 3: i32 fogport, 4: EdgeInfoData edgeInfoData, 5: list<string> keys);
+
+	// get multiple metadata blocks
+        list<MetadataResponse> getManyMetadataByBlockidList(1: list<i64> mbidList, 2: string fogip, 3: i32 fogport, 4: EdgeInfoData edgeInfoData, 5: list<string> keys);
 }

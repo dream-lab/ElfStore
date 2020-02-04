@@ -152,6 +152,9 @@ service EdgeService {
    //ReadReplica getMetadata(1:string mbId),
    ReadReplica getMetadata(1:i64 mbId),
 
+   // this returns the metadata of all the blocks
+   list<ReadReplica> getMetadataBlocksByMbidList(1:list<i64> mbId),
+
    /**
     * This method has a oneway modifier. That means the client only makes
     * a request and does not listen for any response at all. Oneway methods

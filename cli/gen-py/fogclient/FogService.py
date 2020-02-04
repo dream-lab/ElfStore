@@ -395,6 +395,17 @@ class Iface(object):
         """
         pass
 
+    def getManyMetadataByBlockidList(self, mbidList, fogip, fogport, edgeInfoData, keys):
+        """
+        Parameters:
+         - mbidList
+         - fogip
+         - fogport
+         - edgeInfoData
+         - keys
+        """
+        pass
+
 
 class Client(Iface):
     def __init__(self, iprot, oprot=None):
@@ -1972,6 +1983,45 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getMetadataByBlockid failed: unknown result")
 
+    def getManyMetadataByBlockidList(self, mbidList, fogip, fogport, edgeInfoData, keys):
+        """
+        Parameters:
+         - mbidList
+         - fogip
+         - fogport
+         - edgeInfoData
+         - keys
+        """
+        self.send_getManyMetadataByBlockidList(mbidList, fogip, fogport, edgeInfoData, keys)
+        return self.recv_getManyMetadataByBlockidList()
+
+    def send_getManyMetadataByBlockidList(self, mbidList, fogip, fogport, edgeInfoData, keys):
+        self._oprot.writeMessageBegin('getManyMetadataByBlockidList', TMessageType.CALL, self._seqid)
+        args = getManyMetadataByBlockidList_args()
+        args.mbidList = mbidList
+        args.fogip = fogip
+        args.fogport = fogport
+        args.edgeInfoData = edgeInfoData
+        args.keys = keys
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_getManyMetadataByBlockidList(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = getManyMetadataByBlockidList_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "getManyMetadataByBlockidList failed: unknown result")
+
 
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
@@ -2026,6 +2076,7 @@ class Processor(Iface, TProcessor):
         self._processMap["findBlockUsingQuery"] = Processor.process_findBlockUsingQuery
         self._processMap["findBlocksAndLocationsWithQuery"] = Processor.process_findBlocksAndLocationsWithQuery
         self._processMap["getMetadataByBlockid"] = Processor.process_getMetadataByBlockid
+        self._processMap["getManyMetadataByBlockidList"] = Processor.process_getManyMetadataByBlockidList
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
@@ -3141,6 +3192,29 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("getMetadataByBlockid", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_getManyMetadataByBlockidList(self, seqid, iprot, oprot):
+        args = getManyMetadataByBlockidList_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = getManyMetadataByBlockidList_result()
+        try:
+            result.success = self._handler.getManyMetadataByBlockidList(args.mbidList, args.fogip, args.fogport, args.edgeInfoData, args.keys)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("getManyMetadataByBlockidList", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -9811,6 +9885,201 @@ class getMetadataByBlockid_result(object):
 all_structs.append(getMetadataByBlockid_result)
 getMetadataByBlockid_result.thrift_spec = (
     (0, TType.STRUCT, 'success', [MetadataResponse, None], None, ),  # 0
+)
+
+
+class getManyMetadataByBlockidList_args(object):
+    """
+    Attributes:
+     - mbidList
+     - fogip
+     - fogport
+     - edgeInfoData
+     - keys
+    """
+
+
+    def __init__(self, mbidList=None, fogip=None, fogport=None, edgeInfoData=None, keys=None,):
+        self.mbidList = mbidList
+        self.fogip = fogip
+        self.fogport = fogport
+        self.edgeInfoData = edgeInfoData
+        self.keys = keys
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.mbidList = []
+                    (_etype347, _size344) = iprot.readListBegin()
+                    for _i348 in range(_size344):
+                        _elem349 = iprot.readI64()
+                        self.mbidList.append(_elem349)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.fogip = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.I32:
+                    self.fogport = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRUCT:
+                    self.edgeInfoData = EdgeInfoData()
+                    self.edgeInfoData.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.LIST:
+                    self.keys = []
+                    (_etype353, _size350) = iprot.readListBegin()
+                    for _i354 in range(_size350):
+                        _elem355 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.keys.append(_elem355)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getManyMetadataByBlockidList_args')
+        if self.mbidList is not None:
+            oprot.writeFieldBegin('mbidList', TType.LIST, 1)
+            oprot.writeListBegin(TType.I64, len(self.mbidList))
+            for iter356 in self.mbidList:
+                oprot.writeI64(iter356)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.fogip is not None:
+            oprot.writeFieldBegin('fogip', TType.STRING, 2)
+            oprot.writeString(self.fogip.encode('utf-8') if sys.version_info[0] == 2 else self.fogip)
+            oprot.writeFieldEnd()
+        if self.fogport is not None:
+            oprot.writeFieldBegin('fogport', TType.I32, 3)
+            oprot.writeI32(self.fogport)
+            oprot.writeFieldEnd()
+        if self.edgeInfoData is not None:
+            oprot.writeFieldBegin('edgeInfoData', TType.STRUCT, 4)
+            self.edgeInfoData.write(oprot)
+            oprot.writeFieldEnd()
+        if self.keys is not None:
+            oprot.writeFieldBegin('keys', TType.LIST, 5)
+            oprot.writeListBegin(TType.STRING, len(self.keys))
+            for iter357 in self.keys:
+                oprot.writeString(iter357.encode('utf-8') if sys.version_info[0] == 2 else iter357)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getManyMetadataByBlockidList_args)
+getManyMetadataByBlockidList_args.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'mbidList', (TType.I64, None, False), None, ),  # 1
+    (2, TType.STRING, 'fogip', 'UTF8', None, ),  # 2
+    (3, TType.I32, 'fogport', None, None, ),  # 3
+    (4, TType.STRUCT, 'edgeInfoData', [EdgeInfoData, None], None, ),  # 4
+    (5, TType.LIST, 'keys', (TType.STRING, 'UTF8', False), None, ),  # 5
+)
+
+
+class getManyMetadataByBlockidList_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.LIST:
+                    self.success = []
+                    (_etype361, _size358) = iprot.readListBegin()
+                    for _i362 in range(_size358):
+                        _elem363 = MetadataResponse()
+                        _elem363.read(iprot)
+                        self.success.append(_elem363)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getManyMetadataByBlockidList_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.LIST, 0)
+            oprot.writeListBegin(TType.STRUCT, len(self.success))
+            for iter364 in self.success:
+                iter364.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getManyMetadataByBlockidList_result)
+getManyMetadataByBlockidList_result.thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT, [MetadataResponse, None], False), None, ),  # 0
 )
 fix_spec(all_structs)
 del all_structs

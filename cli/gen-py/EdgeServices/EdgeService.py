@@ -78,6 +78,13 @@ class Iface(object):
         """
         pass
 
+    def getMetadataBlocksByMbidList(self, mbId):
+        """
+        Parameters:
+         - mbId
+        """
+        pass
+
     def zip(self):
         """
         This method has a oneway modifier. That means the client only makes
@@ -326,6 +333,37 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getMetadata failed: unknown result")
 
+    def getMetadataBlocksByMbidList(self, mbId):
+        """
+        Parameters:
+         - mbId
+        """
+        self.send_getMetadataBlocksByMbidList(mbId)
+        return self.recv_getMetadataBlocksByMbidList()
+
+    def send_getMetadataBlocksByMbidList(self, mbId):
+        self._oprot.writeMessageBegin('getMetadataBlocksByMbidList', TMessageType.CALL, self._seqid)
+        args = getMetadataBlocksByMbidList_args()
+        args.mbId = mbId
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_getMetadataBlocksByMbidList(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = getMetadataBlocksByMbidList_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "getMetadataBlocksByMbidList failed: unknown result")
+
     def zip(self):
         """
         This method has a oneway modifier. That means the client only makes
@@ -353,6 +391,7 @@ class Processor(Iface, TProcessor):
         self._processMap["update"] = Processor.process_update
         self._processMap["read"] = Processor.process_read
         self._processMap["getMetadata"] = Processor.process_getMetadata
+        self._processMap["getMetadataBlocksByMbidList"] = Processor.process_getMetadataBlocksByMbidList
         self._processMap["zip"] = Processor.process_zip
 
     def process(self, iprot, oprot):
@@ -527,6 +566,29 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("getMetadata", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_getMetadataBlocksByMbidList(self, seqid, iprot, oprot):
+        args = getMetadataBlocksByMbidList_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = getMetadataBlocksByMbidList_result()
+        try:
+            result.success = self._handler.getMetadataBlocksByMbidList(args.mbId)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("getMetadataBlocksByMbidList", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -1456,6 +1518,144 @@ class getMetadata_result(object):
 all_structs.append(getMetadata_result)
 getMetadata_result.thrift_spec = (
     (0, TType.STRUCT, 'success', [ReadReplica, None], None, ),  # 0
+)
+
+
+class getMetadataBlocksByMbidList_args(object):
+    """
+    Attributes:
+     - mbId
+    """
+
+
+    def __init__(self, mbId=None,):
+        self.mbId = mbId
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.mbId = []
+                    (_etype19, _size16) = iprot.readListBegin()
+                    for _i20 in range(_size16):
+                        _elem21 = iprot.readI64()
+                        self.mbId.append(_elem21)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getMetadataBlocksByMbidList_args')
+        if self.mbId is not None:
+            oprot.writeFieldBegin('mbId', TType.LIST, 1)
+            oprot.writeListBegin(TType.I64, len(self.mbId))
+            for iter22 in self.mbId:
+                oprot.writeI64(iter22)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getMetadataBlocksByMbidList_args)
+getMetadataBlocksByMbidList_args.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'mbId', (TType.I64, None, False), None, ),  # 1
+)
+
+
+class getMetadataBlocksByMbidList_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.LIST:
+                    self.success = []
+                    (_etype26, _size23) = iprot.readListBegin()
+                    for _i27 in range(_size23):
+                        _elem28 = ReadReplica()
+                        _elem28.read(iprot)
+                        self.success.append(_elem28)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getMetadataBlocksByMbidList_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.LIST, 0)
+            oprot.writeListBegin(TType.STRUCT, len(self.success))
+            for iter29 in self.success:
+                iter29.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getMetadataBlocksByMbidList_result)
+getMetadataBlocksByMbidList_result.thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT, [ReadReplica, None], False), None, ),  # 0
 )
 
 

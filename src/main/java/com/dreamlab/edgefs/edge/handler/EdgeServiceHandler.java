@@ -7,7 +7,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.lang.reflect.Method;
 
 import org.apache.commons.io.FileUtils;
@@ -225,12 +226,12 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 
 	@Override
 	public void zip() throws TException {
-
+		LOGGER.info("Zipped!");
 	}
 
 	@Override
 	public void pong() throws TException {
-
+		LOGGER.info("Ping!");
 	}
 
 	@Override
@@ -241,5 +242,17 @@ public class EdgeServiceHandler implements EdgeService.Iface {
 	@Override
 	public int add(int num1, int num2) throws TException {
 		return 0;
+	}
+
+	@Override
+	public List<ReadReplica> getMetadataBlocksByMbidList(List<Long> mbIdList) throws TException {
+		List<ReadReplica> myReadReplicaList = new ArrayList<ReadReplica>();
+		
+		for(Long mbID : mbIdList) {
+			ReadReplica localReadReplica = getMetadata(mbID);
+			myReadReplicaList.add(localReadReplica);
+		}
+		
+		return myReadReplicaList;
 	}
 }

@@ -3572,4 +3572,76 @@ public class FogServiceHandler implements FogService.Iface {
 		return finalResultMap;
 	}
 
+	@Override
+	public List<MetadataResponse> getManyMetadataByBlockidList(List<Long> mbidList, String fogip, int fogport,
+			EdgeInfoData edgeInfoData, List<String> keys) throws TException {
+		
+		List<MetadataResponse> metadataResponseList = new ArrayList<MetadataResponse>();
+		
+		MetadataResponse metaResponse = new MetadataResponse();
+		metaResponse.setStatus(Constants.FAILURE);
+		metaResponse.setResult(new HashMap<String, List<String>>());
+
+		/** Check if the fogip,port being sent matches the current fog ip **/
+		if (!(fogip.equals(fog.getMyFogInfo().getNodeIP()) && fogport == fog.getMyFogInfo().getPort())) {
+			metaResponse.setErrorResponse("ERROR : Fog ip/port did not match");
+			metadataResponseList.add(metaResponse);
+			return metadataResponseList;
+		}
+		
+		/** Check if the Edge is present in this partition **/
+		if(false == fog.getLocalEdgesMap().containsKey(edgeInfoData.getNodeId())) {
+			metaResponse.setErrorResponse("ERROR : Edge ID did not match");
+			metadataResponseList.add(metaResponse);
+			return metadataResponseList;
+		}
+
+		for(Long mbid : mbidList) {
+			/** Check if the microbatch is present in this partition **/
+			if (!fog.getMbIDLocationMap().containsKey(mbid)) {
+				metaResponse.setErrorResponse("block id does not exist in the partition");
+				metadataResponseList.add(metaResponse);
+				return metadataResponseList;
+			}	
+		}		
+
+		/**
+		 * Now read from the edge directly 2 => fetches only metadata, need to change it
+		 * to enum NA => is the default parameter that needs to be passed
+		 **/
+		TTransport transport = new TFramedTransport(new TSocket(edgeInfoData.getNodeIp(), edgeInfoData.getPort()));
+		try {
+			transport.open();
+			TProtocol protocol = new TBinaryProtocol(transport);
+			EdgeService.Client edgeClient = new EdgeService.Client(protocol);
+			List<ReadReplica>  metadataList = edgeClient.getMetadataBlocksByMbidList(mbidList);
+			for(ReadReplica metadata : metadataList) {
+				Metadata meta = metadata.getMetadata();
+
+				Map<String, List<String>> metaKeyValPairs = meta.getMetakeyvaluepairs();
+				Map<String, List<String>> resultMap = new HashMap<String, List<String>>();
+
+				for (String key : keys) {
+					if (metaKeyValPairs.containsKey(key)) {
+						resultMap.put(key, metaKeyValPairs.get(key));
+					}
+				}
+
+				metaResponse.setResult(resultMap);
+				metadataResponseList.add(metaResponse);	
+			}
+			
+		} catch (TException e) {
+			LOGGER.info("Error while reading microbatch from edge : " + edgeInfoData.getNodeIp() + " : " + edgeInfoData.getPort());
+			LOGGER.error(e.toString());
+			metaResponse.status = Constants.SUCCESS;
+			e.printStackTrace();
+		} finally {
+			transport.close();
+		}
+
+		return metadataResponseList;
+
+	}
+
 }
