@@ -478,7 +478,7 @@ service FogService {
 	map<i64, list<FindReplica>> findFast(1: list<i64> microbatchIdList, 2: bool checkNeighbors, 3: bool checkBuddies,4: EdgeInfoData selfInfo);
 
 	//ReadReplica read(1: string microbatchId, 2:bool fetchMetadata);
-	ReadReplica read(1: i64 microbatchId, 2:bool fetchMetadata,3:string compFormat,4:i64 uncompSize);
+	ReadReplica read(1: i64 microbatchId, 2: bool fetchMetadata,3:string compFormat,4: i64 uncompSize);	
 
 	QueryReplica findUsingQuery(1: string metadataKey, 2:string metadataValue, 3:bool checkNeighbors, 4:bool checkBuddies);
 
@@ -543,4 +543,16 @@ service FogService {
 
 	// get multiple metadata blocks
         list<MetadataResponse> getManyMetadataByBlockidList(1: list<i64> mbidList, 2: string fogip, 3: i32 fogport, 4: EdgeInfoData edgeInfoData, 5: list<string> keys);
+
+	//put data
+	WriteResponse putData(1: Metadata mbMetadata, 2: i16 version, 3:binary data, 4: WritePreference preference,5: map<string,list<string>> metaKeyValueMap ,6: string clientId);
+
+	//put data quorum
+	WriteResponse putDataQuorum(1: Metadata mbMetadata, 2: i16 version, 3: binary data, 4: map<string,list<string>> metaKeyValueMap,5: string clientid);
+
+	// get the block
+	ReadReplica get(1: i64 microbatchId, 2: bool fetchMetadata,3: string compFormat,4: i64 uncompSize,5: string clientId);
+
+	// get the block
+	ReadReplica getData(1: i64 microbatchId, 2: bool fetchMetadata,3: string compFormat,4: i64 uncompSize,5: EdgeInfoData selfInfo);
 }

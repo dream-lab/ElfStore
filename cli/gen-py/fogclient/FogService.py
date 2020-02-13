@@ -406,6 +406,51 @@ class Iface(object):
         """
         pass
 
+    def putData(self, mbMetadata, version, data, preference, metaKeyValueMap, clientId):
+        """
+        Parameters:
+         - mbMetadata
+         - version
+         - data
+         - preference
+         - metaKeyValueMap
+         - clientId
+        """
+        pass
+
+    def putDataQuorum(self, mbMetadata, version, data, metaKeyValueMap, clientid):
+        """
+        Parameters:
+         - mbMetadata
+         - version
+         - data
+         - metaKeyValueMap
+         - clientid
+        """
+        pass
+
+    def get(self, microbatchId, fetchMetadata, compFormat, uncompSize, clientId):
+        """
+        Parameters:
+         - microbatchId
+         - fetchMetadata
+         - compFormat
+         - uncompSize
+         - clientId
+        """
+        pass
+
+    def getData(self, microbatchId, fetchMetadata, compFormat, uncompSize, selfInfo):
+        """
+        Parameters:
+         - microbatchId
+         - fetchMetadata
+         - compFormat
+         - uncompSize
+         - selfInfo
+        """
+        pass
+
 
 class Client(Iface):
     def __init__(self, iprot, oprot=None):
@@ -2022,6 +2067,164 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getManyMetadataByBlockidList failed: unknown result")
 
+    def putData(self, mbMetadata, version, data, preference, metaKeyValueMap, clientId):
+        """
+        Parameters:
+         - mbMetadata
+         - version
+         - data
+         - preference
+         - metaKeyValueMap
+         - clientId
+        """
+        self.send_putData(mbMetadata, version, data, preference, metaKeyValueMap, clientId)
+        return self.recv_putData()
+
+    def send_putData(self, mbMetadata, version, data, preference, metaKeyValueMap, clientId):
+        self._oprot.writeMessageBegin('putData', TMessageType.CALL, self._seqid)
+        args = putData_args()
+        args.mbMetadata = mbMetadata
+        args.version = version
+        args.data = data
+        args.preference = preference
+        args.metaKeyValueMap = metaKeyValueMap
+        args.clientId = clientId
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_putData(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = putData_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "putData failed: unknown result")
+
+    def putDataQuorum(self, mbMetadata, version, data, metaKeyValueMap, clientid):
+        """
+        Parameters:
+         - mbMetadata
+         - version
+         - data
+         - metaKeyValueMap
+         - clientid
+        """
+        self.send_putDataQuorum(mbMetadata, version, data, metaKeyValueMap, clientid)
+        return self.recv_putDataQuorum()
+
+    def send_putDataQuorum(self, mbMetadata, version, data, metaKeyValueMap, clientid):
+        self._oprot.writeMessageBegin('putDataQuorum', TMessageType.CALL, self._seqid)
+        args = putDataQuorum_args()
+        args.mbMetadata = mbMetadata
+        args.version = version
+        args.data = data
+        args.metaKeyValueMap = metaKeyValueMap
+        args.clientid = clientid
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_putDataQuorum(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = putDataQuorum_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "putDataQuorum failed: unknown result")
+
+    def get(self, microbatchId, fetchMetadata, compFormat, uncompSize, clientId):
+        """
+        Parameters:
+         - microbatchId
+         - fetchMetadata
+         - compFormat
+         - uncompSize
+         - clientId
+        """
+        self.send_get(microbatchId, fetchMetadata, compFormat, uncompSize, clientId)
+        return self.recv_get()
+
+    def send_get(self, microbatchId, fetchMetadata, compFormat, uncompSize, clientId):
+        self._oprot.writeMessageBegin('get', TMessageType.CALL, self._seqid)
+        args = get_args()
+        args.microbatchId = microbatchId
+        args.fetchMetadata = fetchMetadata
+        args.compFormat = compFormat
+        args.uncompSize = uncompSize
+        args.clientId = clientId
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_get(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = get_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "get failed: unknown result")
+
+    def getData(self, microbatchId, fetchMetadata, compFormat, uncompSize, selfInfo):
+        """
+        Parameters:
+         - microbatchId
+         - fetchMetadata
+         - compFormat
+         - uncompSize
+         - selfInfo
+        """
+        self.send_getData(microbatchId, fetchMetadata, compFormat, uncompSize, selfInfo)
+        return self.recv_getData()
+
+    def send_getData(self, microbatchId, fetchMetadata, compFormat, uncompSize, selfInfo):
+        self._oprot.writeMessageBegin('getData', TMessageType.CALL, self._seqid)
+        args = getData_args()
+        args.microbatchId = microbatchId
+        args.fetchMetadata = fetchMetadata
+        args.compFormat = compFormat
+        args.uncompSize = uncompSize
+        args.selfInfo = selfInfo
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_getData(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = getData_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "getData failed: unknown result")
+
 
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
@@ -2077,6 +2280,10 @@ class Processor(Iface, TProcessor):
         self._processMap["findBlocksAndLocationsWithQuery"] = Processor.process_findBlocksAndLocationsWithQuery
         self._processMap["getMetadataByBlockid"] = Processor.process_getMetadataByBlockid
         self._processMap["getManyMetadataByBlockidList"] = Processor.process_getManyMetadataByBlockidList
+        self._processMap["putData"] = Processor.process_putData
+        self._processMap["putDataQuorum"] = Processor.process_putDataQuorum
+        self._processMap["get"] = Processor.process_get
+        self._processMap["getData"] = Processor.process_getData
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
@@ -3215,6 +3422,98 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("getManyMetadataByBlockidList", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_putData(self, seqid, iprot, oprot):
+        args = putData_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = putData_result()
+        try:
+            result.success = self._handler.putData(args.mbMetadata, args.version, args.data, args.preference, args.metaKeyValueMap, args.clientId)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("putData", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_putDataQuorum(self, seqid, iprot, oprot):
+        args = putDataQuorum_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = putDataQuorum_result()
+        try:
+            result.success = self._handler.putDataQuorum(args.mbMetadata, args.version, args.data, args.metaKeyValueMap, args.clientid)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("putDataQuorum", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_get(self, seqid, iprot, oprot):
+        args = get_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = get_result()
+        try:
+            result.success = self._handler.get(args.microbatchId, args.fetchMetadata, args.compFormat, args.uncompSize, args.clientId)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("get", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_getData(self, seqid, iprot, oprot):
+        args = getData_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = getData_result()
+        try:
+            result.success = self._handler.getData(args.microbatchId, args.fetchMetadata, args.compFormat, args.uncompSize, args.selfInfo)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("getData", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -10080,6 +10379,737 @@ class getManyMetadataByBlockidList_result(object):
 all_structs.append(getManyMetadataByBlockidList_result)
 getManyMetadataByBlockidList_result.thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT, [MetadataResponse, None], False), None, ),  # 0
+)
+
+
+class putData_args(object):
+    """
+    Attributes:
+     - mbMetadata
+     - version
+     - data
+     - preference
+     - metaKeyValueMap
+     - clientId
+    """
+
+
+    def __init__(self, mbMetadata=None, version=None, data=None, preference=None, metaKeyValueMap=None, clientId=None,):
+        self.mbMetadata = mbMetadata
+        self.version = version
+        self.data = data
+        self.preference = preference
+        self.metaKeyValueMap = metaKeyValueMap
+        self.clientId = clientId
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.mbMetadata = Metadata()
+                    self.mbMetadata.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I16:
+                    self.version = iprot.readI16()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.data = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I32:
+                    self.preference = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.MAP:
+                    self.metaKeyValueMap = {}
+                    (_ktype366, _vtype367, _size365) = iprot.readMapBegin()
+                    for _i369 in range(_size365):
+                        _key370 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val371 = []
+                        (_etype375, _size372) = iprot.readListBegin()
+                        for _i376 in range(_size372):
+                            _elem377 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _val371.append(_elem377)
+                        iprot.readListEnd()
+                        self.metaKeyValueMap[_key370] = _val371
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.STRING:
+                    self.clientId = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('putData_args')
+        if self.mbMetadata is not None:
+            oprot.writeFieldBegin('mbMetadata', TType.STRUCT, 1)
+            self.mbMetadata.write(oprot)
+            oprot.writeFieldEnd()
+        if self.version is not None:
+            oprot.writeFieldBegin('version', TType.I16, 2)
+            oprot.writeI16(self.version)
+            oprot.writeFieldEnd()
+        if self.data is not None:
+            oprot.writeFieldBegin('data', TType.STRING, 3)
+            oprot.writeBinary(self.data)
+            oprot.writeFieldEnd()
+        if self.preference is not None:
+            oprot.writeFieldBegin('preference', TType.I32, 4)
+            oprot.writeI32(self.preference)
+            oprot.writeFieldEnd()
+        if self.metaKeyValueMap is not None:
+            oprot.writeFieldBegin('metaKeyValueMap', TType.MAP, 5)
+            oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.metaKeyValueMap))
+            for kiter378, viter379 in self.metaKeyValueMap.items():
+                oprot.writeString(kiter378.encode('utf-8') if sys.version_info[0] == 2 else kiter378)
+                oprot.writeListBegin(TType.STRING, len(viter379))
+                for iter380 in viter379:
+                    oprot.writeString(iter380.encode('utf-8') if sys.version_info[0] == 2 else iter380)
+                oprot.writeListEnd()
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.clientId is not None:
+            oprot.writeFieldBegin('clientId', TType.STRING, 6)
+            oprot.writeString(self.clientId.encode('utf-8') if sys.version_info[0] == 2 else self.clientId)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(putData_args)
+putData_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'mbMetadata', [Metadata, None], None, ),  # 1
+    (2, TType.I16, 'version', None, None, ),  # 2
+    (3, TType.STRING, 'data', 'BINARY', None, ),  # 3
+    (4, TType.I32, 'preference', None, None, ),  # 4
+    (5, TType.MAP, 'metaKeyValueMap', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 5
+    (6, TType.STRING, 'clientId', 'UTF8', None, ),  # 6
+)
+
+
+class putData_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = WriteResponse()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('putData_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(putData_result)
+putData_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [WriteResponse, None], None, ),  # 0
+)
+
+
+class putDataQuorum_args(object):
+    """
+    Attributes:
+     - mbMetadata
+     - version
+     - data
+     - metaKeyValueMap
+     - clientid
+    """
+
+
+    def __init__(self, mbMetadata=None, version=None, data=None, metaKeyValueMap=None, clientid=None,):
+        self.mbMetadata = mbMetadata
+        self.version = version
+        self.data = data
+        self.metaKeyValueMap = metaKeyValueMap
+        self.clientid = clientid
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.mbMetadata = Metadata()
+                    self.mbMetadata.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I16:
+                    self.version = iprot.readI16()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.data = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.MAP:
+                    self.metaKeyValueMap = {}
+                    (_ktype382, _vtype383, _size381) = iprot.readMapBegin()
+                    for _i385 in range(_size381):
+                        _key386 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val387 = []
+                        (_etype391, _size388) = iprot.readListBegin()
+                        for _i392 in range(_size388):
+                            _elem393 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _val387.append(_elem393)
+                        iprot.readListEnd()
+                        self.metaKeyValueMap[_key386] = _val387
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
+                    self.clientid = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('putDataQuorum_args')
+        if self.mbMetadata is not None:
+            oprot.writeFieldBegin('mbMetadata', TType.STRUCT, 1)
+            self.mbMetadata.write(oprot)
+            oprot.writeFieldEnd()
+        if self.version is not None:
+            oprot.writeFieldBegin('version', TType.I16, 2)
+            oprot.writeI16(self.version)
+            oprot.writeFieldEnd()
+        if self.data is not None:
+            oprot.writeFieldBegin('data', TType.STRING, 3)
+            oprot.writeBinary(self.data)
+            oprot.writeFieldEnd()
+        if self.metaKeyValueMap is not None:
+            oprot.writeFieldBegin('metaKeyValueMap', TType.MAP, 4)
+            oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.metaKeyValueMap))
+            for kiter394, viter395 in self.metaKeyValueMap.items():
+                oprot.writeString(kiter394.encode('utf-8') if sys.version_info[0] == 2 else kiter394)
+                oprot.writeListBegin(TType.STRING, len(viter395))
+                for iter396 in viter395:
+                    oprot.writeString(iter396.encode('utf-8') if sys.version_info[0] == 2 else iter396)
+                oprot.writeListEnd()
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.clientid is not None:
+            oprot.writeFieldBegin('clientid', TType.STRING, 5)
+            oprot.writeString(self.clientid.encode('utf-8') if sys.version_info[0] == 2 else self.clientid)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(putDataQuorum_args)
+putDataQuorum_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'mbMetadata', [Metadata, None], None, ),  # 1
+    (2, TType.I16, 'version', None, None, ),  # 2
+    (3, TType.STRING, 'data', 'BINARY', None, ),  # 3
+    (4, TType.MAP, 'metaKeyValueMap', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 4
+    (5, TType.STRING, 'clientid', 'UTF8', None, ),  # 5
+)
+
+
+class putDataQuorum_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = WriteResponse()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('putDataQuorum_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(putDataQuorum_result)
+putDataQuorum_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [WriteResponse, None], None, ),  # 0
+)
+
+
+class get_args(object):
+    """
+    Attributes:
+     - microbatchId
+     - fetchMetadata
+     - compFormat
+     - uncompSize
+     - clientId
+    """
+
+
+    def __init__(self, microbatchId=None, fetchMetadata=None, compFormat=None, uncompSize=None, clientId=None,):
+        self.microbatchId = microbatchId
+        self.fetchMetadata = fetchMetadata
+        self.compFormat = compFormat
+        self.uncompSize = uncompSize
+        self.clientId = clientId
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I64:
+                    self.microbatchId = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BOOL:
+                    self.fetchMetadata = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.compFormat = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I64:
+                    self.uncompSize = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
+                    self.clientId = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_args')
+        if self.microbatchId is not None:
+            oprot.writeFieldBegin('microbatchId', TType.I64, 1)
+            oprot.writeI64(self.microbatchId)
+            oprot.writeFieldEnd()
+        if self.fetchMetadata is not None:
+            oprot.writeFieldBegin('fetchMetadata', TType.BOOL, 2)
+            oprot.writeBool(self.fetchMetadata)
+            oprot.writeFieldEnd()
+        if self.compFormat is not None:
+            oprot.writeFieldBegin('compFormat', TType.STRING, 3)
+            oprot.writeString(self.compFormat.encode('utf-8') if sys.version_info[0] == 2 else self.compFormat)
+            oprot.writeFieldEnd()
+        if self.uncompSize is not None:
+            oprot.writeFieldBegin('uncompSize', TType.I64, 4)
+            oprot.writeI64(self.uncompSize)
+            oprot.writeFieldEnd()
+        if self.clientId is not None:
+            oprot.writeFieldBegin('clientId', TType.STRING, 5)
+            oprot.writeString(self.clientId.encode('utf-8') if sys.version_info[0] == 2 else self.clientId)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_args)
+get_args.thrift_spec = (
+    None,  # 0
+    (1, TType.I64, 'microbatchId', None, None, ),  # 1
+    (2, TType.BOOL, 'fetchMetadata', None, None, ),  # 2
+    (3, TType.STRING, 'compFormat', 'UTF8', None, ),  # 3
+    (4, TType.I64, 'uncompSize', None, None, ),  # 4
+    (5, TType.STRING, 'clientId', 'UTF8', None, ),  # 5
+)
+
+
+class get_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = ReadReplica()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_result)
+get_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [ReadReplica, None], None, ),  # 0
+)
+
+
+class getData_args(object):
+    """
+    Attributes:
+     - microbatchId
+     - fetchMetadata
+     - compFormat
+     - uncompSize
+     - selfInfo
+    """
+
+
+    def __init__(self, microbatchId=None, fetchMetadata=None, compFormat=None, uncompSize=None, selfInfo=None,):
+        self.microbatchId = microbatchId
+        self.fetchMetadata = fetchMetadata
+        self.compFormat = compFormat
+        self.uncompSize = uncompSize
+        self.selfInfo = selfInfo
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I64:
+                    self.microbatchId = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BOOL:
+                    self.fetchMetadata = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.compFormat = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I64:
+                    self.uncompSize = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRUCT:
+                    self.selfInfo = EdgeInfoData()
+                    self.selfInfo.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getData_args')
+        if self.microbatchId is not None:
+            oprot.writeFieldBegin('microbatchId', TType.I64, 1)
+            oprot.writeI64(self.microbatchId)
+            oprot.writeFieldEnd()
+        if self.fetchMetadata is not None:
+            oprot.writeFieldBegin('fetchMetadata', TType.BOOL, 2)
+            oprot.writeBool(self.fetchMetadata)
+            oprot.writeFieldEnd()
+        if self.compFormat is not None:
+            oprot.writeFieldBegin('compFormat', TType.STRING, 3)
+            oprot.writeString(self.compFormat.encode('utf-8') if sys.version_info[0] == 2 else self.compFormat)
+            oprot.writeFieldEnd()
+        if self.uncompSize is not None:
+            oprot.writeFieldBegin('uncompSize', TType.I64, 4)
+            oprot.writeI64(self.uncompSize)
+            oprot.writeFieldEnd()
+        if self.selfInfo is not None:
+            oprot.writeFieldBegin('selfInfo', TType.STRUCT, 5)
+            self.selfInfo.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getData_args)
+getData_args.thrift_spec = (
+    None,  # 0
+    (1, TType.I64, 'microbatchId', None, None, ),  # 1
+    (2, TType.BOOL, 'fetchMetadata', None, None, ),  # 2
+    (3, TType.STRING, 'compFormat', 'UTF8', None, ),  # 3
+    (4, TType.I64, 'uncompSize', None, None, ),  # 4
+    (5, TType.STRUCT, 'selfInfo', [EdgeInfoData, None], None, ),  # 5
+)
+
+
+class getData_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = ReadReplica()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getData_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getData_result)
+getData_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [ReadReplica, None], None, ),  # 0
 )
 fix_spec(all_structs)
 del all_structs

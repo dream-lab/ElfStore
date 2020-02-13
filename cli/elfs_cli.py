@@ -12,11 +12,14 @@ import contextlib
 
 import module_EdgeClientCLI_regstream
 import module_EdgeClientCLI_get
+import module_EdgeClientCLI_fog_get
 import module_EdgeClientCLI_put
+import module_EdgeClientCLI_fog_put
 import module_EdgeClientCLI_ls
 import module_EdgeClientCLI_find
 import module_EdgeClientCLI_getMeta
 import module_EdgeClientCLI_findBlockQueryWithLocations
+
 
 '''
 helper imports
@@ -89,6 +92,27 @@ class elfsCLI(Cmd):
         else:
             module_EdgeClientCLI_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,tokens.comp)
 
+    def do_fogput(self,args):
+
+        ## here args includes everyting after the invokation command
+        ## split the args starting using shlex into tokens
+        line = shlex.split(args)
+        ## parse the tokens using the previously defined #global parser
+        tokens = put_parser.parse_args(line)
+
+        splitChoice = str(0)
+        setLease = str(0)
+
+        if tokens.singleBlock == True:
+            splitChoice = str(1);
+        if tokens.setLease == True:
+            setLease = str(1)
+
+        if tokens.v == True:
+            module_EdgeClientCLI_fog_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,tokens.comp,True)
+        else:
+            module_EdgeClientCLI_fog_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,tokens.comp)
+
 
     def do_get(self,args):
         ## here args includes everyting after the invokation command
@@ -102,6 +126,20 @@ class elfsCLI(Cmd):
         else:
             module_EdgeClientCLI_get.get(tokens.start, tokens.end, tokens.edgeId, tokens.edgeIp, tokens.edgePort, tokens.edgeReli, tokens.fogIp, tokens.fogPort)
             #del jsonResponse
+
+    def do_fogget(self,args):
+        ## here args includes everyting after the invokation command
+        ## split the args starting using shlex into tokens
+        line = shlex.split(args)
+        ## parse the tokens using the previously defined #global parser
+        tokens = get_parser.parse_args(line)
+        if tokens.v == True:
+            module_EdgeClientCLI_fog_get.get(tokens.start, tokens.end, tokens.edgeId, tokens.edgeIp, tokens.edgePort, tokens.edgeReli, tokens.fogIp, tokens.fogPort,True)
+            #del jsonResponse
+        else:
+            module_EdgeClientCLI_fog_get.get(tokens.start, tokens.end, tokens.edgeId, tokens.edgeIp, tokens.edgePort, tokens.edgeReli, tokens.fogIp, tokens.fogPort)
+            #del jsonResponse
+
 
     def do_getmeta(self, args):
 
@@ -402,6 +440,34 @@ if __name__ == '__main__':
     findwithloc_parser.add_argument("--matchpref", default="2")
     findwithloc_parser.add_argument("--findloccount", default="1")
     findwithloc_parser.add_argument("--v", "--verbose", action="store_true")
+
+    # fog put data 
+    fogput_parser = subparsers.add_parser("fogput")
+    fogput_parser.add_argument("--path")
+    fogput_parser.add_argument("--streamId")
+    fogput_parser.add_argument("--start")
+    fogput_parser.add_argument("--metadata", default = None)
+    fogput_parser.add_argument("--fogIp", default = FOG_IP)
+    fogput_parser.add_argument("--fogPort", default = str(FOG_PORT))
+    fogput_parser.add_argument("--edgeId", default = str(EDGE_ID))
+    fogput_parser.add_argument("--clientId", default = CLIENT_ID)
+    fogput_parser.add_argument("--singleBlock", action ="store_true")
+    fogput_parser.add_argument("--setLease", action ="store_true")
+    fogput_parser.add_argument("--duration",default=str(0))
+    fogput_parser.add_argument("--comp",default=COMP_FORMAT)
+    fogput_parser.add_argument("--v","--verbose", action ="store_true")
+
+    # fog get data
+    fogget_parser = subparsers.add_parser("fogget")
+    fogget_parser.add_argument("--start")
+    fogget_parser.add_argument("--end", default = str(-1))
+    fogget_parser.add_argument("--edgeId", default = str(EDGE_ID))
+    fogget_parser.add_argument("--edgeIp", default = EDGE_IP)
+    fogget_parser.add_argument("--edgePort", default = str(EDGE_PORT))
+    fogget_parser.add_argument("--edgeReli", default = str(EDGE_RELI))
+    fogget_parser.add_argument("--fogIp", default = FOG_IP)
+    fogget_parser.add_argument("--fogPort", default = str(FOG_PORT))
+    fogget_parser.add_argument("--v","--verbose", action = "store_true")
 
     ## Parser for join command
     ## Arguments :
