@@ -233,8 +233,3 @@ def get(start,end,edgeId,edgeIp,edgePort,edgeReliability,fogIp,fogPort, verbose 
             if responseCode!=1 : print("Read response for microbatch "+str(i)+" is : \nfailure  \nNo. of bytes read = 0\n"+"Response Code: "+str(responseCode))
             else :  print("Read response for microbatch "+str(i)+" is : \nsuccess \nNo. of bytes read = "+str(bytesRead)+"\n")
             i = i + 1
-
-    #jsonResponse = JSON_RESPONSE
-
-    #JSON_RESPONSE = dict()
-    #return json.dumps(JSON_RESPONSE)

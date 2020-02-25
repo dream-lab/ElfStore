@@ -272,13 +272,21 @@ class Iface(object):
         """
         pass
 
-    def open(self, streamId, clientId, expectedLease, setLease):
+    def openLease(self, streamId, clientId, expectedLease, setLease):
         """
         Parameters:
          - streamId
          - clientId
          - expectedLease
          - setLease
+        """
+        pass
+
+    def closeLease(self, streamId, clientId):
+        """
+        Parameters:
+         - streamId
+         - clientId
         """
         pass
 
@@ -447,6 +455,31 @@ class Iface(object):
          - fetchMetadata
          - compFormat
          - uncompSize
+         - selfInfo
+        """
+        pass
+
+    def updateBlockAndMeta(self, mbId, mbMetadata, mbData, clientId, updateMetaFlag, updateDataFlag):
+        """
+        Parameters:
+         - mbId
+         - mbMetadata
+         - mbData
+         - clientId
+         - updateMetaFlag
+         - updateDataFlag
+        """
+        pass
+
+    def updateBlockQuorum(self, mbId, mbMetadata, mbData, clientId, updateMetaFlag, updateDataFlag, selfInfo):
+        """
+        Parameters:
+         - mbId
+         - mbMetadata
+         - mbData
+         - clientId
+         - updateMetaFlag
+         - updateDataFlag
          - selfInfo
         """
         pass
@@ -1521,7 +1554,7 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "updateStreamMetadata failed: unknown result")
 
-    def open(self, streamId, clientId, expectedLease, setLease):
+    def openLease(self, streamId, clientId, expectedLease, setLease):
         """
         Parameters:
          - streamId
@@ -1529,12 +1562,12 @@ class Client(Iface):
          - expectedLease
          - setLease
         """
-        self.send_open(streamId, clientId, expectedLease, setLease)
-        return self.recv_open()
+        self.send_openLease(streamId, clientId, expectedLease, setLease)
+        return self.recv_openLease()
 
-    def send_open(self, streamId, clientId, expectedLease, setLease):
-        self._oprot.writeMessageBegin('open', TMessageType.CALL, self._seqid)
-        args = open_args()
+    def send_openLease(self, streamId, clientId, expectedLease, setLease):
+        self._oprot.writeMessageBegin('openLease', TMessageType.CALL, self._seqid)
+        args = openLease_args()
         args.streamId = streamId
         args.clientId = clientId
         args.expectedLease = expectedLease
@@ -1543,7 +1576,7 @@ class Client(Iface):
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
 
-    def recv_open(self):
+    def recv_openLease(self):
         iprot = self._iprot
         (fname, mtype, rseqid) = iprot.readMessageBegin()
         if mtype == TMessageType.EXCEPTION:
@@ -1551,12 +1584,45 @@ class Client(Iface):
             x.read(iprot)
             iprot.readMessageEnd()
             raise x
-        result = open_result()
+        result = openLease_result()
         result.read(iprot)
         iprot.readMessageEnd()
         if result.success is not None:
             return result.success
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "open failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "openLease failed: unknown result")
+
+    def closeLease(self, streamId, clientId):
+        """
+        Parameters:
+         - streamId
+         - clientId
+        """
+        self.send_closeLease(streamId, clientId)
+        return self.recv_closeLease()
+
+    def send_closeLease(self, streamId, clientId):
+        self._oprot.writeMessageBegin('closeLease', TMessageType.CALL, self._seqid)
+        args = closeLease_args()
+        args.streamId = streamId
+        args.clientId = clientId
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_closeLease(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = closeLease_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "closeLease failed: unknown result")
 
     def putNext(self, mbMetadata, data, preference, metaKeyValueMap):
         """
@@ -2225,6 +2291,90 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getData failed: unknown result")
 
+    def updateBlockAndMeta(self, mbId, mbMetadata, mbData, clientId, updateMetaFlag, updateDataFlag):
+        """
+        Parameters:
+         - mbId
+         - mbMetadata
+         - mbData
+         - clientId
+         - updateMetaFlag
+         - updateDataFlag
+        """
+        self.send_updateBlockAndMeta(mbId, mbMetadata, mbData, clientId, updateMetaFlag, updateDataFlag)
+        return self.recv_updateBlockAndMeta()
+
+    def send_updateBlockAndMeta(self, mbId, mbMetadata, mbData, clientId, updateMetaFlag, updateDataFlag):
+        self._oprot.writeMessageBegin('updateBlockAndMeta', TMessageType.CALL, self._seqid)
+        args = updateBlockAndMeta_args()
+        args.mbId = mbId
+        args.mbMetadata = mbMetadata
+        args.mbData = mbData
+        args.clientId = clientId
+        args.updateMetaFlag = updateMetaFlag
+        args.updateDataFlag = updateDataFlag
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_updateBlockAndMeta(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = updateBlockAndMeta_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "updateBlockAndMeta failed: unknown result")
+
+    def updateBlockQuorum(self, mbId, mbMetadata, mbData, clientId, updateMetaFlag, updateDataFlag, selfInfo):
+        """
+        Parameters:
+         - mbId
+         - mbMetadata
+         - mbData
+         - clientId
+         - updateMetaFlag
+         - updateDataFlag
+         - selfInfo
+        """
+        self.send_updateBlockQuorum(mbId, mbMetadata, mbData, clientId, updateMetaFlag, updateDataFlag, selfInfo)
+        return self.recv_updateBlockQuorum()
+
+    def send_updateBlockQuorum(self, mbId, mbMetadata, mbData, clientId, updateMetaFlag, updateDataFlag, selfInfo):
+        self._oprot.writeMessageBegin('updateBlockQuorum', TMessageType.CALL, self._seqid)
+        args = updateBlockQuorum_args()
+        args.mbId = mbId
+        args.mbMetadata = mbMetadata
+        args.mbData = mbData
+        args.clientId = clientId
+        args.updateMetaFlag = updateMetaFlag
+        args.updateDataFlag = updateDataFlag
+        args.selfInfo = selfInfo
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_updateBlockQuorum(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = updateBlockQuorum_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "updateBlockQuorum failed: unknown result")
+
 
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
@@ -2264,7 +2414,8 @@ class Processor(Iface, TProcessor):
         self._processMap["getMeta"] = Processor.process_getMeta
         self._processMap["serializeState"] = Processor.process_serializeState
         self._processMap["updateStreamMetadata"] = Processor.process_updateStreamMetadata
-        self._processMap["open"] = Processor.process_open
+        self._processMap["openLease"] = Processor.process_openLease
+        self._processMap["closeLease"] = Processor.process_closeLease
         self._processMap["putNext"] = Processor.process_putNext
         self._processMap["incrementBlockCount"] = Processor.process_incrementBlockCount
         self._processMap["renewLease"] = Processor.process_renewLease
@@ -2284,6 +2435,8 @@ class Processor(Iface, TProcessor):
         self._processMap["putDataQuorum"] = Processor.process_putDataQuorum
         self._processMap["get"] = Processor.process_get
         self._processMap["getData"] = Processor.process_getData
+        self._processMap["updateBlockAndMeta"] = Processor.process_updateBlockAndMeta
+        self._processMap["updateBlockQuorum"] = Processor.process_updateBlockQuorum
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
@@ -3058,13 +3211,13 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
-    def process_open(self, seqid, iprot, oprot):
-        args = open_args()
+    def process_openLease(self, seqid, iprot, oprot):
+        args = openLease_args()
         args.read(iprot)
         iprot.readMessageEnd()
-        result = open_result()
+        result = openLease_result()
         try:
-            result.success = self._handler.open(args.streamId, args.clientId, args.expectedLease, args.setLease)
+            result.success = self._handler.openLease(args.streamId, args.clientId, args.expectedLease, args.setLease)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -3076,7 +3229,30 @@ class Processor(Iface, TProcessor):
             logging.exception('Unexpected exception in handler')
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
-        oprot.writeMessageBegin("open", msg_type, seqid)
+        oprot.writeMessageBegin("openLease", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_closeLease(self, seqid, iprot, oprot):
+        args = closeLease_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = closeLease_result()
+        try:
+            result.success = self._handler.closeLease(args.streamId, args.clientId)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("closeLease", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -3514,6 +3690,52 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("getData", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_updateBlockAndMeta(self, seqid, iprot, oprot):
+        args = updateBlockAndMeta_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = updateBlockAndMeta_result()
+        try:
+            result.success = self._handler.updateBlockAndMeta(args.mbId, args.mbMetadata, args.mbData, args.clientId, args.updateMetaFlag, args.updateDataFlag)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("updateBlockAndMeta", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_updateBlockQuorum(self, seqid, iprot, oprot):
+        args = updateBlockQuorum_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = updateBlockQuorum_result()
+        try:
+            result.success = self._handler.updateBlockQuorum(args.mbId, args.mbMetadata, args.mbData, args.clientId, args.updateMetaFlag, args.updateDataFlag, args.selfInfo)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("updateBlockQuorum", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -7956,7 +8178,7 @@ updateStreamMetadata_result.thrift_spec = (
 )
 
 
-class open_args(object):
+class openLease_args(object):
     """
     Attributes:
      - streamId
@@ -8010,7 +8232,7 @@ class open_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('open_args')
+        oprot.writeStructBegin('openLease_args')
         if self.streamId is not None:
             oprot.writeFieldBegin('streamId', TType.STRING, 1)
             oprot.writeString(self.streamId.encode('utf-8') if sys.version_info[0] == 2 else self.streamId)
@@ -8043,8 +8265,8 @@ class open_args(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(open_args)
-open_args.thrift_spec = (
+all_structs.append(openLease_args)
+openLease_args.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'streamId', 'UTF8', None, ),  # 1
     (2, TType.STRING, 'clientId', 'UTF8', None, ),  # 2
@@ -8053,7 +8275,7 @@ open_args.thrift_spec = (
 )
 
 
-class open_result(object):
+class openLease_result(object):
     """
     Attributes:
      - success
@@ -8087,7 +8309,7 @@ class open_result(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('open_result')
+        oprot.writeStructBegin('openLease_result')
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.STRUCT, 0)
             self.success.write(oprot)
@@ -8108,8 +8330,142 @@ class open_result(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(open_result)
-open_result.thrift_spec = (
+all_structs.append(openLease_result)
+openLease_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [OpenStreamResponse, None], None, ),  # 0
+)
+
+
+class closeLease_args(object):
+    """
+    Attributes:
+     - streamId
+     - clientId
+    """
+
+
+    def __init__(self, streamId=None, clientId=None,):
+        self.streamId = streamId
+        self.clientId = clientId
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.streamId = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.clientId = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('closeLease_args')
+        if self.streamId is not None:
+            oprot.writeFieldBegin('streamId', TType.STRING, 1)
+            oprot.writeString(self.streamId.encode('utf-8') if sys.version_info[0] == 2 else self.streamId)
+            oprot.writeFieldEnd()
+        if self.clientId is not None:
+            oprot.writeFieldBegin('clientId', TType.STRING, 2)
+            oprot.writeString(self.clientId.encode('utf-8') if sys.version_info[0] == 2 else self.clientId)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(closeLease_args)
+closeLease_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'streamId', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'clientId', 'UTF8', None, ),  # 2
+)
+
+
+class closeLease_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = OpenStreamResponse()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('closeLease_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(closeLease_result)
+closeLease_result.thrift_spec = (
     (0, TType.STRUCT, 'success', [OpenStreamResponse, None], None, ),  # 0
 )
 
@@ -11110,6 +11466,385 @@ class getData_result(object):
 all_structs.append(getData_result)
 getData_result.thrift_spec = (
     (0, TType.STRUCT, 'success', [ReadReplica, None], None, ),  # 0
+)
+
+
+class updateBlockAndMeta_args(object):
+    """
+    Attributes:
+     - mbId
+     - mbMetadata
+     - mbData
+     - clientId
+     - updateMetaFlag
+     - updateDataFlag
+    """
+
+
+    def __init__(self, mbId=None, mbMetadata=None, mbData=None, clientId=None, updateMetaFlag=None, updateDataFlag=None,):
+        self.mbId = mbId
+        self.mbMetadata = mbMetadata
+        self.mbData = mbData
+        self.clientId = clientId
+        self.updateMetaFlag = updateMetaFlag
+        self.updateDataFlag = updateDataFlag
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I64:
+                    self.mbId = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.mbMetadata = Metadata()
+                    self.mbMetadata.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.mbData = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRING:
+                    self.clientId = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.BOOL:
+                    self.updateMetaFlag = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.BOOL:
+                    self.updateDataFlag = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('updateBlockAndMeta_args')
+        if self.mbId is not None:
+            oprot.writeFieldBegin('mbId', TType.I64, 1)
+            oprot.writeI64(self.mbId)
+            oprot.writeFieldEnd()
+        if self.mbMetadata is not None:
+            oprot.writeFieldBegin('mbMetadata', TType.STRUCT, 2)
+            self.mbMetadata.write(oprot)
+            oprot.writeFieldEnd()
+        if self.mbData is not None:
+            oprot.writeFieldBegin('mbData', TType.STRING, 3)
+            oprot.writeBinary(self.mbData)
+            oprot.writeFieldEnd()
+        if self.clientId is not None:
+            oprot.writeFieldBegin('clientId', TType.STRING, 4)
+            oprot.writeString(self.clientId.encode('utf-8') if sys.version_info[0] == 2 else self.clientId)
+            oprot.writeFieldEnd()
+        if self.updateMetaFlag is not None:
+            oprot.writeFieldBegin('updateMetaFlag', TType.BOOL, 5)
+            oprot.writeBool(self.updateMetaFlag)
+            oprot.writeFieldEnd()
+        if self.updateDataFlag is not None:
+            oprot.writeFieldBegin('updateDataFlag', TType.BOOL, 6)
+            oprot.writeBool(self.updateDataFlag)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(updateBlockAndMeta_args)
+updateBlockAndMeta_args.thrift_spec = (
+    None,  # 0
+    (1, TType.I64, 'mbId', None, None, ),  # 1
+    (2, TType.STRUCT, 'mbMetadata', [Metadata, None], None, ),  # 2
+    (3, TType.STRING, 'mbData', 'BINARY', None, ),  # 3
+    (4, TType.STRING, 'clientId', 'UTF8', None, ),  # 4
+    (5, TType.BOOL, 'updateMetaFlag', None, None, ),  # 5
+    (6, TType.BOOL, 'updateDataFlag', None, None, ),  # 6
+)
+
+
+class updateBlockAndMeta_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = WriteResponse()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('updateBlockAndMeta_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(updateBlockAndMeta_result)
+updateBlockAndMeta_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [WriteResponse, None], None, ),  # 0
+)
+
+
+class updateBlockQuorum_args(object):
+    """
+    Attributes:
+     - mbId
+     - mbMetadata
+     - mbData
+     - clientId
+     - updateMetaFlag
+     - updateDataFlag
+     - selfInfo
+    """
+
+
+    def __init__(self, mbId=None, mbMetadata=None, mbData=None, clientId=None, updateMetaFlag=None, updateDataFlag=None, selfInfo=None,):
+        self.mbId = mbId
+        self.mbMetadata = mbMetadata
+        self.mbData = mbData
+        self.clientId = clientId
+        self.updateMetaFlag = updateMetaFlag
+        self.updateDataFlag = updateDataFlag
+        self.selfInfo = selfInfo
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I64:
+                    self.mbId = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.mbMetadata = Metadata()
+                    self.mbMetadata.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.mbData = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRING:
+                    self.clientId = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.BOOL:
+                    self.updateMetaFlag = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.BOOL:
+                    self.updateDataFlag = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.STRUCT:
+                    self.selfInfo = EdgeInfoData()
+                    self.selfInfo.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('updateBlockQuorum_args')
+        if self.mbId is not None:
+            oprot.writeFieldBegin('mbId', TType.I64, 1)
+            oprot.writeI64(self.mbId)
+            oprot.writeFieldEnd()
+        if self.mbMetadata is not None:
+            oprot.writeFieldBegin('mbMetadata', TType.STRUCT, 2)
+            self.mbMetadata.write(oprot)
+            oprot.writeFieldEnd()
+        if self.mbData is not None:
+            oprot.writeFieldBegin('mbData', TType.STRING, 3)
+            oprot.writeBinary(self.mbData)
+            oprot.writeFieldEnd()
+        if self.clientId is not None:
+            oprot.writeFieldBegin('clientId', TType.STRING, 4)
+            oprot.writeString(self.clientId.encode('utf-8') if sys.version_info[0] == 2 else self.clientId)
+            oprot.writeFieldEnd()
+        if self.updateMetaFlag is not None:
+            oprot.writeFieldBegin('updateMetaFlag', TType.BOOL, 5)
+            oprot.writeBool(self.updateMetaFlag)
+            oprot.writeFieldEnd()
+        if self.updateDataFlag is not None:
+            oprot.writeFieldBegin('updateDataFlag', TType.BOOL, 6)
+            oprot.writeBool(self.updateDataFlag)
+            oprot.writeFieldEnd()
+        if self.selfInfo is not None:
+            oprot.writeFieldBegin('selfInfo', TType.STRUCT, 7)
+            self.selfInfo.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(updateBlockQuorum_args)
+updateBlockQuorum_args.thrift_spec = (
+    None,  # 0
+    (1, TType.I64, 'mbId', None, None, ),  # 1
+    (2, TType.STRUCT, 'mbMetadata', [Metadata, None], None, ),  # 2
+    (3, TType.STRING, 'mbData', 'BINARY', None, ),  # 3
+    (4, TType.STRING, 'clientId', 'UTF8', None, ),  # 4
+    (5, TType.BOOL, 'updateMetaFlag', None, None, ),  # 5
+    (6, TType.BOOL, 'updateDataFlag', None, None, ),  # 6
+    (7, TType.STRUCT, 'selfInfo', [EdgeInfoData, None], None, ),  # 7
+)
+
+
+class updateBlockQuorum_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = WriteResponse()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('updateBlockQuorum_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(updateBlockQuorum_result)
+updateBlockQuorum_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [WriteResponse, None], None, ),  # 0
 )
 fix_spec(all_structs)
 del all_structs

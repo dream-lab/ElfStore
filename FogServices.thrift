@@ -492,7 +492,10 @@ service FogService {
 	StreamMetadataUpdateResponse updateStreamMetadata(1: StreamMetadata metadata);
 
 	//open a stream for putting blocks
-	OpenStreamResponse open(1: string streamId, 2: string clientId, 3: i32 expectedLease, 4: bool setLease);
+	OpenStreamResponse openLease(1: string streamId, 2: string clientId, 3: i32 expectedLease, 4: bool setLease);
+
+	//give away the lease, invoked after a block is written
+	OpenStreamResponse closeLease(1: string streamId, 2: string clientId);
 
 	//client will start writing by issuing putNext calls
 	WriteResponse putNext(1:Metadata mbMetadata, 2:binary data, 3: WritePreference preference,4: map<string,list<string>> metaKeyValueMap);
@@ -555,4 +558,10 @@ service FogService {
 
 	// get the block
 	ReadReplica getData(1: i64 microbatchId, 2: bool fetchMetadata,3: string compFormat,4: i64 uncompSize,5: EdgeInfoData selfInfo);
+
+	// update block data
+        WriteResponse updateBlockAndMeta(1: i64 mbId, 2: Metadata mbMetadata, 3: binary mbData, 4: string clientId, 5: bool updateMetaFlag, 6: bool updateDataFlag);
+
+        //update api, where the data of the previous block is overwritten
+	WriteResponse updateBlockQuorum(1: i64 mbId, 2: Metadata mbMetadata, 3: binary mbData, 4: string clientId, 5: bool updateMetaFlag, 6: bool updateDataFlag, 7: EdgeInfoData selfInfo);
 }

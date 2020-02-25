@@ -113,6 +113,27 @@ class elfsCLI(Cmd):
         else:
             module_EdgeClientCLI_fog_put.put(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,tokens.comp)
 
+    def do_fogupdate(self,args):
+
+        ## here args includes everyting after the invokation command
+        ## split the args starting using shlex into tokens
+        line = shlex.split(args)
+        ## parse the tokens using the previously defined #global parser
+        tokens = put_parser.parse_args(line)
+
+        splitChoice = str(0)
+        setLease = str(0)
+
+        if tokens.singleBlock == True:
+            splitChoice = str(1);
+        if tokens.setLease == True:
+            setLease = str(1)
+
+        if tokens.v == True:
+            module_EdgeClientCLI_fog_update.update(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,tokens.comp,True)
+        else:
+            module_EdgeClientCLI_fog_update.update(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,tokens.comp)            
+
 
     def do_get(self,args):
         ## here args includes everyting after the invokation command
@@ -468,6 +489,22 @@ if __name__ == '__main__':
     fogget_parser.add_argument("--fogIp", default = FOG_IP)
     fogget_parser.add_argument("--fogPort", default = str(FOG_PORT))
     fogget_parser.add_argument("--v","--verbose", action = "store_true")
+
+    # fog get data
+    fogupdate_parser = subparsers.add_parser("fogupdate")
+    fogupdate_parser.add_argument("--path")
+    fogupdate_parser.add_argument("--streamId")
+    fogupdate_parser.add_argument("--start")
+    fogupdate_parser.add_argument("--metadata", default = None)
+    fogupdate_parser.add_argument("--fogIp", default = FOG_IP)
+    fogupdate_parser.add_argument("--fogPort", default = str(FOG_PORT))
+    fogupdate_parser.add_argument("--edgeId", default = str(EDGE_ID))
+    fogupdate_parser.add_argument("--clientId", default = CLIENT_ID)
+    fogupdate_parser.add_argument("--singleBlock", action ="store_true")
+    fogupdate_parser.add_argument("--setLease", action ="store_true")
+    fogupdate_parser.add_argument("--duration",default=str(0))
+    fogupdate_parser.add_argument("--comp",default=COMP_FORMAT)
+    fogupdate_parser.add_argument("--v","--verbose", action ="store_true")
 
     ## Parser for join command
     ## Arguments :

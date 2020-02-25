@@ -106,6 +106,8 @@ import com.dreamlab.edgefs.thrift.WritePreference;
 import com.dreamlab.edgefs.thrift.WriteResponse;
 import com.dreamlab.edgefs.writes.PutInterfaceImpl;
 import com.dreamlab.edgefs.writes.PutLocal;
+import com.dreamlab.edgefs.writes.UpdateInterfaceImpl;
+import com.dreamlab.edgefs.writes.UpdateLocal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -591,20 +593,6 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * This will perform the selection of replicas for a given metadata
-	 *
-	 * @param dataLength It is called from {@link #getWriteLocations} wherein we
-	 *                   receive the encoded value of storage space as a byte and
-	 *                   send to this method the datalength in MB
-	 */
-//	public List<WritableFogData> identifyReplicas(long dataLength, EdgeInfoData edge,double expectedReliability,int minReplica,int maxReplica) {
-	// new field microbatchId added to make sure that even though two edges on a Fog
-	// can contain the
-	// same microbatch, it should never happen that same microbatch is replicated on
-	// same edge neither
-	// during normal writes (via localWritesInProgress) nor during recovery (via
-	// mbIDLocationMap)
-	/***
 	 *
 	 * @param mbId                microbatch id
 	 * @param dataLength          the length of the microbatch in bytes
@@ -1010,21 +998,22 @@ public class FogServiceHandler implements FogService.Iface {
 		return Constants.FAILURE;
 	}
 
-	// currently not using the expectedLease but may use in the future, so watch out
-	// this method should be called only when you are EITHER
-	// 1 - opening the stream for first time i.e. you are writing to this stream for
-	// the first time OR
-	// 2 - you have written in the past. In case you were the previous
-	// lease holder and you held the lease for more than the hard lease time, you
-	// cannot
-	// use renew lease way of acquiring the lock and have to call open again.
-	// The Fog will be providing hint to the client so as to call open() or renew()
-	// based
-	// on whether some other client has acquired the lock in between this client as
-	// well as
-	// whether the hard lease time has expired or not
+	/**
+	 * currently not using the expectedLease but may use in the future, so watch out
+	 * this method should be called only when you are EITHER 1 - opening the stream
+	 * for first time i.e. you are writing to this stream for the first time
+	 * 
+	 * OR
+	 * 
+	 * 2 - you have written in the past. In case you were the previous lease holder
+	 * and you held the lease for more than the hard lease time, you cannot use
+	 * renew lease way of acquiring the lock and have to call open again. The Fog
+	 * will be providing hint to the client so as to call open() or renew() based on
+	 * whether some other client has acquired the lock in between this client as
+	 * well as whether the hard lease time has expired or not
+	 **/
 	@Override
-	public OpenStreamResponse open(String streamId, String clientId, int expectedLease, boolean setLease)
+	public OpenStreamResponse openLease(String streamId, String clientId, int expectedLease, boolean setLease)
 			throws TException {
 		LOGGER.info("The setlease flag is set to " + setLease);
 		OpenStreamResponse response = new OpenStreamResponse(Constants.FAILURE);
@@ -1042,24 +1031,30 @@ public class FogServiceHandler implements FogService.Iface {
 		LOGGER.info("open stream : " + blockMetadata.toString() + " the streamid is " + streamId + " the clientid is "
 				+ clientId);
 		if (blockMetadata.getLock() == null) {
-			setBlockMetadata(clientId, blockMetadata, response, setLease);
+			setBlockMetadata(clientId, blockMetadata, response);
 			LOGGER.info("open stream : This is for the first time block metadata is " + blockMetadata.toString());
 		} else {
 			// the lease maybe held by some other client and its soft lease may have expired
 			// lets give the lease to the newer client then
+			LOGGER.info("Current time " + System.currentTimeMillis() + " Lease start time "
+					+ blockMetadata.getLeaseStartTime() + " Lease duration " + blockMetadata.getLeaseDuration());
 			if ((System.currentTimeMillis() - blockMetadata.getLeaseStartTime()) >= blockMetadata.getLeaseDuration()) {
-				// at this time, it might happen that the client currently holding the lock
-				// is progressing towards writing the block. The writing of block consists of
-				// two parts. One is writing the data to replicas and second is to increment
-				// the last blockId as well as append the MD5 checksum to the BlockMetadata
-				// instance. At the point of incrementing the last blockId, we should try to
-				// acquire the lock and see if it goes through. If not, this part has succeeded
-				// and the lock belongs to the newer client now. Also since we have written the
-				// blocks to the replicas, we will get some replicas while reading which are not
-				// consistent since their checksum won't match with the actual data for that
-				// blockId. So reading may require consulting the owner Fog (thoughts ??)
+
+				/**
+				 * NOTE : About acquiring lease At this time, it might happen that the client
+				 * currently holding the lock is progressing towards writing the block. The
+				 * writing of block consists of two parts. One is writing the data to replicas
+				 * and second is to increment the last blockId as well as append the MD5
+				 * checksum to the BlockMetadata instance. At the point of incrementing the last
+				 * blockId, we should try to acquire the lock and see if it goes through. If
+				 * not, this part has succeeded and the lock belongs to the newer client now.
+				 * Also since we have written the blocks to the replicas, we will get some
+				 * replicas while reading which are not consistent since their checksum won't
+				 * match with the actual data for that blockId. So reading may require
+				 * consulting the owner Fog (thoughts ??)
+				 **/
 				LOGGER.info("open stream : in the else-if condition ");
-				setBlockMetadata(clientId, blockMetadata, response, setLease);
+				setBlockMetadata(clientId, blockMetadata, response);
 			} else {
 				// someone else has the lock within the soft lease or whatever duration was
 				// agreed as the lease time, so fail at this time
@@ -1069,12 +1064,11 @@ public class FogServiceHandler implements FogService.Iface {
 				// enum dedicated to only this type of response
 //				setBlockMetadata(clientId, blockMetadata, response, setLease);
 				if (setLease == false)
-					setBlockMetadata(clientId, blockMetadata, response, setLease);
+					setBlockMetadata(clientId, blockMetadata, response);
 				else {
 					response.setStatus(Constants.FAILURE);
 					response.setMessage("Stream in open state, retry opening after some time");
 				}
-
 			}
 		}
 		streamOpenLock.unlock();
@@ -1082,9 +1076,8 @@ public class FogServiceHandler implements FogService.Iface {
 		return response;
 	}
 
-	/** Function to be modified **/
-	private void setBlockMetadata(String clientId, BlockMetadata blockMetadata, OpenStreamResponse response,
-			boolean setLease) {
+	/** Function that creates lease **/
+	private void setBlockMetadata(String clientId, BlockMetadata blockMetadata, OpenStreamResponse response) {
 		blockMetadata.setLock(clientId);
 		blockMetadata.setSessionSecret(UUID.randomUUID().toString());
 		// may use expectedLease in future
@@ -1095,6 +1088,37 @@ public class FogServiceHandler implements FogService.Iface {
 		if (blockMetadata.getStartBlockId() > blockMetadata.getLastBlockId()) {
 			blockMetadata.setLastBlockId(blockMetadata.getStartBlockId() - 1);
 		}
+
+		/** Prepare a response **/
+		response.setStatus(Constants.SUCCESS);
+		response.setLeaseTime(blockMetadata.getLeaseDuration());
+		response.setSessionSecret(blockMetadata.getSessionSecret());
+		response.setLastBlockId(blockMetadata.getLastBlockId());
+	}
+
+	@Override
+	public OpenStreamResponse closeLease(String streamId, String clientId) throws TException {
+		LOGGER.info("[DEBUG] closeLease() api is called");
+		OpenStreamResponse response = new OpenStreamResponse(Constants.FAILURE);
+		BlockMetadata blockMetadata = fog.getPerStreamBlockMetadata().get(streamId);
+		if (null != blockMetadata) {
+			resetBlockMetadata(clientId, blockMetadata, response);
+		}
+
+		return response;
+	}
+
+	/** Use this to release the lock **/
+	private void resetBlockMetadata(String clientId, BlockMetadata blockMetadata, OpenStreamResponse response) {
+		blockMetadata.setLock("Client ID cleared");
+		blockMetadata.setSessionSecret("Session secret cleared");
+		blockMetadata.setLeaseDuration(0);
+		blockMetadata.setLeaseStartTime(System.currentTimeMillis());
+		if (blockMetadata.getStartBlockId() > blockMetadata.getLastBlockId()) {
+			blockMetadata.setLastBlockId(blockMetadata.getStartBlockId() - 1);
+		}
+
+		/** Prepare a response **/
 		response.setStatus(Constants.SUCCESS);
 		response.setLeaseTime(blockMetadata.getLeaseDuration());
 		response.setSessionSecret(blockMetadata.getSessionSecret());
@@ -2063,7 +2087,8 @@ public class FogServiceHandler implements FogService.Iface {
 	// personal bloomfilter is sent to subscribers and also in consolidated
 	// form to neighbors. Its aim is to purely facilitate microbatch searches
 	// based on microbatch metadata (though streamId can also be used)
-	private static void updateBloomFilters(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String, List<String>> metaKeyValueMap) {
+	private static void updateBloomFilters(Metadata mbMetadata, EdgeInfo edgeInfo,
+			Map<String, List<String>> metaKeyValueMap) {
 		byte[] fogBFilter = fog.getPersonalBloomFilter();
 		byte[] edgeBFilter = fog.getEdgeBloomFilters().get(edgeInfo.getNodeId());
 		byte[] fogDynamicFilter = fog.getPersonalDynamicFilter();
@@ -2107,16 +2132,17 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 	}
 
-	private static void updateFogAndEdgeBloomFilters(String key, String value, byte[] fogBFilter, byte[] edgeBFilter) {
+	public static void updateFogAndEdgeBloomFilters(String key, String value, byte[] fogBFilter, byte[] edgeBFilter) {
 		BloomFilter.storeEntry(key, value, fogBFilter);
 		BloomFilter.storeEntry(key, value, edgeBFilter);
 	}
 
-	private static void updateDymanicBloomFilter(String key, String value, byte[] fogDynamicFilter) {
+	public static void updateDymanicBloomFilter(String key, String value, byte[] fogDynamicFilter) {
 		BloomFilter.storeEntry(key, value, fogDynamicFilter);
 	}
 
-	private static void updateMetadataMap(Metadata mbMetadata, EdgeInfo edgeInfo, Map<String, List<String>> metaKeyValueMap) {
+	private static void updateMetadataMap(Metadata mbMetadata, EdgeInfo edgeInfo,
+			Map<String, List<String>> metaKeyValueMap) {
 		// for every key:value present in the mbMetadata, we need to store that
 		// in the map to faciliate find
 		// no need to insert mbId in this map as there is a separate map for it
@@ -2188,6 +2214,12 @@ public class FogServiceHandler implements FogService.Iface {
 
 	public static synchronized EdgeInfo identifyLocalReplica(int dataLength, WritePreference preference, long mbId) {
 
+		/**
+		 * we pass the duplicateHolders while identifying local replica because it might
+		 * happen that during recovery, we may choose an edge that already has the
+		 * microbatch present so we should pick a different edge to make sure there is
+		 * proper replication
+		 **/
 		Map<Short, Byte> duplicateHolders = fog.getMbIDLocationMap().get(mbId);
 
 		FogStats selfStats = FogStats.createInstance(fog.getCoarseGrainedStats().getInfo());
@@ -2214,15 +2246,15 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	// assuming dataLength is in bytes
-	private static EdgeInfo getHighReliabilityEdge(FogStats selfStats, long dataLength, Map<Short, Byte> duplicateHolders,
-			long mbId) {
+	private static EdgeInfo getHighReliabilityEdge(FogStats selfStats, long dataLength,
+			Map<Short, Byte> duplicateHolders, long mbId) {
 		Map<Short, EdgeInfo> localEdges = fog.getLocalEdgesMap();
 		Map<StorageReliability, List<Short>> localEdgeMapping = fog.getLocalEdgeMapping();
 		Set<Short> visitedEdges = new HashSet<>();
 		Random random = new Random();
-		
-		LOGGER.info("[DEBUG] The testing thing is "+duplicateHolders);
-		LOGGER.info("[DEBUG] Edges that are in progress "+fog.getLocalEdgeWritesInProgress().containsKey(mbId));
+
+		LOGGER.info("[DEBUG] The testing thing is " + duplicateHolders);
+		LOGGER.info("[DEBUG] Edges that are in progress " + fog.getLocalEdgeWritesInProgress().containsKey(mbId));
 
 		List<Short> list = localEdgeMapping.get(StorageReliability.HH);
 		List<Short> iterList = null; // this will be used for iteration
@@ -2233,7 +2265,7 @@ public class FogServiceHandler implements FogService.Iface {
 				iterList = list;
 			} else {
 				iterList = new ArrayList<>(list);
-				if(null != duplicateHolders) {
+				if (null != duplicateHolders) {
 					for (Short edgeId : duplicateHolders.keySet()) {
 						if (list.contains(edgeId)) {
 							iterList.remove((Object) edgeId);
@@ -2242,7 +2274,7 @@ public class FogServiceHandler implements FogService.Iface {
 					if (fog.getLocalEdgeWritesInProgress().containsKey(mbId)) {
 						iterList.remove((Object) fog.getLocalEdgeWritesInProgress().get(mbId));
 					}
-				}				
+				}
 			}
 
 			int size = iterList.size();
@@ -2269,7 +2301,7 @@ public class FogServiceHandler implements FogService.Iface {
 				iterList = list;
 			} else {
 				iterList = new ArrayList<>(list);
-				if(null != duplicateHolders) {
+				if (null != duplicateHolders) {
 					for (Short edgeId : duplicateHolders.keySet()) {
 						if (list.contains(edgeId)) {
 							iterList.remove((Object) edgeId);
@@ -2277,8 +2309,8 @@ public class FogServiceHandler implements FogService.Iface {
 					}
 					if (fog.getLocalEdgeWritesInProgress().containsKey(mbId)) {
 						iterList.remove((Object) fog.getLocalEdgeWritesInProgress().get(mbId));
-					}	
-				}				
+					}
+				}
 			}
 
 			int size = iterList.size();
@@ -2301,8 +2333,8 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	// assuming dataLength is in bytes
-	private static EdgeInfo getLowReliabilityEdge(FogStats selfStats, long dataLength, Map<Short, Byte> duplicateHolders,
-			long mbId) {
+	private static EdgeInfo getLowReliabilityEdge(FogStats selfStats, long dataLength,
+			Map<Short, Byte> duplicateHolders, long mbId) {
 		Map<Short, EdgeInfo> localEdges = fog.getLocalEdgesMap();
 		Map<StorageReliability, List<Short>> localEdgeMapping = fog.getLocalEdgeMapping();
 		Set<Short> visitedEdges = new HashSet<>();
@@ -2352,7 +2384,7 @@ public class FogServiceHandler implements FogService.Iface {
 					&& !fog.getLocalEdgeWritesInProgress().containsKey(mbId)) {
 				iterList = list;
 			} else {
-				if(null != duplicateHolders) {
+				if (null != duplicateHolders) {
 					iterList = new ArrayList<>(list);
 					for (Short edgeId : duplicateHolders.keySet()) {
 						if (list.contains(edgeId)) {
@@ -2361,8 +2393,8 @@ public class FogServiceHandler implements FogService.Iface {
 					}
 					if (fog.getLocalEdgeWritesInProgress().containsKey(mbId)) {
 						iterList.remove((Object) fog.getLocalEdgeWritesInProgress().get(mbId));
-					}	
-				}				
+					}
+				}
 			}
 
 			int size = iterList.size();
@@ -2622,12 +2654,7 @@ public class FogServiceHandler implements FogService.Iface {
 		 * pick the same edge again
 		 **/
 		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", putNext, startTime=" + System.currentTimeMillis());
-		Map<Short, Byte> duplicateHolders = fog.getMbIDLocationMap().get(mbMetadata.getMbId());
-		// we pass the duplicateHolders while identifying local replica because it might
-		// happen that during recovery, we may choose an edge that already has the
-		// microbatch
-		// present so we should pick a different edge to make sure there is proper
-		// replication
+		
 		EdgeInfo localEdge = null;
 		synchronized (this) {
 			localEdge = identifyLocalReplica(data.capacity(), preference, mbMetadata.getMbId());
@@ -2721,17 +2748,16 @@ public class FogServiceHandler implements FogService.Iface {
 		return response;
 	}
 
-	// by default, we are setting the lease time equal to the soft lease time
-	// (system-wide property)
-	// in case, this client has the lock but the lease is expired but still the
-	// difference between
-	// current time and lease start time is less than hard lease time and no other
-	// client has acquired
-	// the lock, the lease can be made available to the client. In case lock is
-	// still available but
-	// difference between current time and lease start time for the client is more
-	// than the hard lease
-	// time, then lock cannot be acquired and client needs to renew the lease
+	/**
+	 * By default, we are setting the lease time equal to the soft lease time
+	 * (system-wide property) in case, this client has the lock but the lease is
+	 * expired but still the difference between current time and lease start time is
+	 * less than hard lease time and no other client has acquired the lock, the
+	 * lease can be made available to the client. In case lock is still available
+	 * but difference between current time and lease start time for the client is
+	 * more than the hard lease time, then lock cannot be acquired and client needs
+	 * to renew the lease
+	 **/
 	private BlockMetadataUpdateMessage checkLeaseOwnership(Metadata mbMetadata, boolean setLease) {
 		LOGGER.info(" checkLeaseOwnership : The setlease flag is set to " + setLease);
 
@@ -2766,7 +2792,6 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 	}
 
-	// expectedLease is not as of now but maybe used in the future
 	@Override
 	public StreamLeaseRenewalResponse renewLease(String streamId, String clientId, String sessionSecret,
 			int expectedLease, boolean setLease) throws TException {
@@ -2788,25 +2813,23 @@ public class FogServiceHandler implements FogService.Iface {
 			streamOpenLock.unlock();
 			return response;
 
-		} // to successfully renew the lease, the same client should be the one holding
-			// the lock
-			// previously i.e. no other client should have acquired the lock between the
-			// hard lease
-			// time expiration and renew call made
-			// NOTE::There is no consideration of time in this case i.e. it might happen
-			// that
-			// the client is the one last holding the lock but makes the renew call after a
-			// long
-			// time particularly longer than the hard lease time, in that case the renewal
-			// should
-			// still fail and client should first call open() and then do the necessary
-			// operations
-			// Lets fix this after the feature set completion
-			// NOTE:: As per the discussion, the renew call is made by the client when the
-			// client
-			// feels that the lease time left is less than the time taken to complete some
-			// specific
-			// operation whose time the client maintains.
+		}
+		/**
+		 * A NOTE on renew lease
+		 * 
+		 * To successfully renew the lease, the same client should be the one holding
+		 * the lock previously i.e. no other client should have acquired the lock
+		 * between the hard lease time expiration and renew call made NOTE::There is no
+		 * consideration of time in this case i.e. it might happen that the client is
+		 * the one last holding the lock but makes the renew call after a long time
+		 * particularly longer than the hard lease time, in that case the renewal should
+		 * still fail and client should first call open() and then do the necessary
+		 * operations Lets fix this after the feature set completion
+		 * 
+		 * NOTE:: As per the discussion, the renew call is made by the client when the
+		 * client feels that the lease time left is less than the time taken to complete
+		 * some specific operation whose time the client maintains.
+		 **/
 		if (blockMetadata.getLock() == null || !blockMetadata.getLock().equals(clientId)
 				|| !blockMetadata.getSessionSecret().equals(sessionSecret)) {
 			response = new StreamLeaseRenewalResponse(Constants.FAILURE,
@@ -2815,6 +2838,7 @@ public class FogServiceHandler implements FogService.Iface {
 			if ((System.currentTimeMillis() - blockMetadata.getLeaseStartTime()) < (fog.getStreamHardLease() * 1000)) {
 				blockMetadata.setLeaseStartTime(System.currentTimeMillis());
 
+				/** Default lease duration **/
 				if (expectedLease <= 0) {
 					expectedLease = 90; // set 90s as default lease duration
 				}
@@ -3321,7 +3345,7 @@ public class FogServiceHandler implements FogService.Iface {
 		ArrayList<Long> remList = microbatchList;
 		boolean allBlocksMatched = false;
 
-		/** Iteratre over neighbors **/
+		/** Iterate over neighbors **/
 		for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
 			FogExchangeInfo nInfo = entry.getValue();
 			if (nInfo != null) {
@@ -3660,7 +3684,7 @@ public class FogServiceHandler implements FogService.Iface {
 		return metadataResponseList;
 
 	}
-	
+
 	@Override
 	public WriteResponse putData(Metadata mbMetadata, short version, ByteBuffer data, WritePreference preference,
 			Map<String, List<String>> metaKeyValueMap, String clientId) throws TException {
@@ -3669,7 +3693,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 		PutLocal putLocalReplica = new PutLocal();
 		wrResponse = putLocalReplica.putData(mbMetadata, version, data, preference, metaKeyValueMap, clientId, fog);
-		
+
 		return wrResponse;
 	}
 
@@ -3680,13 +3704,13 @@ public class FogServiceHandler implements FogService.Iface {
 		long sizeOfData = data.capacity() / (1024 * 1024);
 		LOGGER.info("The size of data (bare-metal) => " + sizeOfData + "  Encoded data "
 				+ Constants.encodeLongAsByte(sizeOfData));
-		
+
 		long startWriteLocation = System.nanoTime();
 		List<WritableFogData> writeLocations = getWriteLocations(Constants.encodeLongAsByte(sizeOfData), mbMetadata,
 				null, true);
 		long endWriteLocation = System.nanoTime();
-				
-		/**Important **/
+
+		/** Important **/
 //		mbMetadata.setBlockLocations(writeLocations);
 
 		LOGGER.info("[LOCATIONS] : The output locations are " + writeLocations.toString());
@@ -3695,10 +3719,9 @@ public class FogServiceHandler implements FogService.Iface {
 		PutInterfaceImpl putObj = new PutInterfaceImpl();
 		putObj.setWriteLocation(writeLocations);
 
-		WriteResponse result = putObj.putNext(mbMetadata, version, data, metaKeyValueMap, clientId,fog);
-				long putEndTime = System.nanoTime();
-		
-			
+		WriteResponse result = putObj.putNext(mbMetadata, version, data, metaKeyValueMap, clientId, fog);
+		long putEndTime = System.nanoTime();
+
 		return result;
 	}
 
@@ -3706,8 +3729,7 @@ public class FogServiceHandler implements FogService.Iface {
 	public ReadReplica get(long microbatchId, boolean fetchMetadata, String compFormat, long uncompSize,
 			String clientId) throws TException {
 		GetLocal getObj = new GetLocal();
-		ReadReplica result = getObj.readLocal(microbatchId, fetchMetadata, compFormat, uncompSize,
-				clientId, fog);
+		ReadReplica result = getObj.readLocal(microbatchId, fetchMetadata, compFormat, uncompSize, clientId, fog);
 
 		return result;
 	}
@@ -3756,6 +3778,33 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 
 		return data;
-	}	
+	}
+
+	@Override
+	public WriteResponse updateBlockAndMeta(long mbId, Metadata mbMetadata, ByteBuffer mbData, String clientId,
+			boolean updateMetaFlag, boolean updateDataFlag) throws TException {
+		WriteResponse wrResponse = new WriteResponse();
+		wrResponse.setStatus(Constants.FAILURE);
+
+		UpdateLocal updateObj = new UpdateLocal();
+		wrResponse = updateObj.updateBlock(mbId, mbMetadata, mbData, clientId, updateMetaFlag, updateDataFlag, fog);
+		return wrResponse;
+	}
+
+	@Override
+	public WriteResponse updateBlockQuorum(long mbId, Metadata mbMetadata, ByteBuffer mbData, String clientId,
+			boolean updateMetaFlag, boolean updateDataFlag, EdgeInfoData selfInfo) throws TException {
+
+		WriteResponse wrResponse = new WriteResponse();
+		wrResponse.setStatus(Constants.FAILURE);
+
+		UpdateInterfaceImpl updateObj = new UpdateInterfaceImpl();
+		List<FindReplica> replicaLocations = find(mbId, true, true, selfInfo);
+		updateObj.setWriteLocation(replicaLocations);
+
+		wrResponse = updateObj.updateBlock(mbId, mbMetadata, mbData, clientId, updateMetaFlag, updateDataFlag, fog);
+
+		return wrResponse;
+	}
 
 }

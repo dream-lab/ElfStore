@@ -186,54 +186,11 @@ class EdgeClient:
 
         while True:
             #type of response is OpenStreamResponse
-            response = client.openLease(stream_id, client_id, expected_lease,setLease)
+            response = client.open(stream_id, client_id, expected_lease,setLease)
             if response.status == 1:
                 TIME_LOCK_ACQUIRED = int(time.time() * 1000)
                 TIME_LEASE_EXPIRE = TIME_LOCK_ACQUIRED + response.leaseTime
                 IS_LOCK_HELD = True
-                break
-            else:
-                time.sleep(1)
-        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
-
-        self.closeSocket(transport)
-
-        myLogs = open(BASE_LOG+ "logs.txt",'a')
-        myLogs.write(timestamp_record)
-        myLogs.close()
-
-        global SESSION_SECRET
-        SESSION_SECRET = response.sessionSecret
-        return response
-
-    #open stream has an id of 350
-    def closeStream(self, stream_id, client_id, blockId):
-        print("Relinquishing stream lock")
-        #stream can only be opened by calling open() on the stream owner
-        #for writes, initially we will use getStreamMetadata() to get the owner
-        #which can be cached so that the after successful completion of a write,
-        #we can invoke incrementBlockCount on the owner directly and further writes
-        #can also use the cached information till the lease is valid
-
-        timestamp_record = str(blockId) + ", 350,"+ str(-1)  + ",open stream,starttime = "+repr(time.time())+","
-        metadata = self.getStreamMetadata(stream_id)
-        ownerFog = metadata.owner.value
-        global STREAM_OWNER_FOG_IP
-        STREAM_OWNER_FOG_IP = ownerFog.NodeIP
-        global STREAM_OWNER_FOG_PORT
-        STREAM_OWNER_FOG_PORT = ownerFog.port
-
-        client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
-
-        global TIME_LOCK_ACQUIRED
-        global TIME_LEASE_EXPIRE
-        global IS_LOCK_HELD
-
-        while True:
-            #type of response is OpenStreamResponse
-            response = client.closeLease(stream_id, client_id)
-            if response.status == 1:                
-                IS_LOCK_HELD = False
                 break
             else:
                 time.sleep(1)
@@ -498,10 +455,9 @@ class EdgeClient:
 
         #lets renew the lease. The behaviour should adhere with the policy of the lease time
         #left in comparison to the time taken to complete the operation
-        print("Lets first issue request to renew the lease for putNext()")
-        #self.renew_lease(metaData.streamId, metaData.clientId, metaData.sessionSecret, EXPECTED_LEASE, ESTIMATE_PUT_NEXT, metaData.mbId,setLease)
+        print("[DEBUG] Renew Lease")
+        self.renew_lease(metaData.streamId, metaData.clientId, metaData.sessionSecret, EXPECTED_LEASE, ESTIMATE_PUT_NEXT, metaData.mbId,setLease)
 
-        self.openStream(metaData.streamId, metaData.clientId, EXPECTED_LEASE, metaData.mbId,setLease)
         #ISSUE ALERT:: Since the metaData object is prepared above, it might happen that the clientId and sessionSecret
         #were set to dummy global values since before issuing the first write, we do a renew lease which is last code line
         #but we set the clientId and secret many lines above. So once renew_lease() returns the proper sessionSecret will
@@ -515,16 +471,10 @@ class EdgeClient:
         client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
 
         #response is now a WriteResponse and not a byte
-        response = client.putDataQuorum(metaData, 0, data,metaKeyValueMap, CLIENT_ID)
-        print("Wrote data at ",time.time())
-	#time.sleep(30)
-        response = self.closeStream(metaData.streamId, metaData.clientId, microbatchID)
-
-	print("response status ",response.status)
-        return response.status
+        response = client.updateBlockQuorum(microbatchID, metaData, data,CLIENT_ID, )
 
         #the response type is BlockMetadataUpdateResponse
-        #response = self.increment_block_count(metaData,setLease)
+        # response = self.increment_block_count(metaData,setLease)
         if response.code == -1:
             #this blockId is already written
             #In our designed experiment, different clients are writing to different regions so this
@@ -543,7 +493,7 @@ class EdgeClient:
         else:
             return response.code
     
-def put(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,splitChoice,setLease,leaseDuration,compFormat,verbose = False):
+def update(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,splitChoice,setLease,leaseDuration,compFormat,verbose = False):
     myEdge = EdgeClient()
 
     global PATH

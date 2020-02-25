@@ -58,7 +58,8 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  ReadReplica getMeta(i64 microbatchId, bool checkNeighbors, bool checkBuddies)')
     print('  i8 serializeState()')
     print('  StreamMetadataUpdateResponse updateStreamMetadata(StreamMetadata metadata)')
-    print('  OpenStreamResponse open(string streamId, string clientId, i32 expectedLease, bool setLease)')
+    print('  OpenStreamResponse openLease(string streamId, string clientId, i32 expectedLease, bool setLease)')
+    print('  OpenStreamResponse closeLease(string streamId, string clientId)')
     print('  WriteResponse putNext(Metadata mbMetadata, string data, WritePreference preference,  metaKeyValueMap)')
     print('  BlockMetadataUpdateResponse incrementBlockCount(Metadata mbMetadata, bool setLease)')
     print('  StreamLeaseRenewalResponse renewLease(string streamId, string clientId, string sessionSecret, i32 expectedLease, bool setLease)')
@@ -78,6 +79,8 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  WriteResponse putDataQuorum(Metadata mbMetadata, i16 version, string data,  metaKeyValueMap, string clientid)')
     print('  ReadReplica get(i64 microbatchId, bool fetchMetadata, string compFormat, i64 uncompSize, string clientId)')
     print('  ReadReplica getData(i64 microbatchId, bool fetchMetadata, string compFormat, i64 uncompSize, EdgeInfoData selfInfo)')
+    print('  WriteResponse updateBlockAndMeta(i64 mbId, Metadata mbMetadata, string mbData, string clientId, bool updateMetaFlag, bool updateDataFlag)')
+    print('  WriteResponse updateBlockQuorum(i64 mbId, Metadata mbMetadata, string mbData, string clientId, bool updateMetaFlag, bool updateDataFlag, EdgeInfoData selfInfo)')
     print('')
     sys.exit(0)
 
@@ -361,11 +364,17 @@ elif cmd == 'updateStreamMetadata':
         sys.exit(1)
     pp.pprint(client.updateStreamMetadata(eval(args[0]),))
 
-elif cmd == 'open':
+elif cmd == 'openLease':
     if len(args) != 4:
-        print('open requires 4 args')
+        print('openLease requires 4 args')
         sys.exit(1)
-    pp.pprint(client.open(args[0], args[1], eval(args[2]), eval(args[3]),))
+    pp.pprint(client.openLease(args[0], args[1], eval(args[2]), eval(args[3]),))
+
+elif cmd == 'closeLease':
+    if len(args) != 2:
+        print('closeLease requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.closeLease(args[0], args[1],))
 
 elif cmd == 'putNext':
     if len(args) != 4:
@@ -480,6 +489,18 @@ elif cmd == 'getData':
         print('getData requires 5 args')
         sys.exit(1)
     pp.pprint(client.getData(eval(args[0]), eval(args[1]), args[2], eval(args[3]), eval(args[4]),))
+
+elif cmd == 'updateBlockAndMeta':
+    if len(args) != 6:
+        print('updateBlockAndMeta requires 6 args')
+        sys.exit(1)
+    pp.pprint(client.updateBlockAndMeta(eval(args[0]), eval(args[1]), args[2], args[3], eval(args[4]), eval(args[5]),))
+
+elif cmd == 'updateBlockQuorum':
+    if len(args) != 7:
+        print('updateBlockQuorum requires 7 args')
+        sys.exit(1)
+    pp.pprint(client.updateBlockQuorum(eval(args[0]), eval(args[1]), args[2], args[3], eval(args[4]), eval(args[5]), eval(args[6]),))
 
 else:
     print('Unrecognized method %s' % cmd)

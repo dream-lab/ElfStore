@@ -354,8 +354,6 @@ class EdgeClient:
 
     def writeRequestToFog(self,microbatchID,streamId,filePath, data, fogReplicaMap, yetAnotherMap,sizeChoice,setLease,metaKeyValueMap):
 
-        #/home/swamiji/eclipse-workspace/edgefs_Europar/EdgeServer/Audio_02_06_2019_20_57_02.mp3
-
         #Read data and send it
         # path = '/home/swamiji/phd/myFile.txt'
         #path = filePath

@@ -51,8 +51,11 @@ put --path=/home/swamiji/phd/EdgeFS/ElfStore/edgefs/microbatch_data/microbatch0.
 
 Sample commands to test:
 
+Start the client
+python -W ignore elfs_cli.py edge-config-files/edge11_config.json
+
 regstream --fogIp 127.0.0.1 --fogPort 9090 --id stream_id_test_1 --reli .90 --minReplica 3 --maxReplica 3 --verbose
-fogput --path=/home/swamiji/phd/EdgeFS/ElfStore/microbatches/microbatch0.txt --fogIp 127.0.0.1 --fogPort 9090 --streamId=stream_id_test_1 --start=777 --singleBlock --v
+fogput --path=/home/swamiji/phd/EdgeFS/ElfStore/microbatches/microbatch0.txt --fogIp 127.0.0.1 --fogPort 9090 --streamId=stream_id_test_1 --start=667 --singleBlock --setLease --v
 getmeta --fogIp 127.0.0.1 --fogPort 9090 --edgeId 1 --edgeIp 127.0.0.1 --edgePort 7001 --mbid 11 --keylist cds
 findwithloc --fogIp 127.0.0.1 --fogPort 9090 --matchpref 1 --findloccount 0
 fogget --start=777 --v
