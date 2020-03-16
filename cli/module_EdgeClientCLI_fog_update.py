@@ -48,6 +48,9 @@ START = int()
 FOG_IP = str()
 FOG_PORT = int()
 EDGE_ID = int()
+EDGE_IP = str()
+EDGE_PORT = int()
+EDGE_RELIABILITY = int()
 CLIENT_ID = str()
 STREAM_RELIABILITY = float()
 ## Write file(s) as one block
@@ -104,30 +107,6 @@ class EdgeClient:
 
         return streamMetadataInfo.streamMetadata
 
-    #incrementBlockCount() has an id of 500
-    def increment_block_count(self, metadata,setLease):
-        global STREAM_OWNER_FOG_IP
-        global STREAM_OWNER_FOG_PORT
-        print("Going to increment the last blockId for the stream")
-
-        timestamp_record = str(metadata.mbId) + ", 500,"+ STREAM_OWNER_FOG_IP  + ",increment last blockId,starttime = "+repr(time.time())+","
-
-        print("Lets first issue request to renew the lease for incrementBlockCount()")
-        self.renew_lease(metadata.streamId, metadata.clientId, metadata.sessionSecret, EXPECTED_LEASE, ESTIMATE_INCR_BLOCK_COUNT, metadata.mbId,setLease)
-
-
-        client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
-        #the response type is BlockMetadataUpdateResponse
-        response = client.incrementBlockCount(metadata,setLease)
-        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
-        self.closeSocket(transport)
-
-        myLogs = open(BASE_LOG+ "logs.txt",'a')
-        myLogs.write(timestamp_record)
-        myLogs.close()
-
-        return response
-
     # Return the fog client instance to talk to the fog
     def openSocketConnection(self,ip,port, choice):
 
@@ -162,13 +141,8 @@ class EdgeClient:
         transport.close()
 
     #open stream has an id of 350
-    def openStream(self, stream_id, client_id, expected_lease, blockId,setLease):
+    def openStream(self, stream_id, client_id, expected_lease, blockId,setLease, streamOwnerFog):
         print("Going to open stream for writing")
-        #stream can only be opened by calling open() on the stream owner
-        #for writes, initially we will use getStreamMetadata() to get the owner
-        #which can be cached so that the after successful completion of a write,
-        #we can invoke incrementBlockCount on the owner directly and further writes
-        #can also use the cached information till the lease is valid
 
         timestamp_record = str(blockId) + ", 350,"+ str(-1)  + ",open stream,starttime = "+repr(time.time())+","
         metadata = self.getStreamMetadata(stream_id)
@@ -178,7 +152,7 @@ class EdgeClient:
         global STREAM_OWNER_FOG_PORT
         STREAM_OWNER_FOG_PORT = ownerFog.port
 
-        client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
+        client,transport = self.openSocketConnection(streamOwnerFog.NodeIP, streamOwnerFog.port, FOG_SERVICE)
 
         global TIME_LOCK_ACQUIRED
         global TIME_LEASE_EXPIRE
@@ -186,7 +160,7 @@ class EdgeClient:
 
         while True:
             #type of response is OpenStreamResponse
-            response = client.open(stream_id, client_id, expected_lease,setLease)
+            response = client.openLease(stream_id, client_id, expected_lease,setLease)
             if response.status == 1:
                 TIME_LOCK_ACQUIRED = int(time.time() * 1000)
                 TIME_LEASE_EXPIRE = TIME_LOCK_ACQUIRED + response.leaseTime
@@ -206,71 +180,49 @@ class EdgeClient:
         SESSION_SECRET = response.sessionSecret
         return response
 
+    '''
+    give away the acquired lock for the stream
+    '''
+    def closeStream(self, stream_id, client_id, blockId, streamOwnerFog):
+        print("Relinquishing stream lock")
 
-    #renewLease() has an id of 400 and the overall time to complete the lock acquiring has an id of 450
-    #if the left lease time is more than the time for the operation e.g. putNext or increment block count
-    #then the renewLease() should return with a status of 1 and if that doesn't happen, it should be treated
-    #as an exception. Similarly if the left lease time is less than the time for the operation, renewLease()
-    #might return with a status of 0 and a negative code. In that case, some other client would have acquired
-    #the lock on the stream and we will then use the openStream to acquire the lock. To capture whether an
-    #exception occurs during this process, we use a code of 475
-    def renew_lease(self, stream_id, client_id, session_secret, expected_lease, expected_completion_time, blockId,setLease):
-        print("Lets check if there is a need to renew lease")
+        timestamp_record = str(blockId) + ", 350,"+ str(-1)  + ",open stream,starttime = "+repr(time.time())+","
+        client,transport = self.openSocketConnection(streamOwnerFog.NodeIP, streamOwnerFog.port, FOG_SERVICE)
 
-        #lets divide the renewal result in two parts based on whether the left lease time is more or less than the
-        #time taken to complete the operation. In case we have more lease time left than the operation, we will
-        #not make call to the server and proceed with the operation
-        global TIME_LEASE_EXPIRE
         global TIME_LOCK_ACQUIRED
-        current_time = int((time.time() * 1000))
-        if TIME_LEASE_EXPIRE - current_time > expected_completion_time:
-            #no need to call renewLease now, lets return and perform the operation
-            return
-
-        #the behaviour of renewal of lease is as follows: the renewal can only succeed when the client holding
-        #the lock is the previous holder as well i.e. no one has acquired the lock in between the lease expiration
-        #and this renewal attempt. In case it fails, then go back to the open() api to get a fresh lock as some
-        #other client got the lock in between
-        global STREAM_OWNER_FOG_IP
-        global STREAM_OWNER_FOG_PORT
+        global TIME_LEASE_EXPIRE
         global IS_LOCK_HELD
 
-        #this log is to capture the total time for acquiring the lock
-        timestamp_full = str(blockId) + ", 450,"+ STREAM_OWNER_FOG_IP  + ",lock reacquire,starttime = "+repr(time.time())+","
-        timestamp_record = ''
-
-        fallback = True
-        if IS_LOCK_HELD == True:
-            #for lease renewal, after endtime, adding status flag as well indicating whether it was successful or not
-            timestamp_record = str(blockId) + ", 400,"+ STREAM_OWNER_FOG_IP  + ",renew stream lease,starttime = "+repr(time.time())+","
-
-            client,transport = self.openSocketConnection(STREAM_OWNER_FOG_IP, STREAM_OWNER_FOG_PORT, FOG_SERVICE)
-
-            #the response type is StreamLeaseRenewalResponse
-            response = client.renewLease(stream_id, client_id, session_secret, expected_lease,setLease)
+        while True:
+            #type of response is OpenStreamResponse
+            response = client.closeLease(stream_id, client_id)
             if response.status == 1:
-                print("renewLease() successful")
-                timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",1" + '\n'
-                timestamp_full = timestamp_full +"endtime = " + repr(time.time()) + '\n'
-                fallback = False
-                #set the time of new lease start and lease expire time here
-                TIME_LOCK_ACQUIRED = int(time.time() * 1000)
-                TIME_LEASE_EXPIRE = TIME_LOCK_ACQUIRED + response.leaseTime
-            else:
-                print("renewLease() failed, falling back to open() api")
-                timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + ",0" + '\n'
                 IS_LOCK_HELD = False
+                break
+            else:
+                time.sleep(1)
+        timestamp_record = timestamp_record +"endtime = " + repr(time.time()) + '\n'
 
-            self.closeSocket(transport)
+        self.closeSocket(transport)
 
-        if fallback == True:
-            self.openStream(stream_id, client_id, expected_lease, blockId,setLease)
-            timestamp_full = timestamp_full +"endtime = " + repr(time.time()) + '\n'
         myLogs = open(BASE_LOG+ "logs.txt",'a')
         myLogs.write(timestamp_record)
-        myLogs.write(timestamp_full)
         myLogs.close()
 
+        global SESSION_SECRET
+        SESSION_SECRET = response.sessionSecret
+        return response
+
+    '''
+    Performs a remote api call to a Fog, to retrieve the streamId Owner
+    returns : NodeInfoData which is the owner Fog of the stream
+    '''
+    def find_stream_owner(self, streamId):
+        my_client, transport = self.openSocketConnection(FOG_IP, FOG_PORT, FOG_SERVICE)
+        streamOwnerFog = my_client.findStreamOwner(streamId, True, True)
+        print("Stream owner Fog is ",streamOwnerFog)
+        self.closeSocket(transport)
+        return streamOwnerFog
 
     #utility function to return the systems's utilizaion and free space
     def returnDiskSpace(self):
@@ -398,7 +350,7 @@ class EdgeClient:
         metaData = self.createMetadataObj(microbatchID, streamId, len(data))
 
         #print EDGE_ID,EDGE_IP,EDGE_PORT,EDGE_RELIABILITY,encodedSpace
-        #edgeInfo = EdgeInfoData(EDGE_ID,EDGE_IP,EDGE_PORT,EDGE_RELIABILITY,encodedSpace)
+        edgeInfo = EdgeInfoData(EDGE_ID,EDGE_IP,EDGE_PORT,EDGE_RELIABILITY,encodedSpace)
         #print "here also ",edgeInfo
         print("encodedSpace ",encodedSpace)
 
@@ -406,39 +358,12 @@ class EdgeClient:
         timestamp_record_getWrite = str(microbatchID)  +   ","  +   str(-100) +  ", local, "  + "getWriteLocations ,starttime = " + repr(time.time())  + ","
         #result = myClient.getWriteLocations(encodedSpace,metaData,blackListedFogs,edgeInfo) #datalength,
         print("sizeofblock => ",metaData.sizeofblock)
-        result = myClient.getWriteLocations(encodedSpace,metaData,blackListedFogs,True)
         timestamp_record_getWrite = timestamp_record_getWrite +"endtime = " + repr(time.time()) +" , " + str(sizeChoice) + '\n'
 
         #we are calculating replicas using getWriteLocations()
         yetAnotherMap[microbatchID] = {}
 
         insideDict = {}
-
-        for w in result:
-            edgeInfoData = w.edgeInfo
-            if(edgeInfoData != None ):
-                if("local" in fogReplicaMap):
-                     fogReplicaMap["local"] =  fogReplicaMap["local"] + 1
-
-                else:
-                     fogReplicaMap["local"] = 1
-
-                if("local" in insideDict):
-                             insideDict["local"] = insideDict["local"] + 1
-
-                else:
-                     insideDict["local"] = 1
-
-            else:
-                if(str(w.node.nodeId) in fogReplicaMap):
-                    fogReplicaMap[str(w.node.nodeId)] =  fogReplicaMap[str(w.node.nodeId)] + 1
-                else:
-                    fogReplicaMap[str(w.node.nodeId)] = 1
-
-                if(str(w.node.nodeId) in insideDict):
-                      insideDict[str(w.node.nodeId)] = insideDict[str(w.node.nodeId)] + 1
-                else:
-                      insideDict[str(w.node.nodeId)] =  1
 
         #util map
         yetAnotherMap[microbatchID] = insideDict
@@ -449,51 +374,34 @@ class EdgeClient:
         hash_md5.update(data)
         metaData.checksum = hash_md5.hexdigest()
 
-        print("the write locations are ",result)
-
         timestamp_record = str(microbatchID) +  ",-1, local ,write req,starttime = " +   repr(time.time()) +    ","
 
-        #lets renew the lease. The behaviour should adhere with the policy of the lease time
-        #left in comparison to the time taken to complete the operation
-        print("[DEBUG] Renew Lease")
-        self.renew_lease(metaData.streamId, metaData.clientId, metaData.sessionSecret, EXPECTED_LEASE, ESTIMATE_PUT_NEXT, metaData.mbId,setLease)
+        '''
+        Find the stream owner fog of the given stream
+        '''
+        homeFog = self.find_stream_owner(streamId)
 
-        #ISSUE ALERT:: Since the metaData object is prepared above, it might happen that the clientId and sessionSecret
-        #were set to dummy global values since before issuing the first write, we do a renew lease which is last code line
-        #but we set the clientId and secret many lines above. So once renew_lease() returns the proper sessionSecret will
-        #be with the client and it can properly perform the first write operation. The same fields above cannot be commented
-        #since both clientId and sessionSecret are required fields (thrift)
-        metaData.clientId = CLIENT_ID
-        metaData.sessionSecret = SESSION_SECRET
+        '''
+        Acquire the lease for the given stream
+        '''
+        self.openStream(metaData.streamId, metaData.clientId, EXPECTED_LEASE, metaData.mbId,setLease, homeFog)
 
         index = 1
         processes = []
         client,transport = self.openSocketConnection(FOG_IP,FOG_PORT,FOG_SERVICE)
 
         #response is now a WriteResponse and not a byte
-        response = client.updateBlockQuorum(microbatchID, metaData, data,CLIENT_ID, )
+        response = client.updateBlockQuorum(microbatchID, metaData, data,CLIENT_ID, True, True, edgeInfo)
 
-        #the response type is BlockMetadataUpdateResponse
-        # response = self.increment_block_count(metaData,setLease)
-        if response.code == -1:
-            #this blockId is already written
-            #In our designed experiment, different clients are writing to different regions so this
-            #issue will not occur. However this is kept to indicate that such a scenario can occur
-            #with concurrent clients
-            print("BlockId : " + str(microbatchID) + " is already written, failing the write")
-            return -1
-        elif response.code == -2:
-            #lease expired
-            print("Lease expired, should renew the lease before trying again")
-            return -2
-        elif response.code == -3:
-            #client does not hold the lock
-            print("Client does not hold the lock, should open the stream before writing")
-            return -3
-        else:
-            return response.code
+        '''
+        Release the lease for the given stream
+        '''
+        response = self.closeStream(metaData.streamId, metaData.clientId, microbatchID, homeFog)
+        print("The response of close stream is ", response.status)
+
+        return response.status
     
-def update(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,splitChoice,setLease,leaseDuration,compFormat,verbose = False):
+def update(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,edgeIp, edgePort,edgeReliability,clientId,splitChoice,setLease,leaseDuration,compFormat,verbose = False):
     myEdge = EdgeClient()
 
     global PATH
@@ -508,6 +416,12 @@ def update(path,streamId,start,metadataLocation,fogIp,fogPort,edgeId,clientId,sp
     FOG_PORT = int(fogPort)
     global EDGE_ID
     EDGE_ID = int(edgeId)
+    global EDGE_IP
+    EDGE_IP = str(edgeIp)
+    global EDGE_PORT
+    EDGE_PORT = int(edgePort)
+    global EDGE_RELIABILITY
+    EDGE_RELIABILITY = int(edgeReliability)
     global CLIENT_ID
     CLIENT_ID = clientId
     global SPLIT_CHOICE

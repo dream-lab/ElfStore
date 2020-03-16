@@ -81,6 +81,8 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  ReadReplica getData(i64 microbatchId, bool fetchMetadata, string compFormat, i64 uncompSize, EdgeInfoData selfInfo)')
     print('  WriteResponse updateBlockAndMeta(i64 mbId, Metadata mbMetadata, string mbData, string clientId, bool updateMetaFlag, bool updateDataFlag)')
     print('  WriteResponse updateBlockQuorum(i64 mbId, Metadata mbMetadata, string mbData, string clientId, bool updateMetaFlag, bool updateDataFlag, EdgeInfoData selfInfo)')
+    print('  NodeInfoData findStreamOwner(string streamId, bool checkNeighbors, bool checkBuddies)')
+    print('  i8 insertHomeFog(i64 microbatchId, string streamId, NodeInfoData homeFog)')
     print('')
     sys.exit(0)
 
@@ -501,6 +503,18 @@ elif cmd == 'updateBlockQuorum':
         print('updateBlockQuorum requires 7 args')
         sys.exit(1)
     pp.pprint(client.updateBlockQuorum(eval(args[0]), eval(args[1]), args[2], args[3], eval(args[4]), eval(args[5]), eval(args[6]),))
+
+elif cmd == 'findStreamOwner':
+    if len(args) != 3:
+        print('findStreamOwner requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.findStreamOwner(args[0], eval(args[1]), eval(args[2]),))
+
+elif cmd == 'insertHomeFog':
+    if len(args) != 3:
+        print('insertHomeFog requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.insertHomeFog(eval(args[0]), args[1], eval(args[2]),))
 
 else:
     print('Unrecognized method %s' % cmd)

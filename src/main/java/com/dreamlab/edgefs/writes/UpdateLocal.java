@@ -61,7 +61,9 @@ public class UpdateLocal {
 							wrResponse = edgeClient.update(mbId, mbMetadata, mbData);
 							writeData = true;
 
-							/** Increment the version here **/
+							/** TODO : Increment the version here 
+							 * Uncomment and check these once
+							 * **/
 							short version = 0;
 
 //							if (fog.getMbIDLocationMap().containsKey(mbMetadata.getMbId())) {

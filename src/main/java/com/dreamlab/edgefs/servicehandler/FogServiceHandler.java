@@ -47,6 +47,7 @@ import com.dreamlab.edgefs.misc.NeighborDataExchangeFormat;
 import com.dreamlab.edgefs.misc.StaticStreamMetaComparator;
 import com.dreamlab.edgefs.model.BlockMetadata;
 import com.dreamlab.edgefs.model.BlockMetadataUpdateMessage;
+import com.dreamlab.edgefs.model.BlockToStreamIdHomeModel;
 import com.dreamlab.edgefs.model.BuddyHeartbeatData;
 import com.dreamlab.edgefs.model.EdgeInfo;
 import com.dreamlab.edgefs.model.FindConditionTuple;
@@ -1015,6 +1016,7 @@ public class FogServiceHandler implements FogService.Iface {
 	@Override
 	public OpenStreamResponse openLease(String streamId, String clientId, int expectedLease, boolean setLease)
 			throws TException {
+		LOGGER.info("[DEBUG] openLease() api is called");
 		LOGGER.info("The setlease flag is set to " + setLease);
 		OpenStreamResponse response = new OpenStreamResponse(Constants.FAILURE);
 		if (!fog.getStreamMetadata().containsKey(streamId)) {
@@ -3805,6 +3807,89 @@ public class FogServiceHandler implements FogService.Iface {
 		wrResponse = updateObj.updateBlock(mbId, mbMetadata, mbData, clientId, updateMetaFlag, updateDataFlag, fog);
 
 		return wrResponse;
+	}
+	
+	@Override
+	public NodeInfoData findStreamOwner(String streamId, boolean checkNeighbors, boolean checkBuddies)
+			throws TException {
+		NodeInfoData myNodeInfo = null;
+		LOGGER.info("[STREAM] findStreamOwner is called");
+
+		if (fog.getStreamMetadata().containsKey(streamId)) {
+			StreamMetadataInfo streamMetadataInfo = fog.getStreamMetadata().get(streamId);
+			if (false == streamMetadataInfo.isCached()) {
+				myNodeInfo = new NodeInfoData(fog.getMyFogInfo().getNodeID(), fog.getMyFogInfo().getNodeIP(), fog.getMyFogInfo().getPort());
+				return myNodeInfo;
+			}
+		}
+
+		if (checkNeighbors) {
+			Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
+			for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
+				// match with BloomFilter, now contact the node to see if data present or not
+				NeighborInfo neighbor = fog.getNeighborsMap().get(entry.getKey());
+				myNodeInfo = findStreamOwnerFromOtherFog(neighbor.getNode().getNodeIP(), neighbor.getNode().getPort(),
+						streamId, false, false);
+				if (myNodeInfo != null)
+					return myNodeInfo;
+
+			}
+		}
+
+		if (checkBuddies) {
+			Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
+			for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
+				FogExchangeInfo buddyInfo = entry.getValue();
+				if (buddyInfo != null) {
+					FogInfo buddy = fog.getBuddyMap().get(entry.getKey());
+					myNodeInfo = findStreamOwnerFromOtherFog(buddy.getNodeIP(), buddy.getPort(), streamId, true, false);
+					if (myNodeInfo != null) {
+						return myNodeInfo;
+					}
+
+				}
+			}
+		}
+
+		return myNodeInfo;
+	}
+
+	private NodeInfoData findStreamOwnerFromOtherFog(String nodeIP, int port, String streamId, boolean checkNeighbors,
+			boolean checkBuddies) {
+		NodeInfoData myNodeInfo = null;
+		TTransport transport = new TFramedTransport(new TSocket(nodeIP, port));
+		try {
+			transport.open();
+		} catch (TTransportException e) {
+			transport.close();
+			LOGGER.error("Error while fetching information from other fogs");
+			e.printStackTrace();
+			return myNodeInfo;
+		}
+		TProtocol protocol = new TBinaryProtocol(transport);
+		FogService.Client fogClient = new FogService.Client(protocol);
+		try {
+
+			myNodeInfo = fogClient.findStreamOwner(streamId, checkNeighbors, checkBuddies);
+
+		} catch (TException e) {
+			LOGGER.error("Error in finding replicas from neighbor " + nodeIP);
+			LOGGER.info("The message is " + e.toString());
+			e.printStackTrace();
+		} finally {
+			transport.close();
+		}
+		return myNodeInfo;
+	}
+	
+	@Override
+	public byte insertHomeFog(long microbatchId, String streamId, NodeInfoData homeFog) {
+		BlockToStreamIdHomeModel myBlockMapUnit = new BlockToStreamIdHomeModel(streamId, homeFog);
+		fog.getmbIdStreamIdHomeFogMap().put(microbatchId, myBlockMapUnit);
+		LOGGER.info(
+				"Setting the home fog info to be => " + fog.getmbIdStreamIdHomeFogMap().get(microbatchId).getStreamid()
+						+ " => " + fog.getmbIdStreamIdHomeFogMap().get(microbatchId).getNodeInfoData());
+		return Constants.SUCCESS;
 	}
 
 }

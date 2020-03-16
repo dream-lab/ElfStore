@@ -564,4 +564,10 @@ service FogService {
 
         //update api, where the data of the previous block is overwritten
 	WriteResponse updateBlockQuorum(1: i64 mbId, 2: Metadata mbMetadata, 3: binary mbData, 4: string clientId, 5: bool updateMetaFlag, 6: bool updateDataFlag, 7: EdgeInfoData selfInfo);
+
+	// find the fog which is the origin of the stream
+	NodeInfoData findStreamOwner(1: string streamId,2: bool checkNeighbors, 3: bool checkBuddies);
+
+	// for each block, maintain a block -> stream mapping, stream -> homefog mapping
+	byte insertHomeFog(1: i64 microbatchId,2:string streamId, 3: NodeInfoData homeFog);
 }

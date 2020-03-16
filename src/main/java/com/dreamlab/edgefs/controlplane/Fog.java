@@ -31,6 +31,7 @@ import com.dreamlab.edgefs.misc.GlobalStatsHandler;
 import com.dreamlab.edgefs.misc.LocalStatsHandler;
 import com.dreamlab.edgefs.misc.NeighborDataExchangeFormat;
 import com.dreamlab.edgefs.model.BlockMetadata;
+import com.dreamlab.edgefs.model.BlockToStreamIdHomeModel;
 import com.dreamlab.edgefs.model.EdgeInfo;
 import com.dreamlab.edgefs.model.FogExchangeInfo;
 import com.dreamlab.edgefs.model.FogInfo;
@@ -326,6 +327,8 @@ public class Fog implements Serializable {
 
 //	private Map<String, Metadata> blockMetadata = new ConcurrentHashMap<>();
 	private Map<Long, Metadata> blockMetadata = new ConcurrentHashMap<>();
+	
+	private Map<Long, BlockToStreamIdHomeModel> mbIdStreamIdHomeFogMap = new ConcurrentHashMap<Long, BlockToStreamIdHomeModel>();
 
 	// CONCURRENT WRITES::during replica identification phase, we first fetch a
 	// local edge
@@ -860,6 +863,14 @@ public class Fog implements Serializable {
 
 	public void setMbIdStreamIdMap(Map<Long, String> mbIdStreamIdMap) {
 		this.mbIdStreamIdMap = mbIdStreamIdMap;
+	}
+	
+	public Map<Long, BlockToStreamIdHomeModel> getmbIdStreamIdHomeFogMap() {
+		return mbIdStreamIdHomeFogMap;
+	}
+
+	public void setmbIdStreamIdHomeFogMap(Map<Long, BlockToStreamIdHomeModel> mbIdStreamIdHomeFogMap) {
+		this.mbIdStreamIdHomeFogMap = mbIdStreamIdHomeFogMap;
 	}
 
 	/*********************************************************************************/

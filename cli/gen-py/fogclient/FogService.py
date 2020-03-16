@@ -484,6 +484,24 @@ class Iface(object):
         """
         pass
 
+    def findStreamOwner(self, streamId, checkNeighbors, checkBuddies):
+        """
+        Parameters:
+         - streamId
+         - checkNeighbors
+         - checkBuddies
+        """
+        pass
+
+    def insertHomeFog(self, microbatchId, streamId, homeFog):
+        """
+        Parameters:
+         - microbatchId
+         - streamId
+         - homeFog
+        """
+        pass
+
 
 class Client(Iface):
     def __init__(self, iprot, oprot=None):
@@ -2375,6 +2393,76 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "updateBlockQuorum failed: unknown result")
 
+    def findStreamOwner(self, streamId, checkNeighbors, checkBuddies):
+        """
+        Parameters:
+         - streamId
+         - checkNeighbors
+         - checkBuddies
+        """
+        self.send_findStreamOwner(streamId, checkNeighbors, checkBuddies)
+        return self.recv_findStreamOwner()
+
+    def send_findStreamOwner(self, streamId, checkNeighbors, checkBuddies):
+        self._oprot.writeMessageBegin('findStreamOwner', TMessageType.CALL, self._seqid)
+        args = findStreamOwner_args()
+        args.streamId = streamId
+        args.checkNeighbors = checkNeighbors
+        args.checkBuddies = checkBuddies
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_findStreamOwner(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = findStreamOwner_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "findStreamOwner failed: unknown result")
+
+    def insertHomeFog(self, microbatchId, streamId, homeFog):
+        """
+        Parameters:
+         - microbatchId
+         - streamId
+         - homeFog
+        """
+        self.send_insertHomeFog(microbatchId, streamId, homeFog)
+        return self.recv_insertHomeFog()
+
+    def send_insertHomeFog(self, microbatchId, streamId, homeFog):
+        self._oprot.writeMessageBegin('insertHomeFog', TMessageType.CALL, self._seqid)
+        args = insertHomeFog_args()
+        args.microbatchId = microbatchId
+        args.streamId = streamId
+        args.homeFog = homeFog
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_insertHomeFog(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = insertHomeFog_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "insertHomeFog failed: unknown result")
+
 
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
@@ -2437,6 +2525,8 @@ class Processor(Iface, TProcessor):
         self._processMap["getData"] = Processor.process_getData
         self._processMap["updateBlockAndMeta"] = Processor.process_updateBlockAndMeta
         self._processMap["updateBlockQuorum"] = Processor.process_updateBlockQuorum
+        self._processMap["findStreamOwner"] = Processor.process_findStreamOwner
+        self._processMap["insertHomeFog"] = Processor.process_insertHomeFog
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
@@ -3736,6 +3826,52 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("updateBlockQuorum", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_findStreamOwner(self, seqid, iprot, oprot):
+        args = findStreamOwner_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = findStreamOwner_result()
+        try:
+            result.success = self._handler.findStreamOwner(args.streamId, args.checkNeighbors, args.checkBuddies)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("findStreamOwner", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_insertHomeFog(self, seqid, iprot, oprot):
+        args = insertHomeFog_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = insertHomeFog_result()
+        try:
+            result.success = self._handler.insertHomeFog(args.microbatchId, args.streamId, args.homeFog)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("insertHomeFog", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -11845,6 +11981,298 @@ class updateBlockQuorum_result(object):
 all_structs.append(updateBlockQuorum_result)
 updateBlockQuorum_result.thrift_spec = (
     (0, TType.STRUCT, 'success', [WriteResponse, None], None, ),  # 0
+)
+
+
+class findStreamOwner_args(object):
+    """
+    Attributes:
+     - streamId
+     - checkNeighbors
+     - checkBuddies
+    """
+
+
+    def __init__(self, streamId=None, checkNeighbors=None, checkBuddies=None,):
+        self.streamId = streamId
+        self.checkNeighbors = checkNeighbors
+        self.checkBuddies = checkBuddies
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.streamId = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BOOL:
+                    self.checkNeighbors = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.BOOL:
+                    self.checkBuddies = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('findStreamOwner_args')
+        if self.streamId is not None:
+            oprot.writeFieldBegin('streamId', TType.STRING, 1)
+            oprot.writeString(self.streamId.encode('utf-8') if sys.version_info[0] == 2 else self.streamId)
+            oprot.writeFieldEnd()
+        if self.checkNeighbors is not None:
+            oprot.writeFieldBegin('checkNeighbors', TType.BOOL, 2)
+            oprot.writeBool(self.checkNeighbors)
+            oprot.writeFieldEnd()
+        if self.checkBuddies is not None:
+            oprot.writeFieldBegin('checkBuddies', TType.BOOL, 3)
+            oprot.writeBool(self.checkBuddies)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(findStreamOwner_args)
+findStreamOwner_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'streamId', 'UTF8', None, ),  # 1
+    (2, TType.BOOL, 'checkNeighbors', None, None, ),  # 2
+    (3, TType.BOOL, 'checkBuddies', None, None, ),  # 3
+)
+
+
+class findStreamOwner_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = NodeInfoData()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('findStreamOwner_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(findStreamOwner_result)
+findStreamOwner_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [NodeInfoData, None], None, ),  # 0
+)
+
+
+class insertHomeFog_args(object):
+    """
+    Attributes:
+     - microbatchId
+     - streamId
+     - homeFog
+    """
+
+
+    def __init__(self, microbatchId=None, streamId=None, homeFog=None,):
+        self.microbatchId = microbatchId
+        self.streamId = streamId
+        self.homeFog = homeFog
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I64:
+                    self.microbatchId = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.streamId = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRUCT:
+                    self.homeFog = NodeInfoData()
+                    self.homeFog.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('insertHomeFog_args')
+        if self.microbatchId is not None:
+            oprot.writeFieldBegin('microbatchId', TType.I64, 1)
+            oprot.writeI64(self.microbatchId)
+            oprot.writeFieldEnd()
+        if self.streamId is not None:
+            oprot.writeFieldBegin('streamId', TType.STRING, 2)
+            oprot.writeString(self.streamId.encode('utf-8') if sys.version_info[0] == 2 else self.streamId)
+            oprot.writeFieldEnd()
+        if self.homeFog is not None:
+            oprot.writeFieldBegin('homeFog', TType.STRUCT, 3)
+            self.homeFog.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(insertHomeFog_args)
+insertHomeFog_args.thrift_spec = (
+    None,  # 0
+    (1, TType.I64, 'microbatchId', None, None, ),  # 1
+    (2, TType.STRING, 'streamId', 'UTF8', None, ),  # 2
+    (3, TType.STRUCT, 'homeFog', [NodeInfoData, None], None, ),  # 3
+)
+
+
+class insertHomeFog_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.BYTE:
+                    self.success = iprot.readByte()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('insertHomeFog_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.BYTE, 0)
+            oprot.writeByte(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(insertHomeFog_result)
+insertHomeFog_result.thrift_spec = (
+    (0, TType.BYTE, 'success', None, None, ),  # 0
 )
 fix_spec(all_structs)
 del all_structs

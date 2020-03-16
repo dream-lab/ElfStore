@@ -1,31 +1,29 @@
-from cmd import Cmd
 import argparse
+import contextlib
+import hashlib
+import json
+import os
 import shlex
 import sys
-import io
-import os
+from cmd import Cmd
+
 from termcolor import colored
-import json
-import hashlib
-import subprocess
-import contextlib
 
-import module_EdgeClientCLI_regstream
-import module_EdgeClientCLI_get
-import module_EdgeClientCLI_fog_get
-import module_EdgeClientCLI_put
-import module_EdgeClientCLI_fog_put
-import module_EdgeClientCLI_ls
 import module_EdgeClientCLI_find
-import module_EdgeClientCLI_getMeta
 import module_EdgeClientCLI_findBlockQueryWithLocations
-
+import module_EdgeClientCLI_fog_get
+import module_EdgeClientCLI_fog_put
+import module_EdgeClientCLI_fog_update
+import module_EdgeClientCLI_get
+import module_EdgeClientCLI_getMeta
+import module_EdgeClientCLI_ls
+import module_EdgeClientCLI_put
+import module_EdgeClientCLI_regstream
 
 '''
 helper imports
 '''
 from Helper import GetPref
-from Helper import PrepareMetaKeyVal
 from Helper import PrepareFindQueryCondition
 
 ## Global parameters
@@ -130,9 +128,15 @@ class elfsCLI(Cmd):
             setLease = str(1)
 
         if tokens.v == True:
-            module_EdgeClientCLI_fog_update.update(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,tokens.comp,True)
+            module_EdgeClientCLI_fog_update.update(tokens.path, tokens.streamId, tokens.start, tokens.metadata,
+                                                   tokens.fogIp, tokens.fogPort, tokens.edgeId, EDGE_IP, EDGE_PORT,
+                                                   EDGE_RELI, tokens.clientId, splitChoice, setLease, tokens.duration,
+                                                   tokens.comp, True)
         else:
-            module_EdgeClientCLI_fog_update.update(tokens.path,tokens.streamId,tokens.start,tokens.metadata, tokens.fogIp,tokens.fogPort,tokens.edgeId,tokens.clientId,splitChoice,setLease,tokens.duration,tokens.comp)            
+            module_EdgeClientCLI_fog_update.update(tokens.path, tokens.streamId, tokens.start, tokens.metadata,
+                                                   tokens.fogIp, tokens.fogPort, tokens.edgeId, EDGE_IP, EDGE_PORT,
+                                                   EDGE_RELI, tokens.clientId, splitChoice, setLease, tokens.duration,
+                                                   tokens.comp)
 
 
     def do_get(self,args):
