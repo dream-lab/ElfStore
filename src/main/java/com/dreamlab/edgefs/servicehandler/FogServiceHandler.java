@@ -22,6 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.zip.Checksum;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -112,11 +113,6 @@ import com.dreamlab.edgefs.writes.UpdateLocal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- *
- * @author master Request: Multiple Node Request state maintenance (persist in a
- *         file? or a HashMap?) Persisting in Hashmap so far
- */
-/**
  * @author swamiji
  *
  */
@@ -177,14 +173,18 @@ public class FogServiceHandler implements FogService.Iface {
 		return delK;
 	}
 
-	/** Synchronized because multiple fogs might try to join **/
+	/**
+	 * The tolerable extra/deficit number of fogs that a buddy group can have Eg: If
+	 * the buddy group size is 6 and delk is 1, acceptable group size is 4 or 6.
+	 * 
+	 * @param delK
+	 */
 	public synchronized void setDelK(int delK) {
 		this.delK = delK;
 	}
 
-	/** Getters and setters end **/
-
 	/**
+	 * For future use
 	 *
 	 * @param NodeX
 	 * @return
@@ -192,32 +192,13 @@ public class FogServiceHandler implements FogService.Iface {
 	 */
 	@Override
 	public String bootstrapFog(FogInfoData NodeX) throws TException {
-		LOGGER.info("NODE X infor " + NodeX.toString());
+		LOGGER.info("NODE X information " + NodeX.toString());
 		return "SUCCESS";
 	}
 
-	private FogStats convertBytesToStats(byte[] coarseGrainedStats) {
-		FogStats stats = new FogStats();
-		if (coarseGrainedStats.length < 10) {
-			// this is incorrect, maybe log an exception and check whats wrong
-			return null;
-		}
-		stats.setMinStorage(Constants.interpretByteAsLong(coarseGrainedStats[0]));
-		stats.setMedianStorage(Constants.interpretByteAsLong(coarseGrainedStats[1]));
-		stats.setMaxStorage(Constants.interpretByteAsLong(coarseGrainedStats[2]));
-		stats.setMinReliability(coarseGrainedStats[3]);
-		stats.setMedianReliability(coarseGrainedStats[4]);
-		stats.setMaxReliability(coarseGrainedStats[5]);
-		stats.setA(coarseGrainedStats[6]);
-		stats.setB(coarseGrainedStats[7]);
-		stats.setC(coarseGrainedStats[8]);
-		stats.setD(coarseGrainedStats[9]);
-		return stats;
-	}
-
 	/**
-	 * The joining node requests the Fog Referrer to send it candidates of buddy
-	 * pool between pmin and pmax
+	 * Currently unavailable, intended for future use. The joining node requests the
+	 * Fog Referrer to send it candidates of buddy pool between pmin and pmax
 	 *
 	 * @param NodeX the joining node
 	 * @param pmin  the lower bound of buddy pool candidates
@@ -295,6 +276,8 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
+	 * Currently unavailable, intended for future use.
+	 * 
 	 * This call is made by a referrer fog to its buddy, because the candidate pools
 	 * size were less than pmin So the called on buddy will send the candidates in
 	 * its buddy pool back to the referrer's fog
@@ -341,6 +324,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
+	 * Currently unavailable, intended for future use.
 	 *
 	 * @param NodeX The joining Node
 	 * @return YES OR NO, NO means failed to join, YES means NODEX joined the pool
@@ -426,6 +410,8 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
+	 * Currently unavailable, intended for future use.
+	 * 
 	 * Pre-Commit phase in 2PC, checks if node size is breached before admitting any
 	 * fog node
 	 *
@@ -463,6 +449,8 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
+	 * Currently unavailable, intended for future use.
+	 * 
 	 * 2 Phase commit : Phase 2,
 	 *
 	 * @param commitRequest
@@ -497,6 +485,11 @@ public class FogServiceHandler implements FogService.Iface {
 		return response;
 	}
 
+	/**
+	 * Currently unavailable, intended for future use.
+	 * 
+	 * @param buddyPoolId ID of the buddy pool
+	 */
 	@Override
 	public NodeInfoData getPoolMember(short buddyPoolId) throws TException {
 		if (fog.getBuddyPoolId() == buddyPoolId) {
@@ -513,6 +506,11 @@ public class FogServiceHandler implements FogService.Iface {
 		return null;
 	}
 
+	/**
+	 * Currently unavailable, intended for future use.
+	 * 
+	 * Returns all the members in a buddy pool.
+	 */
 	@Override
 	public List<FogInfoData> getBuddyPoolMembers() throws TException {
 		List<FogInfoData> members = new ArrayList<>();
@@ -526,6 +524,11 @@ public class FogServiceHandler implements FogService.Iface {
 		return members;
 	}
 
+	/**
+	 * Currently unavailable, intended for future use.
+	 * 
+	 * Returns the number neighbor per buddy pool.
+	 */
 	@Override
 	public NeighborCount getNeighborCountPerPool() throws TException {
 		NeighborCount neighborCount = new NeighborCount(false);
@@ -558,6 +561,9 @@ public class FogServiceHandler implements FogService.Iface {
 		return neighborCount;
 	}
 
+	/**
+	 * Currently unavailable, intended for future use.
+	 */
 	@Override
 	public List<NeighborInfoData> requestNeighbors(Map<Short, Short> requestMap) throws TException {
 		List<NeighborInfoData> givenNeighbors = new ArrayList<>();
@@ -580,6 +586,9 @@ public class FogServiceHandler implements FogService.Iface {
 		return givenNeighbors;
 	}
 
+	/**
+	 * Currently unavailable, intended for future use.
+	 */
 	@Override
 	public void nodeJoiningComplete() throws TException {
 		// this method is called to release the lock once a joining node
@@ -594,9 +603,14 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
+	 * Returns a list of Fog locations to write the data. It uses the size of data
+	 * to perform Fog selection, uses a best-effort algorithm to meet the
+	 * reliability expected by the block
 	 *
-	 * @param mbId                microbatch id
-	 * @param dataLength          the length of the microbatch in bytes
+	 * @param mbId                microbatch id, needed to ensure that a single edge
+	 *                            is chosen only once for a block.
+	 * @param dataLength          the length of the microbatch in bytes, used to
+	 *                            choose correct Fogs and Edges. (HH, HL algo)
 	 * @param isEdge              if the call came from an edge or a generic client
 	 *                            (without idea of it being an edge)
 	 * @param expectedReliability the reliability expected for the given microbatch
@@ -622,36 +636,6 @@ public class FogServiceHandler implements FogService.Iface {
 
 		String pref = "HHL";
 		double reliability = 0.0;
-
-		/*
-		 * if (edge != null && fog.getLocalEdgesMap().containsKey(edge.getNodeId())) {
-		 * Short edgeId = edge.getNodeId(); LOGGER.info("The storage for this " +
-		 * fog.getLocalEdgesMap().get(edgeId).getStats().getStorage());
-		 *
-		 * if (fog.getLocalEdgesMap().get(edgeId).getNodeIp().equals(edge.getNodeIp())
-		 * && fog.getLocalEdgesMap().get(edgeId).getStatus().equals("A") &&
-		 * fog.getLocalEdgesMap().get(edgeId).getStats().getStorage() >=
-		 * Constants.DISK_WATERMARK &&
-		 * fog.getLocalEdgesMap().get(edgeId).getStats().getStorage() > dataLength) {
-		 * NodeInfoData edgeData = new NodeInfoData(edge.getNodeId(), edge.getNodeIp(),
-		 * edge.getPort()); replicaAlloc.setReliability((double) edge.getReliability() /
-		 * 100.0); LOGGER.info("The reliability is set to " +
-		 * replicaAlloc.getReliability()); reliability = replicaAlloc.getReliability();
-		 * replicasToWrite.add(edgeData); } else { FogStats selfStats =
-		 * FogStats.createInstance(fog.getCoarseGrainedStats().getInfo()); // lets try
-		 * to pick a higher reliability edge first EdgeInfo chosenEdge =
-		 * getHighReliabilityEdge(selfStats, dataLength * 1024 * 1024, null); if
-		 * (chosenEdge == null) { chosenEdge = getLowReliabilityEdge(selfStats,
-		 * dataLength * 1024 * 1024, null); } if (chosenEdge == null) {
-		 * LOGGER.info("Unable to pick A local edge"); } else { NodeInfoData edgeData =
-		 * new NodeInfoData(chosenEdge.getNodeId(), chosenEdge.getNodeIp(),
-		 * chosenEdge.getPort()); replicaAlloc.setReliability((double)
-		 * chosenEdge.getStats().getReliability() / 100.0);
-		 * LOGGER.info("The reliability is set to " + replicaAlloc.getReliability());
-		 * reliability = replicaAlloc.getReliability(); replicasToWrite.add(edgeData); }
-		 *
-		 * } }
-		 */
 
 		// the logic to pick local replica is changed to this piece only
 		FogStats selfStats = FogStats.createInstance(fog.getCoarseGrainedStats().getInfo());
@@ -804,7 +788,12 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 *
+	 * Call which adds the incoming Fog to the subscriber's list. All the
+	 * subscribers are sent frequent updates of change in bloomfilter indexes
+	 * periodically.
+	 * 
+	 * @param nodeInfoData : The Fog which wants to subscribe and gets updates
+	 * @return true after the subscription is successful
 	 */
 	@Override
 	public boolean subscribe(NodeInfoData nodeInfoData) throws TException {
@@ -817,25 +806,13 @@ public class FogServiceHandler implements FogService.Iface {
 		return true;
 	}
 
-	/** Bloom filter searches from the consolidated neighbor buddy bloom filter **/
 	/**
-	 *
-	 * @param microbatchID the microbatch id to search for
-	 * @return location of Fog if present
-	 */
-	public NodeInfo checkConsolidatedNeighborBloomFilter(String microbatchID) {
-
-		NodeInfo destFog = new NodeInfo();
-
-		/** Check the consolidated structure **/
-		/** If not present return false **/
-
-		return destFog;
-	}
-
-	/**
-	 * The regular Edge Heart beat,every message will be payloaded in this heart
-	 * beat
+	 * Periodically this is sent by Edge devices, this contains edge payload such as
+	 * reliability, storage etc., This message is also used to detect whether the
+	 * edge device is alive or dead.
+	 * 
+	 * @param edgePayload Contains edge related statistics such as storage,
+	 *                    reliability etc.,
 	 */
 	@Override
 	public boolean edgeHeartBeats(EdgePayload edgePayload) throws TException {
@@ -873,8 +850,11 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * Device Management API: This is called once at the joining of Edge Should
-	 * update the local Edges TODO::Check killed edge joining again
+	 * An Edge device calls this at the time of registering itself to a Fog
+	 * 
+	 * @param edgeInfoData The edge related properties such as IP, Port etc.,
+	 * @return Constants.SUCCESS if joining of edge is successful. else
+	 *         Constants.FAILURE
 	 */
 	@Override
 	public byte edgeJoin(EdgeInfoData edgeInfoData) throws TException {
@@ -907,34 +887,38 @@ public class FogServiceHandler implements FogService.Iface {
 		// joining
 		fog.getEdgeBloomFilters().put(edgeInfoData.getNodeId(), new byte[Constants.BLOOM_FILTER_BYTES]);
 
-		// please set a consistent value of return values, keep success fixed as 0 or 1
-		return 1;
+		// TODO : please set a consistent value of return values, keep success fixed as
+		// 0 or 1
+		return Constants.SUCCESS;
 	}
 
 	/**
-	 * unregister the stream ID, this is the call from the edge client which is
+	 * Currently unavailable, intended for future use.
+	 * 
+	 * Unregister the stream ID, this is the call from the edge client which is
 	 * producing the stream
+	 * 
+	 * @param streamId The streamID that needs to be unregistered.
 	 *
-	 * On the other end, it will delete the local directory mount.
 	 */
 	@Override
 	public byte terminate(String streamId) throws TException {
 
 //		fog.getStreamIDEdgeIDMap().remove(streamId);
-
 		return 0;
 	}
 
-	// registerStream is equivalent of the create()
-	// IMPORTANT NOTE:: For now, current search such as find and read works on the
-	// basis
-	// of blockId and since on a per stream basis, we may have the same set of
-	// blockIds
-	// which will force us to search with streamId also passed from the client.
-	// Currently
-	// this is not done and as per discussion, an additional information is passed
-	// which
-	// is the starting sequence number provided by the client library
+	/**
+	 * Registers a stream with the Fog.
+	 * 
+	 * @param streamId         The name of the stream being registered
+	 * @param metadata         The stream related metadata, it contains reliability,
+	 *                         min & max replication factor, time etc.,
+	 * @param startSequenceNum The block number that this stream starts from.
+	 *                         (Currently not being used)
+	 * @return a status Constants.SUCCESS or Constants.FAILURE based on whether the
+	 *         registration of stream is successful or not.
+	 */
 	@Override
 	public byte registerStream(String streamId, StreamMetadata metadata, long startSequenceNum) throws TException {
 		if (metadata != null) {
@@ -1000,18 +984,22 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * currently not using the expectedLease but may use in the future, so watch out
-	 * this method should be called only when you are EITHER 1 - opening the stream
-	 * for first time i.e. you are writing to this stream for the first time
+	 * This method is invoked by clients to acquire a stream level lock before
+	 * performing any put/update operation. The lock can be granted only by a Fog on
+	 * which the stream was originally registered.
 	 * 
-	 * OR
-	 * 
-	 * 2 - you have written in the past. In case you were the previous lease holder
-	 * and you held the lease for more than the hard lease time, you cannot use
-	 * renew lease way of acquiring the lock and have to call open again. The Fog
-	 * will be providing hint to the client so as to call open() or renew() based on
-	 * whether some other client has acquired the lock in between this client as
-	 * well as whether the hard lease time has expired or not
+	 * @param streamId      The name of the stream on which the lease needs to be
+	 *                      acquired
+	 * @param clientId      The name of the client trying to issue the lock request,
+	 *                      so that it can be used to remember to which client the
+	 *                      lock has been issued to.
+	 * @param expectedLease The time for which lease is needed (this is relevant
+	 *                      only if setLease is True)
+	 * @param setLease      A boolean True or False to indicate whether acquiring
+	 *                      lease is necessary for writing/updating a block or not
+	 * @return {@link OpenStreamResponse} Indicates whether lease acquisition is
+	 *         successful or not, the time alotted for the lease (ie lease duration)
+	 *         etc., If lease is not granted returns FAILURE.
 	 **/
 	@Override
 	public OpenStreamResponse openLease(String streamId, String clientId, int expectedLease, boolean setLease)
@@ -1078,7 +1066,15 @@ public class FogServiceHandler implements FogService.Iface {
 		return response;
 	}
 
-	/** Function that creates lease **/
+	/**
+	 * Function that creates lease, this is called from the openLease, all the
+	 * parameters follow from the openLease function
+	 * {@link #openLease(String, String, int, boolean)}
+	 * 
+	 * @param clientId
+	 * @param blockMetadata
+	 * @param response
+	 */
 	private void setBlockMetadata(String clientId, BlockMetadata blockMetadata, OpenStreamResponse response) {
 		blockMetadata.setLock(clientId);
 		blockMetadata.setSessionSecret(UUID.randomUUID().toString());
@@ -1098,6 +1094,15 @@ public class FogServiceHandler implements FogService.Iface {
 		response.setLastBlockId(blockMetadata.getLastBlockId());
 	}
 
+	/**
+	 * A method when invoked will relinquish the lock, which was previously acquired
+	 * during the openLease
+	 * 
+	 * @param streamId The streamID of which the lock will be released
+	 * @param clientId The client which is holding the lock
+	 * 
+	 * @return The status whether the lock was succesfully released or not.
+	 */
 	@Override
 	public OpenStreamResponse closeLease(String streamId, String clientId) throws TException {
 		LOGGER.info("[DEBUG] closeLease() api is called");
@@ -1110,7 +1115,14 @@ public class FogServiceHandler implements FogService.Iface {
 		return response;
 	}
 
-	/** Use this to release the lock **/
+	/**
+	 * Use this to release the lock. The parameters follow
+	 * {@link #closeLease(String, String)}
+	 * 
+	 * @param clientId
+	 * @param blockMetadata
+	 * @param response
+	 */
 	private void resetBlockMetadata(String clientId, BlockMetadata blockMetadata, OpenStreamResponse response) {
 		blockMetadata.setLock("Client ID cleared");
 		blockMetadata.setSessionSecret("Session secret cleared");
@@ -1127,6 +1139,13 @@ public class FogServiceHandler implements FogService.Iface {
 		response.setLastBlockId(blockMetadata.getLastBlockId());
 	}
 
+	/**
+	 * Inserts the stream related entries into stream level bloom-filter. The
+	 * parameters follow {@link #registerStream(String, StreamMetadata, long)}
+	 * 
+	 * @param streamId
+	 * @param streamMetadata
+	 */
 	private void updateStreamBloomFilter(String streamId, StreamMetadata streamMetadata) {
 		// for every key present in the streamMetadata along with the streamId, update
 		// the personal stream bloomfilter. Currently search is not supported on top of
@@ -1162,7 +1181,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * Maybe not needed right now
+	 * Currently unavailable, intended for future use.
 	 */
 	@Override
 	public String intentToWrite(byte clientId) throws TException {
@@ -1171,7 +1190,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * We are not supporting this feature as of now
+	 * Currently unavailable, intended for future use.
 	 */
 	@Override
 	public List<NodeInfoData> writeNext(String sessionId, Metadata mbData, byte dataLength) throws TException {
@@ -1179,7 +1198,18 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * selfInfo is the client information
+	 * This api is used to find all the locations where the block is present.
+	 * 
+	 * @param microbatchId   The blockID for which locations are being searched
+	 * @param checkNeighbors A boolean parameter, If True, checks for the block in
+	 *                       neighbors
+	 * @param checkBuddies   A boolean parameter, If True, checks for the block in
+	 *                       buddies
+	 * @param selfInfo       An EdgeInfo object, it is used for logging purposes,
+	 *                       using this it can be found out which edgeClient
+	 *                       initiated the request.
+	 * @return List<FindReplica> A list of locations containing Fog Ip/ports along
+	 *         with Edge IP/Port {@link FindReplica}
 	 */
 	@Override
 	public List<FindReplica> find(long microbatchId, boolean checkNeighbors, boolean checkBuddies,
@@ -1290,6 +1320,15 @@ public class FogServiceHandler implements FogService.Iface {
 		return data;
 	}
 
+	/**
+	 * Search for locations from neighbors, the parameters follow from
+	 * {@link #find(long, boolean, boolean, EdgeInfoData)}
+	 * 
+	 * @param searchKey
+	 * @param searchValue
+	 * @param selfInfo
+	 * @return
+	 */
 	private List<FindReplica> getFromNeighbors(String searchKey, long searchValue, EdgeInfoData selfInfo) {
 		List<FindReplica> replicas = new ArrayList<>();
 		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
@@ -1311,6 +1350,15 @@ public class FogServiceHandler implements FogService.Iface {
 		return replicas;
 	}
 
+	/**
+	 * Search for locations from buddies, the parameters follow from
+	 * {@link #find(long, boolean, boolean, EdgeInfoData)}
+	 * 
+	 * @param searchKey
+	 * @param searchValue
+	 * @param selfInfo
+	 * @return
+	 */
 	private List<FindReplica> getFromBuddies(String searchKey, long searchValue, EdgeInfoData selfInfo) {
 		List<FindReplica> replicas = new ArrayList<>();
 		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
@@ -1332,6 +1380,20 @@ public class FogServiceHandler implements FogService.Iface {
 		return replicas;
 	}
 
+	/**
+	 * Makes a remote call to the Fog in which the bloomfilter search returned True
+	 * for find() api. Parameters follow from
+	 * {@link #getFromBuddies(String, long, EdgeInfoData)} and
+	 * {@link #getFromNeighbors(String, long, EdgeInfoData)}
+	 * 
+	 * @param ip
+	 * @param port
+	 * @param searchValue
+	 * @param checkNeighbors
+	 * @param checkBuddies
+	 * @param edgeInfo
+	 * @return
+	 */
 	private List<FindReplica> fetchDataFromOtherFog(String ip, int port, long searchValue, boolean checkNeighbors,
 			boolean checkBuddies, EdgeInfoData edgeInfo) {
 		List<FindReplica> replicas = new ArrayList<>();
@@ -1359,6 +1421,15 @@ public class FogServiceHandler implements FogService.Iface {
 		return replicas;
 	}
 
+	/**
+	 * Reads the metadata file (the ".meta" file for a block)
+	 * 
+	 * @param microbatchId   The block for which metadata needed to be read
+	 * @param checkNeighbors If True, looks for reading metadata from neighbors
+	 * @param checkBuddies   If True, looks for reading metadata from buddies
+	 * 
+	 * @return {@link ReadReplica} which contains the metadata of a block
+	 */
 	@Override
 	public ReadReplica getMeta(long microbatchId, boolean checkNeighbors, boolean checkBuddies) throws TException {
 		LOGGER.info("MicrobatchId : " + microbatchId + ", getMeta, startTime=" + System.currentTimeMillis());
@@ -1424,6 +1495,14 @@ public class FogServiceHandler implements FogService.Iface {
 		return replica;
 	}
 
+	/**
+	 * Read metadata from neighbor fog, parameters follow
+	 * {@link #getMeta(long, boolean, boolean)}
+	 * 
+	 * @param searchKey
+	 * @param searchValue
+	 * @return {@link ReadReplica} which contains the metadata of a block
+	 */
 	private ReadReplica getMetadataFromNeighbors(String searchKey, long searchValue) {
 		ReadReplica replica = new ReadReplica();
 		replica.setStatus(Constants.FAILURE);
@@ -1445,6 +1524,14 @@ public class FogServiceHandler implements FogService.Iface {
 		return replica;
 	}
 
+	/**
+	 * Read metadata from buddy fog, parameters follow
+	 * {@link #getMeta(long, boolean, boolean)}
+	 * 
+	 * @param searchKey
+	 * @param searchValue
+	 * @return {@link ReadReplica} which contains the metadata of a block
+	 */
 	private ReadReplica getMetadataFromBuddies(String searchKey, long searchValue) {
 		ReadReplica replica = new ReadReplica();
 		replica.setStatus(Constants.FAILURE);
@@ -1465,6 +1552,19 @@ public class FogServiceHandler implements FogService.Iface {
 		return replica;
 	}
 
+	/**
+	 * Read metadata from a remote Fog, this returns after a bloomfilter search
+	 * returned True either for a neighbor or a buddy, parameters follow from
+	 * {@link #getMetadataFromBuddies(String, long) or
+	 * #getMetadataFromNeighbors(String, long)}
+	 * 
+	 * @param ip
+	 * @param port
+	 * @param searchValue
+	 * @param checkNeighbors
+	 * @param checkBuddies
+	 * @return {@link ReadReplica} which contains the metadata of a block
+	 */
 	private ReadReplica fetchMetadataFromOtherFog(String ip, int port, long searchValue, boolean checkNeighbors,
 			boolean checkBuddies) {
 		ReadReplica replica = new ReadReplica();
@@ -1491,6 +1591,20 @@ public class FogServiceHandler implements FogService.Iface {
 		return replica;
 	}
 
+	/**
+	 * Returns all the blocks which match the given query
+	 * (metadatakey+metadataValue)
+	 * 
+	 * @deprecated This method is deprecated use
+	 *             {@link #findBlocksAndLocationsWithQuery(boolean, boolean, List, ReplicaCount, EdgeInfoData)}
+	 * 
+	 * @param metadataKey    the string key
+	 * @param metadataValue  the string value
+	 * @param checkNeighbors if True checks neighbors' bloomfilter for metadataKey
+	 *                       and metadataValue
+	 * @param checkBuddies   if True checks buddies' bloomfilter for metadataKey and
+	 *                       metadataValue
+	 */
 	@Override
 	public QueryReplica findUsingQuery(String metadataKey, String metadataValue, boolean checkNeighbors,
 			boolean checkBuddies) throws TException {
@@ -1519,6 +1633,16 @@ public class FogServiceHandler implements FogService.Iface {
 		return response;
 	}
 
+	/**
+	 * Checks neighbors' bloomfilter to see whether metadata is being matched. The
+	 * parameters follow from
+	 * {@link #findUsingQuery(String, String, boolean, boolean)}
+	 * 
+	 * @deprecated This method is deprecated
+	 * @param searchKey
+	 * @param searchValue
+	 * @param currentState
+	 */
 	private void getMatchListFromNeighbors(String searchKey, String searchValue, QueryReplica currentState) {
 		Map<Long, List<NodeInfoData>> matchingNodes = currentState.getMatchingNodes();
 		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
@@ -1546,6 +1670,17 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 	}
 
+	/**
+	 * Checks buddies' bloomfilter to see whether metadata is being matched. The
+	 * parameters follow from
+	 * {@link #findUsingQuery(String, String, boolean, boolean)}
+	 * 
+	 * @deprecated This method is deprecated
+	 * 
+	 * @param searchKey
+	 * @param searchValue
+	 * @param currentState
+	 */
 	private void getMatchListFromBuddies(String searchKey, String searchValue, QueryReplica currentState) {
 		Map<Long, List<NodeInfoData>> matchingNodes = currentState.getMatchingNodes();
 		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
@@ -1573,6 +1708,22 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 	}
 
+	/**
+	 * Makes a remote call to the sent IP and Port of the Fog to forward the search
+	 * query. Parameters follow from
+	 * {@link #getMatchListFromBuddies(String, String, QueryReplica) or
+	 * #getMatchListFromNeighbors(String, String, QueryReplica)}
+	 * 
+	 * @deprecated This method is deprecated
+	 * 
+	 * @param ip
+	 * @param port
+	 * @param searchKey
+	 * @param searchValue
+	 * @param checkNeighbors
+	 * @param checkBuddies
+	 * @return
+	 */
 	private QueryReplica fetchDataListFromOtherFog(String ip, int port, String searchKey, String searchValue,
 			boolean checkNeighbors, boolean checkBuddies) {
 		QueryReplica replica = new QueryReplica();
@@ -1600,8 +1751,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * Find all the micro batch ids whose metadata matches the given metadata query
-	 * the call is returned to the client
+	 * Currently unavailable, intended for future use.
 	 */
 	@Override
 	public ByteBuffer findNext(String microbatchId) throws TException {
@@ -1610,12 +1760,10 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * this may not be needed now, see comment in {@link #getWriteLocations method}
-	 * Update the arguments required with additional edgeId and call the method
-	 * updateMicrobatchLocalInfo to update metadata
-	 * updateMicrobatchLocalInfo(Metadata mbMetadata, EdgeInfo edgeInfo) TODO:: This
-	 * is invoked by the Edge client in case of a local write, this client should
-	 * calculate the MD5 checksum and pass that checksum in the metadata
+	 * Inserts the block's metadata into the local index structures and folds it
+	 * into bloomfilter so that they can be exchanged with neighbors and buddies.
+	 * 
+	 * @deprecated This method is deprecated
 	 */
 	@Override
 	public byte insertMetadata(Metadata mbMetadata, EdgeInfoData edgeInfoData,
@@ -1651,33 +1799,37 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * the blackListedFogs will be null on initial client request but in case some
-	 * returned Fog is not able to serve the request, then client again requests
-	 * some Fog with the id of that Fog so that it is not returned again
+	 * Retrieves a set of writable locations to which blocks will be evantually
+	 * written. A novel differential replication algorithm is ran to ensure edges
+	 * are sampled based on the available storage and reliability. This method will
+	 * ensure reliability of the block is ensured (reliability is given by the
+	 * stream to which the block is being written)
+	 * 
+	 * @param dataLength      Encoded datalength
+	 * @param metadata        The metadata of the block that will be written
+	 * @param blackListedFogs Fogs which cannot be selected as candidates for
+	 *                        writing (currently not used)
+	 * @param isEdge          A boolean, tells whether the requesting client belongs
+	 *                        to local partition or not (currently not used)
+	 * @return List of Write locations each item of the type {@link WritableFogData}
 	 */
 	@Override
-	/*
-	 * public List<WritableFogData> getWriteLocations(byte dataLength, Metadata
-	 * metadata, List<Short> blackListedFogs, EdgeInfoData clientEdgeInfo) throws
-	 * TException {
-	 */
 	public List<WritableFogData> getWriteLocations(byte dataLength, Metadata metadata, List<Short> blackListedFogs,
 			boolean isEdge) throws TException {
-		// WritableFogData contains the information of node to contact, the type of the
-		// edge
-		// device such as HHL,HLH, etc(WritePreference), the reliability of the node
-		// returned
-		// which will be minReliability in case **L and medianReliability in case of **H
-		// so that
-		// client can request another Fog in case that Fog was not able to server the
-		// request
-
-		// first thing to do is to find the StreamMetadata for the incoming request
-		// via the streamId present in the metadata. Each Fog has a stream bloomfilter
-		// as well which maintains the information about which streams got registered
-		// with it. This bloomfilter is also propagated in a similar way as the other
-		// bloomfilter. StreamMetadata is necessary as we want to know the reliability
-		// and max and min replica which is provided by the client at the stream level
+		/**
+		 * DEV NOTES: WritableFogData contains the information of node to contact, the
+		 * type of the edge device such as HHL,HLH, etc(WritePreference), the
+		 * reliability of the node returned which will be minReliability in case **L and
+		 * medianReliability in case of **H so that client can request another Fog in
+		 * case that Fog was not able to server the request
+		 * 
+		 * first thing to do is to find the StreamMetadata for the incoming request via
+		 * the streamId present in the metadata. Each Fog has a stream bloomfilter as
+		 * well which maintains the information about which streams got registered with
+		 * it. This bloomfilter is also propagated in a similar way as the other
+		 * bloomfilter. StreamMetadata is necessary as we want to know the reliability
+		 * and max and min replica which is provided by the client at the stream level
+		 **/
 		LOGGER.info("Fetching the locations for write operation for microbatchId : " + metadata.getMbId());
 		LOGGER.info("MicrobatchId : " + metadata.getMbId() + ", getWriteLocations, startTime="
 				+ System.currentTimeMillis());
@@ -1711,6 +1863,18 @@ public class FogServiceHandler implements FogService.Iface {
 		return fogLocations;
 	}
 
+	/**
+	 * Retrieve the stream metadata from the Fog
+	 * 
+	 * @param streamId       The name of the stream whose metadata is being
+	 *                       retrieved
+	 * @param checkNeighbors If True, checks the neighbors for retrieving metadata
+	 * @param checkBuddies   If True, checks the buddies for retrieving metadata
+	 * @param forceLatest    If True, refreshes the latest version of stream
+	 *                       metadata from the Fog where the stream was originally
+	 *                       registered.
+	 * @return the stream metadata {@link StreamMetadataInfo}
+	 */
 	@Override
 	public StreamMetadataInfo getStreamMetadata(String streamId, boolean checkNeighbors, boolean checkBuddies,
 			boolean forceLatest) throws TException {
@@ -1809,6 +1973,16 @@ public class FogServiceHandler implements FogService.Iface {
 		return metadataInfo;
 	}
 
+	/**
+	 * Contacts the owner Fog (The fog where the stream was originally registered)
+	 * to retrieve stream metadata The parameters follow from the method
+	 * {@link #getStreamMetadata(String, boolean, boolean, boolean)}
+	 * 
+	 * @param streamId
+	 * @param nodeIP
+	 * @param port
+	 * @return
+	 */
 	private StreamMetadata fetchMetadataFromOwner(String streamId, String nodeIP, int port) {
 		TTransport transport = new TFramedTransport(new TSocket(nodeIP, port));
 		StreamMetadata metadata = null;
@@ -1834,6 +2008,12 @@ public class FogServiceHandler implements FogService.Iface {
 		return metadata;
 	}
 
+	/**
+	 * Returns the metadata for the stream
+	 * 
+	 * @param streamId The name of the stream or streamID
+	 * @return StreamMetadata {@link StreamMetadata}
+	 */
 	@Override
 	public StreamMetadata getStreamMetadataFromOwner(String streamId) throws TException {
 		if (!fog.getStreamMetadata().containsKey(streamId))
@@ -1841,6 +2021,16 @@ public class FogServiceHandler implements FogService.Iface {
 		return fog.getStreamMetadata().get(streamId).getStreamMetadata();
 	}
 
+	/**
+	 * Searches neighbor's bloomfilter for the stream metadata, if found issues a
+	 * remote call to neighbor to return the stream metadata. Parameters follow from
+	 * {@link #getStreamMetadata(String, boolean, boolean, boolean)}
+	 * 
+	 * @param searchKey
+	 * @param searchValue
+	 * @param fetchLatest
+	 * @return
+	 */
 	private StreamMetadataInfo getStreamFromNeighbors(String searchKey, String searchValue, boolean fetchLatest) {
 		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
@@ -1860,6 +2050,16 @@ public class FogServiceHandler implements FogService.Iface {
 		return null;
 	}
 
+	/**
+	 * Searches neighbor's bloomfilter for the stream metadata, if found issues a
+	 * remote call to buddy to return the stream metadata. Parameters follow from
+	 * {@link #getStreamMetadata(String, boolean, boolean, boolean)}
+	 * 
+	 * @param searchKey
+	 * @param searchValue
+	 * @param fetchLatest
+	 * @return
+	 */
 	private StreamMetadataInfo getStreamFromBuddies(String searchKey, String searchValue, boolean fetchLatest) {
 		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
@@ -1880,6 +2080,20 @@ public class FogServiceHandler implements FogService.Iface {
 		return null;
 	}
 
+	/**
+	 * Calls a remote Fog to retrieve stream related metadata. This will be called
+	 * from either {@link #getStreamFromBuddies(String, String, boolean) or
+	 * ##getStreamFromNeighbors(String, String, boolean)}
+	 * 
+	 * @param nodeIP
+	 * @param port
+	 * @param searchKey
+	 * @param searchValue
+	 * @param checkNeighbors
+	 * @param checkBuddies
+	 * @param fetchLatest
+	 * @return
+	 */
 	private StreamMetadataInfo fetchStreamFromOtherFog(String nodeIP, int port, String searchKey, String searchValue,
 			boolean checkNeighbors, boolean checkBuddies, boolean fetchLatest) {
 		StreamMetadataInfo metadata = null;
@@ -2656,7 +2870,7 @@ public class FogServiceHandler implements FogService.Iface {
 		 * pick the same edge again
 		 **/
 		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", putNext, startTime=" + System.currentTimeMillis());
-		
+
 		EdgeInfo localEdge = null;
 		synchronized (this) {
 			localEdge = identifyLocalReplica(data.capacity(), preference, mbMetadata.getMbId());
@@ -3808,7 +4022,7 @@ public class FogServiceHandler implements FogService.Iface {
 
 		return wrResponse;
 	}
-	
+
 	@Override
 	public NodeInfoData findStreamOwner(String streamId, boolean checkNeighbors, boolean checkBuddies)
 			throws TException {
@@ -3818,7 +4032,8 @@ public class FogServiceHandler implements FogService.Iface {
 		if (fog.getStreamMetadata().containsKey(streamId)) {
 			StreamMetadataInfo streamMetadataInfo = fog.getStreamMetadata().get(streamId);
 			if (false == streamMetadataInfo.isCached()) {
-				myNodeInfo = new NodeInfoData(fog.getMyFogInfo().getNodeID(), fog.getMyFogInfo().getNodeIP(), fog.getMyFogInfo().getPort());
+				myNodeInfo = new NodeInfoData(fog.getMyFogInfo().getNodeID(), fog.getMyFogInfo().getNodeIP(),
+						fog.getMyFogInfo().getPort());
 				return myNodeInfo;
 			}
 		}
@@ -3881,7 +4096,7 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 		return myNodeInfo;
 	}
-	
+
 	@Override
 	public byte insertHomeFog(long microbatchId, String streamId, NodeInfoData homeFog) {
 		BlockToStreamIdHomeModel myBlockMapUnit = new BlockToStreamIdHomeModel(streamId, homeFog);
