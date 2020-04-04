@@ -2120,23 +2120,35 @@ public class FogServiceHandler implements FogService.Iface {
 		return metadata;
 	}
 
+	/**
+	 * Called by a client by passing data, metadata and writepreference. On
+	 * invocation, the Fog will search for an appropriate edge locally based on the
+	 * write preference.
+	 * 
+	 * @deprecated This method is deprecated use
+	 *             {@link #putData(Metadata, short, ByteBuffer, WritePreference, Map, String)}
+	 * 
+	 * @param mbMetadata The metadata associated with the data
+	 * @param data       The data to be written
+	 * @param preference One of the 8 values from HHH, HHL etc.,
+	 */
 	@SuppressWarnings("unused")
 	@Override
-//	public byte write(Metadata mbMetadata, ByteBuffer data, WritePreference preference) throws TException {
 	public WriteResponse write(Metadata mbMetadata, ByteBuffer data, WritePreference preference) throws TException {
-		// select a local edge based on the preference given
-		// become a client with that edge server and send the write request
-		// if successful, the persist the metadata and update the various maps
-		// and return true else return false
+		/*
+		 * select a local edge based on the preference given become a client with that
+		 * edge server and send the write request if successful, the persist the
+		 * metadata and update the various maps and return true else return false
+		 */
 
 		WriteResponse wrResponse = new WriteResponse();
 		wrResponse.setStatus(Constants.FAILURE);
-		// it may happen that multiple copies of the same microbatch
-		// will be written to the edges within a single Fog, so we need
-		// to make sure that we should not pick the same edge again
+		/*
+		 * it may happen that multiple copies of the same microbatch will be written to
+		 * the edges within a single Fog, so we need to make sure that we should not
+		 * pick the same edge again
+		 */
 		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", write, startTime=" + System.currentTimeMillis());
-		// Short duplicateHolderEdgeId =
-		// fog.getMbIDLocationMap().get(mbMetadata.getMbId());
 
 		EdgeInfo localEdge = null;
 		/**
@@ -2145,11 +2157,12 @@ public class FogServiceHandler implements FogService.Iface {
 		 * block prevents picking the same edge again.
 		 */
 		Map<Short, Byte> duplicateHolders = fog.getMbIDLocationMap().get(mbMetadata.getMbId());
-		// we pass the duplicateHolders while identifying local replica because it might
-		// happen that during recovery, we may choose an edge that already has the
-		// microbatch
-		// present so we should pick a different edge to make sure there is proper
-		// replication
+		/*
+		 * we pass the duplicateHolders while identifying local replica because it might
+		 * happen that during recovery, we may choose an edge that already has the
+		 * microbatch present so we should pick a different edge to make sure there is
+		 * proper replication
+		 */
 		localEdge = identifyLocalReplica(data.capacity(), preference, mbMetadata.getMbId());
 
 		LOGGER.info("[DEBUG] The local ");
@@ -2186,12 +2199,28 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 		updateMicrobatchLocalInfo(mbMetadata, data, localEdge, new HashMap<String, List<String>>());
 		LOGGER.info("MicrobatchId : " + mbMetadata.getMbId() + ", write, endTime=" + System.currentTimeMillis());
-		// make sure that edge reliability is set correctly when the various edges
-		// are started as we are returning the WriteResponse returned directly
-		// from the Edge
+		/*
+		 * make sure that edge reliability is set correctly when the various edges are
+		 * started as we are returning the WriteResponse returned directly from the Edge
+		 */
 		return wrResponse;
 	}
 
+	/**
+	 * Updates the local indexes and local bloomfilter for the blocks with the block
+	 * related metadata.
+	 * 
+	 * @param mbMetadata      The assoicated metadata of the block, can be thought
+	 *                        of as Static metadata it usually is not modified
+	 *                        (written at the time of block's creation eg: streamID
+	 *                        )
+	 * @param data            The data of the block, it is used to compute the MD5
+	 *                        checksum of the block. Useful to know whether a block
+	 *                        has been modified from the time has been written
+	 * @param edgeInfo        The edge where it will be written
+	 * @param metaKeyValueMap The dynamic metadata key-value properties associated
+	 *                        with the block.
+	 */
 	public static void updateMicrobatchLocalInfo(Metadata mbMetadata, ByteBuffer data, EdgeInfo edgeInfo,
 			Map<String, List<String>> metaKeyValueMap) {
 		// microbatch to edgeId mapping
@@ -2205,28 +2234,31 @@ public class FogServiceHandler implements FogService.Iface {
 		// value in this map is some dummy value
 		edgeMap.put(edgeInfo.getNodeId(), (byte) 1);
 
-		// streamId to set of microbatchId mapping
-		// CONCURRENT WRITES:: What happens when multiple clients are issuing write
-		// requests to a single Fog and if mbSet was null (which is not since we
-		// initialized it during registerStream), then there comes the possibility of
-		// concurrent writers finding the set to be null and making their change and
-		// then putting the changed set back on the map. This will cause lost updates
-		// as only the last write will be visible to the subsequent writers.
-		// If writers only make their change in the set and no put the set again on
-		// the map, that should be sufficient as the reference is modified and no
-		// as the reference is modified and no updates to the set will be missed
-//		Set<String> mbSet = fog.getStreamMbIdMap().get(mbMetadata.getStreamId());
+		/*
+		 * streamId to set of microbatchId mapping CONCURRENT WRITES:: What happens when
+		 * multiple clients are issuing write requests to a single Fog and if mbSet was
+		 * null (which is not since we initialized it during registerStream), then there
+		 * comes the possibility of concurrent writers finding the set to be null and
+		 * making their change and then putting the changed set back on the map. This
+		 * will cause lost updates as only the last write will be visible to the
+		 * subsequent writers. If writers only make their change in the set and no put
+		 * the set again on the map, that should be sufficient as the reference is
+		 * modified and no as the reference is modified and no updates to the set will
+		 * be missed
+		 */
+
 		Set<Long> mbSet = fog.getStreamMbIdMap().get(mbMetadata.getStreamId());
 		if (mbSet == null) {
-			// notice concurrent modification can come here but currently
-			// we are nowhere using an iterator for scanning it
+			/*
+			 * NOTE: notice concurrent modification can come here but currently we are
+			 * nowhere using an iterator for scanning it
+			 */
 			mbSet = new HashSet<>();
 		}
 		mbSet.add(mbMetadata.getMbId());
 		// commented due to above CONCURRENT WRITES comment
 		// fog.getStreamMbIdMap().put(mbMetadata.getStreamId(), mbSet);
 
-		// ISHAN: /** sheshadri **/
 		// For updating mbIdStreamIdMap (reverse map of streamMbIdMap)
 		Map<Long, String> mbIdStreamIdMap = fog.getMbIdToStreamIdMap();
 		mbIdStreamIdMap.put(mbMetadata.getMbId(), mbMetadata.getStreamId());
@@ -2234,7 +2266,6 @@ public class FogServiceHandler implements FogService.Iface {
 
 		// edge to list of microbatchId for recovery purposes
 		// the null case will again not come as we have initialized it on edgeJoin()
-//		Set<String> edgeMBList = fog.getEdgeMicrobatchMap().get(edgeInfo.getNodeId());
 		Set<Long> edgeMBList = fog.getEdgeMicrobatchMap().get(edgeInfo.getNodeId());
 		if (edgeMBList == null) {
 			edgeMBList = new HashSet<>();
@@ -2243,23 +2274,28 @@ public class FogServiceHandler implements FogService.Iface {
 		// commented due to above CONCURRENT WRITES commentupdateMicrobatchLocalInfo
 		// fog.getEdgeMicrobatchMap().put(edgeInfo.getNodeId(), edgeMBList);
 
-		// metadata 'key:value' to the microbatchId map
-		// may need to check for the concurrent writes scenario
+		/*
+		 * metadata 'key:value' to the microbatchId map may need to check for the
+		 * concurrent writes scenario
+		 */
 		updateMetadataMap(mbMetadata, edgeInfo, metaKeyValueMap);
 
-		// update the edge bloomfilter as well as fog's personal bloomfilter
-		// may need to check for the concurrent writes scenario
+		/*
+		 * update the edge bloomfilter as well as fog's personal bloomfilter may need to
+		 * check for the concurrent writes scenario
+		 */
 		updateBloomFilters(mbMetadata, edgeInfo, metaKeyValueMap);
 
-		// add the MD5 checksum for the block of data as well
-		// Note:: This call can come from the write() or insertMetadata()
-		// The case of write is fine as it has the data from which the checksum can
-		// be computed however insertMetadata() doesn't have the data as it comes
-		// from a local edge and makes a separate metadata call. This edge client
-		// should compute the MD5 checksum on its own and send it as a field in the
-		// Metadata object passed
-		// additional check added since the client can send the checksum added metadata
-		// in both cases, writing directly to edge or writing via routing through a fog
+		/*
+		 * add the MD5 checksum for the block of data as well Note:: This call can come
+		 * from the write() or insertMetadata() The case of write is fine as it has the
+		 * data from which the checksum can be computed however insertMetadata() doesn't
+		 * have the data as it comes from a local edge and makes a separate metadata
+		 * call. This edge client should compute the MD5 checksum on its own and send it
+		 * as a field in the Metadata object passed additional check added since the
+		 * client can send the checksum added metadata in both cases, writing directly
+		 * to edge or writing via routing through a fog
+		 */
 		if (data != null && !mbMetadata.isSetChecksum()) {
 			computeMD5Checksum(data, mbMetadata);
 		}
@@ -2277,6 +2313,13 @@ public class FogServiceHandler implements FogService.Iface {
 		fog.setMostRecentNeighborBFUpdate(System.currentTimeMillis());
 	}
 
+	/**
+	 * Computes the MD5 checksum of the given block's data Parameters follow from
+	 * {@link #updateMicrobatchLocalInfo(Metadata, ByteBuffer, EdgeInfo, Map)}
+	 * 
+	 * @param data
+	 * @param mbMetadata
+	 */
 	private static void computeMD5Checksum(ByteBuffer data, Metadata mbMetadata) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("MD5");
@@ -2300,9 +2343,18 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 	}
 
-	// personal bloomfilter is sent to subscribers and also in consolidated
-	// form to neighbors. Its aim is to purely facilitate microbatch searches
-	// based on microbatch metadata (though streamId can also be used)
+	/**
+	 * Updates the indexes of the local bloom-filter with the incoming block's
+	 * metadata info and key-value pairs. These bloomfilters are periodically shared
+	 * with neighbors and buddies
+	 * 
+	 * Parameters follow from
+	 * {@link #updateMicrobatchLocalInfo(Metadata, ByteBuffer, EdgeInfo, Map)}
+	 * 
+	 * @param mbMetadata
+	 * @param edgeInfo
+	 * @param metaKeyValueMap
+	 */
 	private static void updateBloomFilters(Metadata mbMetadata, EdgeInfo edgeInfo,
 			Map<String, List<String>> metaKeyValueMap) {
 		byte[] fogBFilter = fog.getPersonalBloomFilter();
@@ -2334,10 +2386,10 @@ public class FogServiceHandler implements FogService.Iface {
 			}
 		}
 
-		// updating the bloom filters for the new metadata properties defined by the
-		// user
-		// during runtime
-		// :ISHAN Testing for only one key value pair
+		/*
+		 * updating the bloom filters for the new metadata properties defined by the
+		 * user during runtime
+		 */
 		Iterator<Map.Entry<String, List<String>>> itr = metaKeyValueMap.entrySet().iterator();
 		while (itr.hasNext()) {
 			Map.Entry<String, List<String>> entry = itr.next();
@@ -2348,34 +2400,65 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 	}
 
+	/**
+	 * Update the indexes for Fog and Edge bloomfilters Eg entry for key and value
+	 * => mbId:107
+	 * 
+	 * @param key         It describes the type of metadata we are indexing. Eg:
+	 *                    mbId indicates we are indexing block metadata
+	 * @param value       It describes the valid values that the key can take. Eg:
+	 *                    107 will be the number of the block being indexed
+	 * @param fogBFilter  The bloomfilter (byte array) of the current Fog
+	 * @param edgeBFilter The bloomfilter (byte array) of the Edge which is hosting
+	 *                    the block
+	 */
 	public static void updateFogAndEdgeBloomFilters(String key, String value, byte[] fogBFilter, byte[] edgeBFilter) {
 		BloomFilter.storeEntry(key, value, fogBFilter);
 		BloomFilter.storeEntry(key, value, edgeBFilter);
 	}
 
+	/**
+	 * We maintain a separate bloomfilter per Fog for dynamic metadata (key-value)
+	 * pairs Eg: location:iisc
+	 * 
+	 * @param key              The dynamic metadata key
+	 * @param value            The dynamic metadata value
+	 * @param fogDynamicFilter The current Fog's bloomfilter for dynamic metadata
+	 */
 	public static void updateDymanicBloomFilter(String key, String value, byte[] fogDynamicFilter) {
 		BloomFilter.storeEntry(key, value, fogDynamicFilter);
 	}
 
+	/**
+	 * Update the local index with the key-value map of block Parameters follow from
+	 * {@link #updateMicrobatchLocalInfo(Metadata, ByteBuffer, EdgeInfo, Map)}
+	 * 
+	 * @param mbMetadata
+	 * @param edgeInfo
+	 * @param metaKeyValueMap
+	 */
 	private static void updateMetadataMap(Metadata mbMetadata, EdgeInfo edgeInfo,
 			Map<String, List<String>> metaKeyValueMap) {
-		// for every key:value present in the mbMetadata, we need to store that
-		// in the map to faciliate find
-		// no need to insert mbId in this map as there is a separate map for it
+
+		/*
+		 * for every key:value present in the mbMetadata, we need to store that in the
+		 * map to faciliate find no need to insert mbId in this map as there is a
+		 * separate map for it
+		 */
 		String searchKey = Constants.MICROBATCH_METADATA_TIMESTAMP + ":" + mbMetadata.getTimestamp();
 		checkAndInsertEntry(searchKey, mbMetadata.getMbId());
-		// no need to do for streamId as we have a separate map which provides the
-		// functionality to get list of microbatches given a streamId i.e. streamMbIdMap
+		/*
+		 * no need to do for streamId as we have a separate map which provides the
+		 * functionality to get list of microbatches given a streamId i.e. streamMbIdMap
+		 */
 
-		// LATEST: To support query using key value pair instead of a microbatchId,
-		// either
-		// update the logic for findUsingQuery to check if the field being searched is
-		// present
-		// in other local maintained data structures or make a generic method which
-		// supports
-		// every query serviced from here which is what the updated logic is doing now
-		// by adding
-		// fields are present elsewhere as well
+		/*
+		 * LATEST: To support query using key value pair instead of a microbatchId,
+		 * either update the logic for findUsingQuery to check if the field being
+		 * searched is present in other local maintained data structures or make a
+		 * generic method which supports every query serviced from here which is what
+		 * the updated logic is doing now by adding fields are present elsewhere as well
+		 */
 		searchKey = Constants.MICROBATCH_METADATA_ID + ":" + mbMetadata.getMbId();
 		checkAndInsertEntry(searchKey, mbMetadata.getMbId());
 		searchKey = Constants.STREAM_METADATA_ID + ":" + mbMetadata.getStreamId();
@@ -2402,11 +2485,11 @@ public class FogServiceHandler implements FogService.Iface {
 			}
 		}
 
-		// Updating additional metadata properties that are passed by the user
-		// during runtime
-
-		// Updating the metaToMBIdListMap via setMetaMbIdMap()
-		// Testing for only one key value pair
+		/*
+		 * Updating additional metadata properties that are passed by the user during
+		 * runtime Updating the metaToMBIdListMap via setMetaMbIdMap() Testing for only
+		 * one key value pair
+		 */
 		Iterator<Map.Entry<String, List<String>>> itr = metaKeyValueMap.entrySet().iterator();
 		while (itr.hasNext()) {
 			Map.Entry<String, List<String>> entry = itr.next();
@@ -2428,6 +2511,16 @@ public class FogServiceHandler implements FogService.Iface {
 		metaToMBIdListMap.put(searchKey, list);
 	}
 
+	/**
+	 * Identifies a local Edge in the current Fog to write the block
+	 * 
+	 * @param dataLength The size of the block
+	 * @param preference The write preference or choice which tells which Edge to
+	 *                   choose for writing. (HHH, HHL etc.,) one of the 8 choices
+	 * @param mbId       The blockId, to ensure that no block is assigned the same
+	 *                   block again.
+	 * @return The Edge that is chosen
+	 */
 	public static synchronized EdgeInfo identifyLocalReplica(int dataLength, WritePreference preference, long mbId) {
 
 		/**
@@ -2461,7 +2554,17 @@ public class FogServiceHandler implements FogService.Iface {
 		return edgeInfo;
 	}
 
-	// assuming dataLength is in bytes
+	/**
+	 * Pick an edge from the High reliability region
+	 * 
+	 * @param selfStats        contains the storage and reliability related stats
+	 *                         for a Fog
+	 * @param dataLength       The size of data in bytes
+	 * @param duplicateHolders Any other Edge which is holding the block already, so
+	 *                         that such Edges can be excluded
+	 * @param mbId             The blockId
+	 * @return The choice made for the high reliabilty edge
+	 */
 	private static EdgeInfo getHighReliabilityEdge(FogStats selfStats, long dataLength,
 			Map<Short, Byte> duplicateHolders, long mbId) {
 		Map<Short, EdgeInfo> localEdges = fog.getLocalEdgesMap();
@@ -2548,7 +2651,17 @@ public class FogServiceHandler implements FogService.Iface {
 		return null;
 	}
 
-	// assuming dataLength is in bytes
+	/**
+	 * Pick an edge from the Low reliability region
+	 * 
+	 * @param selfStats        contains the storage and reliability related stats
+	 *                         for a Fog
+	 * @param dataLength       The size of data in bytes
+	 * @param duplicateHolders Any other Edge which is holding the block already, so
+	 *                         that such Edges can be excluded
+	 * @param mbId             The blockId
+	 * @return The choice made for the high reliabilty edge
+	 */
 	private static EdgeInfo getLowReliabilityEdge(FogStats selfStats, long dataLength,
 			Map<Short, Byte> duplicateHolders, long mbId) {
 		Map<Short, EdgeInfo> localEdges = fog.getLocalEdgesMap();
@@ -2633,7 +2746,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * Graceful exit, need to unregister the streamID
+	 * Currently unavailable, intended for future use.
 	 */
 	@Override
 	public byte edgeLeave(EdgeInfoData edgeInfoData) throws TException {
@@ -2642,6 +2755,12 @@ public class FogServiceHandler implements FogService.Iface {
 		return 0;
 	}
 
+	/**
+	 * Called by the neighbor Fogs to update their bloomfilter indexes
+	 * 
+	 * @param payload Contains the bloomfilter indexes of the newly added blocks,
+	 *                the heartbeat time etc.,
+	 */
 	@Override
 	public void neighborHeartBeat(NeighborPayload payload) throws TException {
 		NeighborHeartbeatData data = NeighborDataExchangeFormat.decodeData(payload);
@@ -2703,6 +2822,12 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 	}
 
+	/**
+	 * Called by the Buddy Fogs to update their bloomfilter indexes
+	 * 
+	 * @param payload Contains the bloomfilter indexes of the newly added blocks,
+	 *                the heartbeat time etc.,
+	 */
 	@Override
 	public void buddyHeartBeat(BuddyPayload payload) throws TException {
 		BuddyHeartbeatData data = BuddyDataExchangeFormat.decodeData(payload);
@@ -2769,6 +2894,9 @@ public class FogServiceHandler implements FogService.Iface {
 
 	}
 
+	/**
+	 * Currently unavailable, intended for future use
+	 */
 	@Override
 	public byte serializeState() throws TException {
 		LOGGER.info("The serialization started at {}", System.currentTimeMillis());
@@ -2789,13 +2917,22 @@ public class FogServiceHandler implements FogService.Iface {
 		return Constants.SUCCESS;
 	}
 
+	/**
+	 * Stream related properties of an existing stream are updated with the newly
+	 * passed stream metadata
+	 * 
+	 * @param metadata The Metadata of the stream which needs to be updated.
+	 * @return {@link StreamMetadataUpdateResponse}
+	 */
 	@Override
 	public StreamMetadataUpdateResponse updateStreamMetadata(StreamMetadata metadata) throws TException {
-		// this method should be called only at the owner of the stream
-		// if called at any other Fog node, return 0 directly to indicate
-		// failure. Also it might happen that there are concurrent updates
-		// to the stream metadata. In that case that update will go through
-		// which has the same version as the current version of the metadata
+		/**
+		 * this method should be called only at the owner of the stream if called at any
+		 * other Fog node, return 0 directly to indicate failure. Also it might happen
+		 * that there are concurrent updates to the stream metadata. In that case that
+		 * update will go through which has the same version as the current version of
+		 * the metadata
+		 **/
 		if (metadata == null) {
 			return new StreamMetadataUpdateResponse(Constants.FAILURE, StreamMetadataUpdateMessage.FAIL_NULL.getCode());
 		}
@@ -2846,8 +2983,19 @@ public class FogServiceHandler implements FogService.Iface {
 		return StreamMetadataUpdateMessage.SUCCESS;
 	}
 
-	// THIS IS A DUPLICATE OF WRITE(), NEED TO CHECK IF ANYTHING SHOULD BE UPDATED
-	// THE WRITE() WILL GO AWAY VERY SOON
+	/**
+	 * Called by a client by passing data, metadata , writepreference and dynamic
+	 * metadata (key-value) pairs . On invocation, the Fog will search for an
+	 * appropriate edge locally based on the write preference.
+	 * 
+	 * @deprecated This method is deprecated use
+	 *             {@link #putData(Metadata, short, ByteBuffer, WritePreference, Map, String)}
+	 * 
+	 * @param mbMetadata      The metadata associated with the data
+	 * @param data            The data to be written
+	 * @param preference      One of the 8 values from HHH, HHL etc.,
+	 * @param metaKeyValueMap This is the dynamic metadata key-value pairs
+	 */
 	@Override
 	public WriteResponse putNext(Metadata mbMetadata, ByteBuffer data, WritePreference preference,
 			Map<String, List<String>> metaKeyValueMap) throws TException {
@@ -2915,11 +3063,9 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * This is called once the writes are done and the lastBlockId as well as the
-	 * MD5 of the recently written block should be made available at the owner fog
-	 * of the stream. This method uses streamOpenLock which is shared among this,
-	 * open() and renewLease() methods so check carefully for serializing lock
-	 * acquisition and behavior
+	 * Currently unavailable, intended for future use. NOTE: The uniqueness of block
+	 * is being currently managed by client(at the Edge), which carefully issues new
+	 * block-numbers that do not overlap.
 	 */
 	@Override
 	public BlockMetadataUpdateResponse incrementBlockCount(Metadata mbMetadata, boolean setLease) throws TException {
@@ -2965,17 +3111,26 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * By default, we are setting the lease time equal to the soft lease time
-	 * (system-wide property) in case, this client has the lock but the lease is
-	 * expired but still the difference between current time and lease start time is
-	 * less than hard lease time and no other client has acquired the lock, the
-	 * lease can be made available to the client. In case lock is still available
-	 * but difference between current time and lease start time for the client is
-	 * more than the hard lease time, then lock cannot be acquired and client needs
-	 * to renew the lease
-	 **/
+	 * Follows from {@link #incrementBlockCount(Metadata, boolean)} Currently
+	 * unavailable, intended for future use.
+	 * 
+	 * @param mbMetadata
+	 * @param setLease
+	 * @return
+	 */
 	private BlockMetadataUpdateMessage checkLeaseOwnership(Metadata mbMetadata, boolean setLease) {
 		LOGGER.info(" checkLeaseOwnership : The setlease flag is set to " + setLease);
+
+		/**
+		 * DEV NOTES: By default, we are setting the lease time equal to the soft lease
+		 * time (system-wide property) in case, this client has the lock but the lease
+		 * is expired but still the difference between current time and lease start time
+		 * is less than hard lease time and no other client has acquired the lock, the
+		 * lease can be made available to the client. In case lock is still available
+		 * but difference between current time and lease start time for the client is
+		 * more than the hard lease time, then lock cannot be acquired and client needs
+		 * to renew the lease
+		 **/
 
 		/**
 		 * Ishan reported a concurrent writes returned fail no lock when the set lease
@@ -3008,6 +3163,14 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 	}
 
+	/**
+	 * Currently unavailable, intended for future use. For all purposes to avail
+	 * lease grant use {@link #openLease(String, String, int, boolean)}
+	 * 
+	 * NOTES: The original purpose is to have a lease extension whenever blocks were
+	 * being written. In order to achieve that, renewLease would present a request
+	 * to extend the Lease already granted during the writing of block.
+	 */
 	@Override
 	public StreamLeaseRenewalResponse renewLease(String streamId, String clientId, String sessionSecret,
 			int expectedLease, boolean setLease) throws TException {
