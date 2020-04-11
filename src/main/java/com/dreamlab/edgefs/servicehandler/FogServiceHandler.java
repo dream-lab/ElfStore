@@ -1205,7 +1205,8 @@ public class FogServiceHandler implements FogService.Iface {
 	 *                       neighbors
 	 * @param checkBuddies   A boolean parameter, If True, checks for the block in
 	 *                       buddies
-	 * @param selfInfo       An EdgeInfo object, it is used for logging purposes,
+	 * @param selfInfo       An EdgeInfo object, to check if block is present in the
+	 *                       local partition, also it is used for logging purposes,
 	 *                       using this it can be found out which edgeClient
 	 *                       initiated the request.
 	 * @return List<FindReplica> A list of locations containing Fog Ip/ports along
@@ -3238,8 +3239,15 @@ public class FogServiceHandler implements FogService.Iface {
 		return response;
 	}
 
-	// a negative value indicates that either the stream is nonexistent or no blocks
-	// are written to the stream in question.
+	/**
+	 * Retrieves the largest block in the stream.
+	 * 
+	 * @param streamId The streamID in which the largest ID is to be retrieved.
+	 * @return the largest block number in the stream. a negative value indicates
+	 *         that either the stream is nonexistent or no blocks are written to the
+	 *         stream in question.
+	 */
+
 	@Override
 	public long getLargestBlockId(String streamId) throws TException {
 		if (!fog.getStreamMetadata().containsKey(streamId))
@@ -3260,9 +3268,14 @@ public class FogServiceHandler implements FogService.Iface {
 		return blockIdList.get(0);
 	}
 
-	// ISHAN:
+	/**
+	 * List all the blocks written in the current Fog
+	 * 
+	 * @param flag A boolean variable, when set as True will list all blocks written
+	 *             in local partition
+	 * @return A set of blocks written in the current Fog's partition.
+	 */
 	@Override
-	// flag is a dummy variable
 	public Set<Long> listLocalPartitionMbId(boolean flag) {
 		Set<Long> mbids = new HashSet<Long>();
 		mbids = fog.getMbIDLocationMap().keySet();
@@ -3272,8 +3285,12 @@ public class FogServiceHandler implements FogService.Iface {
 			return null;
 	}
 
+	/**
+	 * Returns the list of all neighbors of the current Fog
+	 * 
+	 * @return The list of neighbors for the current Fog.
+	 */
 	@Override
-	// used to get neighbors of a fog
 	public List<NeighborInfoData> requestAllNeighbors() {
 		List<NeighborInfoData> members = new ArrayList<NeighborInfoData>();
 		List<NeighborInfo> neighbors = new ArrayList<NeighborInfo>(fog.getNeighborsMap().values());
@@ -3286,6 +3303,13 @@ public class FogServiceHandler implements FogService.Iface {
 		return members;
 	}
 
+	/**
+	 * Lists all the blocks present in the Fog partition edge-wise. Eg: Edge1 -
+	 * 101,102 .. Edge2: 101,107, 554 etc., Where Edge1, Edge2 are edge devices in
+	 * current partition and the numbers are blocks hosted in the respective Edges
+	 * 
+	 * @return EdgeId --> <blockId1, blockId2, .... >
+	 */
 	@Override
 	public Map<Short, Set<Long>> requestEdgeMicrobatchMap() {
 		Map<Short, Set<Long>> edgeMbIdMap = new ConcurrentHashMap<>();
@@ -3293,6 +3317,12 @@ public class FogServiceHandler implements FogService.Iface {
 		return edgeMbIdMap;
 	}
 
+	/**
+	 * The compression format that is used for storing the block. Eg: zip etc.,
+	 * 
+	 * @param mbId The block for which the compression format is needed
+	 * @return The compression format used for the block
+	 */
 	@Override
 	public Map<String, Long> requestCompFormatSize(long mbId) {
 		Map<String, Long> response = new HashMap<String, Long>();
@@ -3304,23 +3334,29 @@ public class FogServiceHandler implements FogService.Iface {
 		return response;
 	}
 
-	/*
-	 * 
-	 * Execution trace for findStreamUsingQuery 1. get the set of valid streamIds
-	 * for the current fog (i.e the streamids that satisfy all the meta data map
-	 * query entries) 2. check for neighbors 2.1 if all the properties are satisfied
-	 * only then make a connection to that particular neighbor. 2.2 perform 1. and
-	 * 2. but here current fog is the neighbor to whom the connection is made. 2.3
-	 * do a union of the "current set" and the set returned by the neighbor. 3.
-	 * check for buddies 3.1 if all the properties are satisfied only then make a
-	 * connection to that particular buddy. 3.2 perform 1. and 2. but here current
-	 * fog is the buddy to whom the connection is made. 3.3 do a union of the
-	 * "current set" and the set returned by the buddy 4. return the "current set".
-	 */
-
 	@Override
 	public Set<String> findStreamUsingQuery(Map<String, String> metaKeyValueMap, boolean checkNeighbors,
 			boolean checkBuddies) {
+
+		/*
+		 * DEV NOTES:
+		 * 
+		 * Execution trace for findStreamUsingQuery 1. get the set of valid streamIds
+		 * for the current fog (i.e the streamids that satisfy all the meta data map
+		 * query entries)
+		 * 
+		 * 2. check for neighbors 2.1 if all the properties are satisfied only then make
+		 * a connection to that particular neighbor. 2.2 perform 1. and 2. but here
+		 * current fog is the neighbor to whom the connection is made. 2.3 do a union of
+		 * the "current set" and the set returned by the neighbor.
+		 * 
+		 * 3. check for buddies 3.1 if all the properties are satisfied only then make a
+		 * connection to that particular buddy. 3.2 perform 1. and 2. but here current
+		 * fog is the buddy to whom the connection is made. 3.3 do a union of the
+		 * "current set" and the set returned by the buddy
+		 * 
+		 * 4. return the "current set".
+		 */
 
 		Set<String> validStreamIdSet = new HashSet<>();
 		boolean firstPass = true;
@@ -3350,6 +3386,12 @@ public class FogServiceHandler implements FogService.Iface {
 		return validStreamIdSet;
 	}
 
+	/**
+	 * Get the streamId set from the neighbors
+	 * 
+	 * @param metaKeyValueMap    The key-value metadata that is being searched for
+	 * @param currentStreamIdSet The set of streamIDs that have satisfied so far.
+	 */
 	private void getValidStreamIdSetFromNeighbors(Map<String, String> metaKeyValueMap, Set<String> currentStreamIdSet) {
 		Map<Short, FogExchangeInfo> neighborExchangeInfo = fog.getNeighborExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : neighborExchangeInfo.entrySet()) {
@@ -3387,6 +3429,12 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 	}
 
+	/**
+	 * Get the streamId set from the buddies
+	 * 
+	 * @param metaKeyValueMap    The key-value metadata that is being searched for
+	 * @param currentStreamIdSet The set of streamIDs that have satisfied so far.
+	 */
 	private void getValidStreamIdSetFromBuddies(Map<String, String> metaKeyValueMap, Set<String> currentStreamIdSet) {
 		Map<Short, FogExchangeInfo> buddyExchangeInfo = fog.getBuddyExchangeInfo();
 		for (Entry<Short, FogExchangeInfo> entry : buddyExchangeInfo.entrySet()) {
@@ -3421,6 +3469,17 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 	}
 
+	/**
+	 * Retrieve the set of streams from a remote Fog
+	 * 
+	 * @param ip              The remote Fog's IP
+	 * @param port            The remote Fog's Port
+	 * @param metaKeyValueMap The key-value pair which needs to be satisfied by a
+	 *                        stream
+	 * @param checkNeighbors  A boolean, if True, retrieves streams from neighbors
+	 * @param checkBuddies    A boolean, if True, retrieves streams from buddies
+	 * @return Set of streams from a Fog
+	 */
 	private Set<String> fetchValidStreamIdSetFromOtherFog(String ip, int port, Map<String, String> metaKeyValueMap,
 			boolean checkNeighbors, boolean checkBuddies) {
 		Set<String> otherValidStreamIdSet = new HashSet<>();
@@ -3446,25 +3505,41 @@ public class FogServiceHandler implements FogService.Iface {
 		return otherValidStreamIdSet;
 	}
 
-	/*
+	/**
+	 * Searches all blocks which match the query sent by the client. The query is
+	 * key-value map
 	 * 
-	 * Execution trace for findBlockUsingQuery 1. get the list of valid
-	 * microbatchIds for the current fog (i.e the mbids that satisfy all the meta
-	 * data map query entries) 2. formulate the response map (since we are required
-	 * to return valid mbids along with the corresponding streamids) 3. check for
-	 * neighbors 3.1 if all the properties are satisfied only then make a connection
-	 * to that particular neighbor. 3.2 perform 1. and 2. but here current fog is
-	 * the neighbor to whom the connection is made. 3.3 do a union of the
-	 * "current map" and the map returned by the neighbor. 4. check for buddies 4.1
-	 * if all the properties are satisfied only then make a connection to that
-	 * particular buddy. 4.2 perform 1. and 2. but here current fog is the buddy to
-	 * whom the connection is made. 4.3 do a union of the "current map" and the map
-	 * returned by the buddy 5. return the "current map".
+	 * @param metaKeyValueMap The query which is a key-value pair eg location:cds
+	 * @param checkNeighbors  A boolean, if True, searches for blocks in neighbors
+	 * @param checkBuddies    A booleam, if True, searches for blocks in buddies
+	 * @return A set of blocks which match the query along with their respective
+	 *         stream IDs
 	 */
-
 	@Override
 	public Map<Long, String> findBlockUsingQuery(Map<String, String> metaKeyValueMap, boolean checkNeighbors,
 			boolean checkBuddies, MatchPreference matchPreference) {
+
+		/*
+		 * DEV NOTES: Execution trace for findBlockUsingQuery
+		 * 
+		 * 1. get the list of valid microbatchIds for the current fog (i.e the mbids
+		 * that satisfy all the meta data map query entries)
+		 * 
+		 * 2. formulate the response map (since we are required to return valid mbids
+		 * along with the corresponding streamids)
+		 * 
+		 * 3. check for neighbors 3.1 if all the properties are satisfied only then make
+		 * a connection to that particular neighbor. 3.2 perform 1. and 2. but here
+		 * current fog is the neighbor to whom the connection is made. 3.3 do a union of
+		 * the "current map" and the map returned by the neighbor.
+		 * 
+		 * 4. check for buddies 4.1 if all the properties are satisfied only then make a
+		 * connection to that particular buddy. 4.2 perform 1. and 2. but here current
+		 * fog is the buddy to whom the connection is made. 4.3 do a union of the
+		 * "current map" and the map returned by the buddy
+		 * 
+		 * 5. return the "current map".
+		 */
 
 		Set<Long> validMbTdList = new HashSet<>();
 		Map<Long, String> mbIdStreamIdMapResponse = new ConcurrentHashMap<>();
@@ -3489,6 +3564,14 @@ public class FogServiceHandler implements FogService.Iface {
 		return mbIdStreamIdMapResponse;
 	}
 
+	/**
+	 * Searches for stream based on the StreamQuery
+	 * 
+	 * @param squery The streamQuery {@link SQueryRequest} contains the metadata
+	 *               properties used for querying
+	 * @return SQueryResponse contains the list of streamID matching the given
+	 *         search criteria
+	 */
 	@Override
 	public SQueryResponse findStream(SQueryRequest squery) throws TException {
 		// TODO Auto-generated method stub
@@ -3512,6 +3595,15 @@ public class FogServiceHandler implements FogService.Iface {
 		return queryResponse;
 	}
 
+	/**
+	 * Updates the content of the block
+	 * 
+	 * @param mbId       The blockID
+	 * @param mbMetadata The metadata content of the block
+	 * @param mbData     The data (in bytes) that will be updating the existing
+	 *                   content
+	 * @return The {@link WriteResponse} is a SUCCESS or FAILURE of the operation
+	 */
 	@Override
 	public WriteResponse updateBlock(long mbId, Metadata mbMetadata, ByteBuffer mbData) throws TException {
 
@@ -3559,13 +3651,22 @@ public class FogServiceHandler implements FogService.Iface {
 		return wrResponse;
 	}
 
-	@Override
 	/**
-	 * mbid => The microbatch for which metadata has to be fetched fogip, fogport =>
-	 * the fog partition in which the block is print edgeip, edgeport => the edge
-	 * which is present in the fog partition keys => Keys of the metadata properties
-	 * which need to be fetched
+	 * Retrieves the metadata of the block which is specified (Reads the .meta file
+	 * which was written at the time of put/update
+	 * 
+	 * @param mbid     The microbatch for which metadata has to be fetched
+	 * @param fogip    The IP of the Fog which contains the block looking for
+	 * @param fogport  The Port of the Fog which contains the block looking for
+	 * @param edgeInfo The Edge device in which the block is located
+	 * @param keys     Keys of the metadata properties for which the metadata values
+	 *                 need to be fetched
+	 * 
+	 * @return The response is the Metadata value for the keys for the specified
+	 *         block if the block is found in the FOg and Edge specified else an
+	 *         appropriate ERROR message will be returned
 	 */
+	@Override
 	public MetadataResponse getMetadataByBlockid(long mbid, String fogip, int fogport, EdgeInfoData edgeInfo,
 			List<String> keys) throws TException {
 
@@ -3627,6 +3728,24 @@ public class FogServiceHandler implements FogService.Iface {
 		return metaResponse;
 	}
 
+	/**
+	 * Finds the first location (Fog and Edge) of the block being searched and
+	 * returns as soon as the first location is found
+	 * 
+	 * @param microbatchIdList The list of blocks for which the block location needs
+	 *                         to be searched
+	 * @param checkNeighbors   A Boolean, If True forwards the query to neighbors if
+	 *                         the location was not being discovered locally for all
+	 *                         blocks
+	 * @param checkBuddies     A Boolean, If True forwards the query to buddies if
+	 *                         the location was not being discovered locally for all
+	 *                         blocks
+	 * @param selfInfo         The edge client's IP,port and ID, to see if block is
+	 *                         present in the local partition (in the partition
+	 *                         where the edge client is querying)
+	 * @return A Map of block and its location for all the blocks whose locations
+	 *         were being requested is returned.
+	 */
 	@Override
 	public Map<Long, List<FindReplica>> findFast(List<Long> microbatchIdList, boolean checkNeighbors,
 			boolean checkBuddies, EdgeInfoData selfInfo) throws TException {
@@ -3716,6 +3835,15 @@ public class FogServiceHandler implements FogService.Iface {
 
 	}
 
+	/**
+	 * Function and parameters follow from
+	 * {@link #findFast(List, boolean, boolean, EdgeInfoData)}
+	 * 
+	 * @param searchKey
+	 * @param microbatchList
+	 * @param selfInfo
+	 * @return
+	 */
 	private Map<Long, List<FindReplica>> getFromNeighborsFast(String searchKey, ArrayList<Long> microbatchList,
 			EdgeInfoData selfInfo) {
 
@@ -3775,6 +3903,15 @@ public class FogServiceHandler implements FogService.Iface {
 		return blockLocationMap;
 	}
 
+	/**
+	 * Function and parameters follow from
+	 * {@link #findFast(List, boolean, boolean, EdgeInfoData)}
+	 * 
+	 * @param searchKey
+	 * @param microbatchList
+	 * @param selfInfo
+	 * @return
+	 */
 	private Map<Long, List<FindReplica>> getFromBuddiesFast(String searchKey, ArrayList<Long> microbatchList,
 			EdgeInfoData selfInfo) {
 
@@ -3836,6 +3973,19 @@ public class FogServiceHandler implements FogService.Iface {
 		return blockLocationMap;
 	}
 
+	/**
+	 * Function and parameters follow from
+	 * {@link #getFromBuddiesFast(String, ArrayList, EdgeInfoData)} or
+	 * {@link #getFromNeighborsFast(String, ArrayList, EdgeInfoData)}
+	 * 
+	 * @param nodeIP
+	 * @param port
+	 * @param microbatchList
+	 * @param checkNeighbors
+	 * @param checkBuddies
+	 * @param selfInfo
+	 * @return
+	 */
 	private Map<Long, List<FindReplica>> fetchDataFromOtherFogFast(String nodeIP, int port,
 			ArrayList<Long> microbatchList, boolean checkNeighbors, boolean checkBuddies, EdgeInfoData selfInfo) {
 
@@ -3864,6 +4014,28 @@ public class FogServiceHandler implements FogService.Iface {
 		}
 		return blockLocationMap;
 	}
+
+	/**
+	 * This function returns the locations and streamIDs of the metadata query
+	 * passed List<List<FindQueryCondition>> findQueryList
+	 * 
+	 * @param checkNeighbors A boolean, forwards the function to the neighbors for
+	 *                       the find query
+	 * @param checkBuddies   A boolean, forwards the function to the buddies for the
+	 *                       find query
+	 * @param findQueryList  The query metadata
+	 * @param replicacount   Indicates the number of locations that can be returned
+	 *                       for the blocks that matched the query. NONE doesn't
+	 *                       return any location, ONE returns single location, ALL
+	 *                       returns all locations
+	 * @param edgeInfo       The edge client's IP,port and ID, to see if block is
+	 *                       present in the local partition (in the partition where
+	 *                       the edge client is querying). also it is used for
+	 *                       logging purposes, using this it can be found out which
+	 *                       edgeClient initiated the request.
+	 * @return {@link FindBlockQueryResponse} contains the streamID, blockLocations
+	 *         for all the blocks which matched the query
+	 */
 
 	@Override
 	public FindBlockQueryResponse findBlocksAndLocationsWithQuery(boolean checkNeighbors, boolean checkBuddies,
@@ -3914,6 +4086,15 @@ public class FogServiceHandler implements FogService.Iface {
 
 		} else if (replicacount == ReplicaCount.ALL) {
 
+			/**
+			 * TODO : This method's search logic can be imporved, currently for all the
+			 * chosen blocks which qualify a query criteria, a find() api is invoked to get
+			 * all the locations of the block.
+			 * 
+			 * This is expensive, since each block will result in an independent find()
+			 * query
+			 **/
+
 			for (Entry<Long, String> entry : findBlockResultMap.entrySet()) {
 				FindBlockQueryValue findBlockQueryValue = new FindBlockQueryValue();
 				findBlockQueryValue.setStreamId(entry.getValue());
@@ -3931,6 +4112,15 @@ public class FogServiceHandler implements FogService.Iface {
 		return findQueryResponse;
 	}
 
+	/**
+	 * Function and parameters follow from
+	 * {@link #findBlocksAndLocationsWithQuery(boolean, boolean, List, ReplicaCount, EdgeInfoData)}
+	 * 
+	 * @param queryiterator
+	 * @param checkNeighbors
+	 * @param checkBuddies
+	 * @return The blockID and its corresponding streamID
+	 */
 	private Map<Long, String> evaluateQuery(Iterator<List<FindConditionTuple<String, String>>> queryiterator,
 			boolean checkNeighbors, boolean checkBuddies) {
 
@@ -3991,6 +4181,19 @@ public class FogServiceHandler implements FogService.Iface {
 		return finalResultMap;
 	}
 
+	/**
+	 * Returns the metadata (.meta file) of all the blocks passed in the list
+	 * 
+	 * @param mbidList     The blockID list of which metadata needs to be retrieved
+	 * @param fogip        The IP of the Fog hosting the block
+	 * @param fogport      The port of the Fog hosting the block
+	 * @param edgeInfoData The edge in which the blocks is present
+	 * @param keys         The keys for which metadata values are supposed to be
+	 *                     returned
+	 * 
+	 * @return The list of {@link MetadataResponse} for each block for the keys
+	 *         present
+	 */
 	@Override
 	public List<MetadataResponse> getManyMetadataByBlockidList(List<Long> mbidList, String fogip, int fogport,
 			EdgeInfoData edgeInfoData, List<String> keys) throws TException {
@@ -4064,6 +4267,20 @@ public class FogServiceHandler implements FogService.Iface {
 
 	}
 
+	/**
+	 * Put the data block of the given block number
+	 * 
+	 * @param mbMetadata      The static metadata associated with the block
+	 * @param version         The version of the block ( it is 0 when the block is
+	 *                        put for the first time)
+	 * @param data            The data of block in bytes
+	 * @param preference      The write preference or choice which tells which Edge
+	 *                        to choose for writing. (HHH, HHL etc.,) one of the 8
+	 *                        choices
+	 * @param metaKeyValueMap The dynamic metadata properties or the key-value pairs
+	 * @param clientId        The clientID of Edge/Fog which is calling putData,
+	 *                        useful for logging which clients invoked requets.
+	 */
 	@Override
 	public WriteResponse putData(Metadata mbMetadata, short version, ByteBuffer data, WritePreference preference,
 			Map<String, List<String>> metaKeyValueMap, String clientId) throws TException {
@@ -4076,6 +4293,19 @@ public class FogServiceHandler implements FogService.Iface {
 		return wrResponse;
 	}
 
+	/**
+	 * Choose locations to write the block and write data in all those locations
+	 * concurrently.
+	 * 
+	 * @param mbMetadata      The static metadata associated with the block
+	 * @param version         The version of the block ( it is 0 when the block is
+	 *                        put for the first time)
+	 * @param data            The data of block in bytes
+	 * @param metaKeyValueMap The dynamic metadata properties or the key-value pairs
+	 * @param clientId        The clientID of Edge/Fog which is calling putData,
+	 *                        useful for logging which clients invoked requets.
+	 * @return {@link WriteResponse} tells whether the block write is successful
+	 */
 	@Override
 	public WriteResponse putDataQuorum(Metadata mbMetadata, short version, ByteBuffer data,
 			Map<String, List<String>> metaKeyValueMap, String clientId) throws TException {
@@ -4104,6 +4334,19 @@ public class FogServiceHandler implements FogService.Iface {
 		return result;
 	}
 
+	/**
+	 * Read the data of the given block number
+	 * 
+	 * @param microbatchId  The block number which needs to be read
+	 * @param fetchMetadata A boolean, if True reads metadata as well, if False then
+	 *                      reads only data
+	 * @param compFormat    Indicates the compression type of the block (By default
+	 *                      it reads no compression)
+	 * @param uncompSize    Not relevant currently
+	 * @param clientId      The clientID of Edge/Fog which is calling putData,
+	 *                      useful for logging which clients invoked requets.
+	 * @return {@link ReadReplica} contains the data being read.
+	 */
 	@Override
 	public ReadReplica get(long microbatchId, boolean fetchMetadata, String compFormat, long uncompSize,
 			String clientId) throws TException {
@@ -4113,6 +4356,19 @@ public class FogServiceHandler implements FogService.Iface {
 		return result;
 	}
 
+	/**
+	 * Read the data of the given block number
+	 * 
+	 * @param microbatchId  The block number which needs to be read
+	 * @param fetchMetadata A boolean, if True reads metadata as well, if False then
+	 *                      reads only data
+	 * @param compFormat    Indicates the compression type of the block (By default
+	 *                      it reads no compression)
+	 * @param uncompSize    Not relevant currently
+	 * @param selfInfo      The Edge client's IP, Port etc., used for logging
+	 *                      purposes
+	 * @return {@link ReadReplica} contains the data being read.
+	 */
 	@Override
 	public ReadReplica getData(long microbatchId, boolean fetchMetadata, String compFormat, long uncompSize,
 			EdgeInfoData selfInfo) throws TException {
@@ -4159,6 +4415,18 @@ public class FogServiceHandler implements FogService.Iface {
 		return data;
 	}
 
+	/**
+	 * Updates the block data and its metadata
+	 * 
+	 * @param mbId           The block number which needs to be updated
+	 * @param mbMetadata     The metadata of the block
+	 * @param mbData         The data in bytes which needs to be updated
+	 * @param clientId       The ID of the Fog/Edge client which is performing the
+	 *                       update, it used for logging purpose
+	 * @param updateMetaFlag A boolean, if True metadata is updated
+	 * @param updateDataFlag A boolean, if True data is updated
+	 * @return {@link WriteResponse} indicating whether update was successful.
+	 */
 	@Override
 	public WriteResponse updateBlockAndMeta(long mbId, Metadata mbMetadata, ByteBuffer mbData, String clientId,
 			boolean updateMetaFlag, boolean updateDataFlag) throws TException {
@@ -4170,6 +4438,18 @@ public class FogServiceHandler implements FogService.Iface {
 		return wrResponse;
 	}
 
+	/**
+	 * Updates the block data and its metadata
+	 * 
+	 * @param mbId           The block number which needs to be updated
+	 * @param mbMetadata     The metadata of the block
+	 * @param mbData         The data in bytes which needs to be updated
+	 * @param selfInfo       The ID of the Fog/Edge client which is performing the
+	 *                       update, it used for logging purpose
+	 * @param updateMetaFlag A boolean, if True metadata is updated
+	 * @param updateDataFlag A boolean, if True data is updated
+	 * @return {@link WriteResponse} indicating whether update was successful.
+	 */
 	@Override
 	public WriteResponse updateBlockQuorum(long mbId, Metadata mbMetadata, ByteBuffer mbData, String clientId,
 			boolean updateMetaFlag, boolean updateDataFlag, EdgeInfoData selfInfo) throws TException {
@@ -4186,6 +4466,14 @@ public class FogServiceHandler implements FogService.Iface {
 		return wrResponse;
 	}
 
+	/**
+	 * Finds the Fog IP/Port of a given stream was registered
+	 * 
+	 * @param streamId       The streamID for which the Fog needs to be found
+	 * @param checkNeighbors A boolean, if True forwards the search to Neighbor Fogs
+	 * @param checkBuddies   A boolean, if True forwards the search to Buddy Fogs
+	 * @return The Fog where the stream was registered
+	 */
 	@Override
 	public NodeInfoData findStreamOwner(String streamId, boolean checkNeighbors, boolean checkBuddies)
 			throws TException {
@@ -4232,6 +4520,17 @@ public class FogServiceHandler implements FogService.Iface {
 		return myNodeInfo;
 	}
 
+	/**
+	 * Forwards the query to other remote Fogs, parameters follow from
+	 * {@link #findStreamOwner(String, boolean, boolean)}
+	 * 
+	 * @param nodeIP
+	 * @param port
+	 * @param streamId
+	 * @param checkNeighbors
+	 * @param checkBuddies
+	 * @return
+	 */
 	private NodeInfoData findStreamOwnerFromOtherFog(String nodeIP, int port, String streamId, boolean checkNeighbors,
 			boolean checkBuddies) {
 		NodeInfoData myNodeInfo = null;
@@ -4260,6 +4559,9 @@ public class FogServiceHandler implements FogService.Iface {
 		return myNodeInfo;
 	}
 
+	/**
+	 * Currently unavailable, intended for future use.
+	 */
 	@Override
 	public byte insertHomeFog(long microbatchId, String streamId, NodeInfoData homeFog) {
 		BlockToStreamIdHomeModel myBlockMapUnit = new BlockToStreamIdHomeModel(streamId, homeFog);
