@@ -4268,7 +4268,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * Put the data block of the given block number
+	 * Put the data block of the given block number. Originates from the putDataQuorum
 	 * 
 	 * @param mbMetadata      The static metadata associated with the block
 	 * @param version         The version of the block ( it is 0 when the block is
@@ -4335,7 +4335,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * Read the data of the given block number
+	 * Read the data of the given block number. Originates from the getData()
 	 * 
 	 * @param microbatchId  The block number which needs to be read
 	 * @param fetchMetadata A boolean, if True reads metadata as well, if False then
@@ -4416,7 +4416,7 @@ public class FogServiceHandler implements FogService.Iface {
 	}
 
 	/**
-	 * Updates the block data and its metadata
+	 * Updates the block data and its metadata. Originates from the updateBlockQuorum() 
 	 * 
 	 * @param mbId           The block number which needs to be updated
 	 * @param mbMetadata     The metadata of the block
