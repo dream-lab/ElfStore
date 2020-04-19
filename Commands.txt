@@ -1,4 +1,4 @@
-Pre-requisite:
+Pre-requisites:
 
 thrift --gen java FogServices.thrift (then copy it to the correct java src folder path)
 thrift --gen py FogServices.thrift
